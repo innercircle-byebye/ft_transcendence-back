@@ -1,16 +1,39 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-echo "Pre-push Hook: Checking branch name / Mengecek nama branch..."
+FORBIDDEN_HTTPS_URL="https://github.com/innercircle-byebye/ft_transcendence-back.git" # insert your remote url (https)
+FORBIDDEN_SSH_URL="git@github.com:innercircle-byebye/ft_transcendence-back.git" # insert your remote url (ssh)
+FORBIDDEN_REF="refs/heads/main" # insert branch ref
 
 BRANCH=`git rev-parse --abbrev-ref HEAD`
-
-if [ "$BRANCH" = main ]; then
-  echo "You can't commit directly to main branch"
-  exit 1
+​
+ARR_GIT_PARAMS=($(echo $HUSKY_GIT_PARAMS))
+ARR_GIT_STDIN=($(echo $HUSKY_GIT_STDIN))
+​
+remote=${ARR_GIT_PARAMS[0]}
+url=${ARR_GIT_PARAMS[1]}
+​
+local_ref=${ARR_GIT_STDIN[0]}
+local_sha=${ARR_GIT_STDIN[1]}
+remote_ref=${ARR_GIT_STDIN[2]}
+remote_sha=${ARR_GIT_STDIN[3]}
+​
+if [ "$url" != "$FORBIDDEN_HTTPS_URL" -a "$url" != "$FORBIDDEN_SSH_URL" ]
+then
+    exit 0 # Forked Project 에서는 제한하지 않음
+fi
+​
+if [ "$BRANCH" = main ]
+then
+    echo "You can't commit directly to main branch"
+    exit 1 # 금지된 ref 로 push 를 실행하면 에러
 fi
 
-
-echo ">> Finish checking branch name / Selesai mengecek nama branch.\n==="
+if [ "$BRANCH" = develop ]
+then
+    echo "You can't commit directly to main branch"
+    exit 1 # 금지된 ref 로 push 를 실행하면 에러
+fi
+​
 
 exit 0
