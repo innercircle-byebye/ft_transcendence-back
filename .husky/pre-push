@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 . "$(dirname "$0")/_/husky.sh"
 
 FORBIDDEN_HTTPS_URL="https://github.com/gabia/git-hooks-study.git" # insert your remote url (https)
