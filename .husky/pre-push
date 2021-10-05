@@ -10,10 +10,6 @@ if [ "$BRANCH" = main ]; then
   exit 1
 fi
 
-if [ "$BRANCH" == develop ]; then
-  echo "You can't commit directly to develop branch"
-  exit 1
-fi
 
 echo ">> Finish checking branch name / Selesai mengecek nama branch.\n==="
 
