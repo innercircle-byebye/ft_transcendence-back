@@ -27,10 +27,13 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "import/prefer-default-export": "off",
+    // for nestjs syntax
+    "class-methods-use-this": "off",
     "prettier/prettier": [
       "error",
       {
-        "endOfLine": "auto"
+        "endOfLine": "auto",
+        "singleQuote": true
       }
     ],
     "no-unused-vars": "warn",
