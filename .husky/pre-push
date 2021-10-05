@@ -3,7 +3,6 @@
 
 FORBIDDEN_HTTPS_URL="https://github.com/innercircle-byebye/ft_transcendence-back.git" # insert your remote url (https)
 FORBIDDEN_SSH_URL="git@github.com:innercircle-byebye/ft_transcendence-back.git" # insert your remote url (ssh)
-FORBIDDEN_REF="refs/heads/main" # insert branch ref
 
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 ​
@@ -35,5 +34,4 @@ then
     exit 1 # 금지된 ref 로 push 를 실행하면 에러
 fi
 ​
-
 exit 0
