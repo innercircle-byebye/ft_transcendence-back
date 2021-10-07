@@ -6,14 +6,8 @@ export class UserEntity {
   id: number;
 
   @Column({ length: 32 })
-  username: string;
+  nickname: string;
 
   @Column({ unique: true })
-  email: string;
-
-  @Column()
-  password: string;
-
-  @Column({ default: '' })
-  imageLink: string;
+  profileImage: string;
 }
