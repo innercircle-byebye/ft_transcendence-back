@@ -13,6 +13,7 @@ export class UserService {
 
   async postUser(nickname: string, profileImage: string) {
     console.log(nickname);
+    console.log(profileImage);
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -22,10 +23,18 @@ export class UserService {
     if (user) {
       return;
     }
-    console.log(nickname);
-    await queryRunner.manager.getRepository(UserEntity).save({
-      nickname,
-      profileImage,
-    });
+    try {
+      await queryRunner.manager.getRepository(UserEntity).save({
+        nickname,
+        profileImage,
+      });
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

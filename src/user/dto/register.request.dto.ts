@@ -6,7 +6,7 @@ export class RegisterRequestDto {
     description: '사용자 닉네임',
     required: true,
   })
-  public nickaname: string;
+  public nickname: string;
 
   @ApiProperty({
     description: '프로필 이미지 경로',
