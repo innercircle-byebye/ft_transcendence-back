@@ -6,25 +6,7 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('google-login')
-  @UseGuards(AuthGuard('google'))
-  googleLogin() {}
-
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req, @Res({ passthrough: true }) res) {
-    if (!req.user) {
-      return 'No user from google';
-    }
-    const accessToken = this.authService.generateAccessToken(req.user);
-    res.cookie('pong_access_token', accessToken);
-    return {
-      message: 'User info from Google',
-      user: req.user,
-    };
-  }
-
-  @Get('ft-login')
+  @Get('ft_login')
   @UseGuards(AuthGuard('ft'))
   ftLogin() {}
 

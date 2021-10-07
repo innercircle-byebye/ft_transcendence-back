@@ -4,10 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { HttpModule } from '@nestjs/axios';
 import { AuthController } from './auth.controller';
-import { GoogleStrategy } from './google.strategy';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthService } from './auth.service';
-import { FtStrategy } from './ft.strategy';
+import { FtStrategy } from './strategies/ft.strategy';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { FtStrategy } from './ft.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, FtStrategy, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, FtStrategy, JwtStrategy],
   exports: [],
 })
 export class AuthModule {}

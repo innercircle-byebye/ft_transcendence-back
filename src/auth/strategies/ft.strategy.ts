@@ -37,8 +37,8 @@ export class FtStrategy extends PassportStrategy(Strategy, 'ft') {
     const user = {
       id: data.id,
       email: data.email,
-      login_id: data.login,
-      image_url: data.image_url,
+      intraId: data.login,
+      imageUrl: data.image_url,
     };
     cb(null, user);
   }
