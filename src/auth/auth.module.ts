@@ -2,15 +2,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { HttpModule } from '@nestjs/axios';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthService } from './auth.service';
+import { FtStrategy } from './ft.strategy';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     PassportModule,
+    HttpModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
@@ -19,7 +22,7 @@ import { AuthService } from './auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, FtStrategy, GoogleStrategy, JwtStrategy],
   exports: [],
 })
 export class AuthModule {}
