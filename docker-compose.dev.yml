@@ -6,12 +6,14 @@ services: # 이 항목 밑에 실행하려는 컨테이너 들을 정의
       dockerfile: Dockerfile.dev # 도커파일 이름
     ports:
       - "3005:3005" # port 맵핑
+    depends_on:
+      - dev-db
     volumes: # 실시간 코드 수정을 위한 volumes 설정
       - /usr/src/app/node_modules
       - ./:/usr/src/app
   dev-db:
     image: postgres:latest # 사용할 이미지
-    # container_name:  # 컨테이너 이름 설정
+    container_name:  "postgres-db" # 컨테이너 이름 설정
     ports:
       - "5432:5432" # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
     volumes:
@@ -20,4 +22,6 @@ services: # 이 항목 밑에 실행하려는 컨테이너 들을 정의
       - ./db/pglog:/var/log/postgresql
     environment:
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=ponggame
       - POSTGRES_PASSWORD=password
