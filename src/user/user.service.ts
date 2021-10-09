@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { User } from '../entities/User';
@@ -24,8 +28,7 @@ export class UserService {
       .getRepository(User)
       .findOne({ where: [{ intraUsername }] });
     if (duplicateIntra) {
-      console.log(duplicateIntra);
-      throw new ForbiddenException(
+      throw new UnauthorizedException(
         '이미 존재하는 사용자입니다. (인트라 ID 확인)',
       );
     }
@@ -33,8 +36,9 @@ export class UserService {
       .getRepository(User)
       .findOne({ where: [{ email }] });
     if (duplicateEmail) {
-      console.log(duplicateEmail);
-      throw new ForbiddenException('이미 존재하는 사용자입니다. (이메일 확인)');
+      throw new UnauthorizedException(
+        '이미 존재하는 사용자입니다. (이메일 확인)',
+      );
     }
 
     try {
