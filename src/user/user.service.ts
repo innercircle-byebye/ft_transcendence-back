@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { UserEntity } from '../entities/Users';
+import { User } from '../entities/User';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private connection: Connection,
   ) {}
 
@@ -18,13 +18,13 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     const user = await queryRunner.manager
-      .getRepository(UserEntity)
+      .getRepository(User)
       .findOne({ where: { nickname } });
     if (user) {
       return;
     }
     try {
-      await queryRunner.manager.getRepository(UserEntity).save({
+      await queryRunner.manager.getRepository(User).save({
         nickname,
         profileImage,
       });

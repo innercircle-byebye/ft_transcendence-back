@@ -7,7 +7,7 @@ const config: ConnectionOptions = {
   username: 'admin',
   password: 'password',
   database: 'ponggame',
-  entities: [`${__dirname}/entities/*.entity{.ts,.js}`],
+  entities: [`${__dirname}/entities/*{.ts,.js}`],
 
   // We are using migrations, synchronize should be set to false.
   synchronize: false,
