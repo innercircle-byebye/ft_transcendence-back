@@ -22,6 +22,7 @@ const config: ConnectionOptions = {
   // the compiled js in prod or the ts in dev.
   migrations: [`${__dirname}/migrations/**/*{.ts,.js}`],
   cli: {
+    entitiesDir: 'src/entities',
     migrationsDir: 'src/migrations',
   },
 };
