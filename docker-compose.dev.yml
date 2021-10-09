@@ -1,6 +1,7 @@
 version: "3" # 파일 규격 버전
 services: # 이 항목 밑에 실행하려는 컨테이너 들을 정의
   dev:
+    container_name: "nestjs-back" # 컨테이너 이름 설정
     build:
       context: .
       dockerfile: Dockerfile.dev # 도커파일 이름
