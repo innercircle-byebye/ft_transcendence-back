@@ -55,4 +55,10 @@ export class UserService {
       await queryRunner.release();
     }
   }
+
+  async deleteUser(userId: number) {
+    console.log(`user id:${userId}`);
+    const targetUser = await this.userRepository.findOne({ where: { userId } });
+    return this.userRepository.softRemove(targetUser);
+  }
 }

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { RegisterRequestDto } from './dto/register.request.dto';
 import { UserService } from './user.service';
@@ -22,6 +31,7 @@ export class UserController {
       data.nickname,
       data.imagePath,
     );
+    return 'ok';
   }
 
   @ApiOperation({ summary: '로그인' })
@@ -34,5 +44,11 @@ export class UserController {
     req.logout();
     res.clearCooke('connect.sid', { httpOnly: true });
     res.send('ok');
+  }
+
+  @ApiOperation({ summary: '사용자 삭제 (soft delete 처리)' })
+  @Delete('/:id')
+  async deleteUser(@Param('id') userId) {
+    return this.userService.deleteUser(userId);
   }
 }
