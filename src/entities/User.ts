@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IsEmail, IsNotEmpty, IsString, IsUrl } from 'class-validator';
 
 export enum UserStatus {
   ONLINE = 'online',
@@ -20,6 +21,8 @@ export class User {
   @PrimaryGeneratedColumn({ type: 'int', name: 'user_id' })
   userId: number;
 
+  @IsEmail()
+  @IsNotEmpty()
   @ApiProperty({
     description: '이메일 주소',
     example: 'marvin@student.42.fr',
@@ -28,6 +31,8 @@ export class User {
   @Column('varchar', { name: 'email', length: 50, unique: true })
   email: string;
 
+  @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: '42 인트라 ID',
     example: 'marvin',
@@ -36,6 +41,8 @@ export class User {
   @Column('varchar', { name: 'intra_username', length: 50, unique: true })
   intraUsername: string;
 
+  @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: '사용자 닉네임',
     example: '퐁게임너무재미있네',
@@ -44,6 +51,8 @@ export class User {
   @Column('varchar', { name: 'nickname', length: 50 })
   nickname: string;
 
+  @IsUrl()
+  @IsNotEmpty()
   @ApiProperty({
     description: '프로필 이미지 경로',
     required: true,
