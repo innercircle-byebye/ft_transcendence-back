@@ -13,11 +13,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
     const status = exception.getStatus();
+    const err = exception.getResponse() as
+      | string
+      | { error: string; statusCode: 400; message: string[] }; // class validator dpfj
 
-    response.status(status).json({
-      statusCode: status,
+    if (typeof err !== 'string' && err.error === 'Bad Request') {
+      return response.status(status).json({
+        success: false,
+        code: status,
+        data: err.message,
+      });
+    }
+
+    return response.status(status).json({
+      success: false,
+      code: status,
       timestamp: new Date().toISOString(),
       path: request.url,
+      data: err,
     });
   }
 }

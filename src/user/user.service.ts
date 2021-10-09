@@ -20,12 +20,23 @@ export class UserService {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const user = await queryRunner.manager
+    const duplicateIntra = await queryRunner.manager
       .getRepository(User)
-      .findOne({ where: { intraUsername } });
-    if (user) {
-      throw new ForbiddenException('이미 존재하는 사용자입니다.');
+      .findOne({ where: [{ intraUsername }] });
+    if (duplicateIntra) {
+      console.log(duplicateIntra);
+      throw new ForbiddenException(
+        '이미 존재하는 사용자입니다. (인트라 ID 확인)',
+      );
     }
+    const duplicateEmail = await queryRunner.manager
+      .getRepository(User)
+      .findOne({ where: [{ email }] });
+    if (duplicateEmail) {
+      console.log(duplicateEmail);
+      throw new ForbiddenException('이미 존재하는 사용자입니다. (이메일 확인)');
+    }
+
     try {
       await queryRunner.manager.getRepository(User).save({
         intraUsername,
