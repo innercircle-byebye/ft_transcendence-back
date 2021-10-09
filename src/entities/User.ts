@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -19,15 +20,34 @@ export class User {
   @PrimaryGeneratedColumn({ type: 'int', name: 'user_id' })
   userId: number;
 
+  @ApiProperty({
+    description: '이메일 주소',
+    example: 'marvin@student.42.fr',
+    required: true,
+  })
   @Column('varchar', { name: 'email', length: 50, unique: true })
   email: string;
 
+  @ApiProperty({
+    description: '42 인트라 ID',
+    example: 'marvin',
+    required: true,
+  })
   @Column('varchar', { name: 'intra_username', length: 50, unique: true })
   intraUsername: string;
 
+  @ApiProperty({
+    description: '사용자 닉네임',
+    example: '퐁게임너무재미있네',
+    required: true,
+  })
   @Column('varchar', { name: 'nickname', length: 50 })
   nickname: string;
 
+  @ApiProperty({
+    description: '프로필 이미지 경로',
+    required: true,
+  })
   @Column('varchar', { name: 'image_path', length: 200, unique: true })
   imagePath: string;
 

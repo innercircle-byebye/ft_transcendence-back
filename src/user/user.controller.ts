@@ -15,8 +15,13 @@ export class UserController {
 
   @ApiOperation({ summary: '회원 가입' })
   @Post()
-  postUser(@Body() body: RegisterRequestDto) {
-    this.userService.postUser(body.nickname, body.profileImage);
+  async postUser(@Body() data: RegisterRequestDto) {
+    await this.userService.registerUser(
+      data.intraUsername,
+      data.email,
+      data.nickname,
+      data.imagePath,
+    );
   }
 
   @ApiOperation({ summary: '로그인' })

@@ -1,16 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
+import { User } from 'src/entities/User';
 
-export class RegisterRequestDto {
-  @ApiProperty({
-    example: '나는퐁게임을했다',
-    description: '사용자 닉네임',
-    required: true,
-  })
-  public nickname: string;
+// 따로 선언 하는게 아니라 생략가능
+// ref: https://docs.nestjs.com/graphql/mapped-types#mapped-types
 
-  @ApiProperty({
-    description: '프로필 이미지 경로',
-    required: false,
-  })
-  public profileImage: string;
-}
+export class RegisterRequestDto extends PickType(User, [
+  'intraUsername',
+  'nickname',
+  'email',
+  'imagePath',
+] as const) {}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { User } from '../entities/User';
@@ -11,22 +11,29 @@ export class UserService {
     private connection: Connection,
   ) {}
 
-  async postUser(nickname: string, profileImage: string) {
-    console.log(nickname);
-    console.log(profileImage);
+  async registerUser(
+    intraUsername: string,
+    email: string,
+    nickname: string,
+    imagePath: string,
+  ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     const user = await queryRunner.manager
       .getRepository(User)
-      .findOne({ where: { nickname } });
+      .findOne({ where: { intraUsername } });
     if (user) {
-      return;
+      throw new ForbiddenException('이미 존재하는 사용자입니다.');
     }
     try {
       await queryRunner.manager.getRepository(User).save({
+        intraUsername,
+        email,
         nickname,
-        profileImage,
+        imagePath,
+        experience: 0,
+        rank_id: 1,
       });
       await queryRunner.commitTransaction();
     } catch (error) {
