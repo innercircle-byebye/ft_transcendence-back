@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+// import { getConnectionOptions } from 'typeorm';
+import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserEntity } from './entities/Users';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -16,17 +17,9 @@ import { UserModule } from './user/user.module';
     }),
     AuthModule,
     UserModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'postgres-db',
-      port: 5432,
-      username: 'admin',
-      password: 'password',
-      database: 'ponggame',
-      entities: [UserEntity],
-      synchronize: true,
-      logging: true,
-      keepConnectionAlive: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: async () =>
+        Object.assign(await ormconfig, { autoLoadEntities: true }),
     }),
   ],
   controllers: [AppController],
