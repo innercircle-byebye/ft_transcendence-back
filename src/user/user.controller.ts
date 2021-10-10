@@ -16,10 +16,17 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @ApiOperation({ summary: '유저 정보 조회' })
+  @ApiOperation({ summary: '전체 유저 확인' })
   @Get()
-  getUser(@Req() req) {
-    return req.user;
+  getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+
+  // TODO: connect.sid 를 통해 현재 자기자신 조회할 수 있도록 업데이트 필요
+  @ApiOperation({ summary: '유저 확인' })
+  @Get('/:id')
+  async getUser(@Param('id') userId) {
+    return this.userService.getUser(userId);
   }
 
   @ApiOperation({ summary: '회원 가입' })
@@ -46,7 +53,7 @@ export class UserController {
     res.send('ok');
   }
 
-  @ApiOperation({ summary: '사용자 삭제 (soft delete 처리)' })
+  @ApiOperation({ summary: '유저 삭제' })
   @Delete('/:id')
   async deleteUser(@Param('id') userId) {
     return this.userService.deleteUser(userId);

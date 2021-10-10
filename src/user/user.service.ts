@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { User } from '../entities/User';
@@ -10,6 +14,19 @@ export class UserService {
     private userRepository: Repository<User>,
     private connection: Connection,
   ) {}
+
+  getAllUsers() {
+    return this.userRepository.find();
+  }
+
+  async getUser(userId: number) {
+    const targetUser = await this.userRepository.findOne({ where: { userId } });
+    if (!targetUser) {
+      // 이미 삭제 처리가 되어 있는 경우
+      throw new ForbiddenException('존재하지 않는 사용자입니다');
+    }
+    return targetUser;
+  }
 
   async registerUser(
     intraUsername: string,
@@ -43,8 +60,10 @@ export class UserService {
         email,
         nickname,
         imagePath,
-        experience: 0,
-        rank_id: 1,
+        // 기본값 (추후 수정필요)
+        experience: 42,
+        rankId: 1,
+        // 기본값 (추후 수정필요)
       });
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -59,6 +78,10 @@ export class UserService {
   async deleteUser(userId: number) {
     console.log(`user id:${userId}`);
     const targetUser = await this.userRepository.findOne({ where: { userId } });
+    if (!targetUser) {
+      // 이미 삭제 처리가 되어 있는 경우
+      throw new ForbiddenException('존재하지 않는 사용자입니다');
+    }
     return this.userRepository.softRemove(targetUser);
   }
 }
