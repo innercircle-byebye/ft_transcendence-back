@@ -98,4 +98,10 @@ export class UserService {
     }
     return null;
   }
+
+  async removeRefreshToken(id: number) {
+    return this.userRepository.update(id, {
+      currentHashedRefreshToken: null,
+    });
+  }
 }

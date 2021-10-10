@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Redirect,
   Req,
   Res,
   UnauthorizedException,
@@ -21,6 +22,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   googleLogin() {}
 
+  @Redirect('http://localhost:3000')
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res({ passthrough: true }) res) {
@@ -48,6 +50,7 @@ export class AuthController {
   @UseGuards(AuthGuard('ft'))
   ftLogin() {}
 
+  @Redirect('http://localhost:3000')
   @Get('ft/callback')
   @UseGuards(AuthGuard('ft'))
   async ftAuthRedirect(@Req() req, @Res({ passthrough: true }) res) {
@@ -78,6 +81,18 @@ export class AuthController {
     const { accessToken, ...accessOption } =
       this.authService.getCookieWithJwtAccessToken(user.id);
     res.cookie('Authentication', accessToken, accessOption);
+  }
+
+  @Get('logout')
+  @UseGuards(AuthGuard('refresh'))
+  async logOut(@Req() req, @Res({ passthrough: true }) res) {
+    const { accessOption, refreshOption } =
+      this.authService.getCookiesForLogOut();
+
+    await this.userService.removeRefreshToken(req.user.id);
+
+    res.cookie('Authentication', '', accessOption);
+    res.cookie('Refresh', '', refreshOption);
   }
 
   // accessToken 테스트용
