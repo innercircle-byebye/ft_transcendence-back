@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 // import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
 import { UserService } from './user.service';
-import { UserEntity } from '../entities/Users';
+import { User } from '../entities/User';
 
 const mockUserRepository = () => ({
   save: jest.fn(),
@@ -26,7 +26,7 @@ describe('UserService', () => {
       providers: [
         UserService,
         {
-          provide: getRepositoryToken(UserEntity),
+          provide: getRepositoryToken(User),
           useValue: mockUserRepository(),
         },
         {
