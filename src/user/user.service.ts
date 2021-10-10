@@ -37,4 +37,34 @@ export class UserService {
       await queryRunner.release();
     }
   }
+
+  async getByIntraUsername(intraUsername: string): Promise<UserEntity> {
+    return this.userRepository.findOne({ intraUsername });
+  }
+
+  async createNewUserByIntraInfo(intraInfo: any): Promise<UserEntity> {
+    const { intraId, email, imageUrl } = intraInfo;
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let createdUser: UserEntity;
+    try {
+      createdUser = await queryRunner.manager.getRepository(UserEntity).save({
+        intraUsername: intraId,
+        nickname: intraId,
+        email,
+        profileImage: imageUrl,
+      });
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+
+    return createdUser;
+  }
 }

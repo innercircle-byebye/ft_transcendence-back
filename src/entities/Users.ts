@@ -6,6 +6,9 @@ export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ length: 50, unique: true })
+  email: string;
+
   @Column({ name: 'intra_username', length: 50, unique: true })
   intraUsername: string;
 
