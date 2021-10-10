@@ -71,10 +71,19 @@ export class AuthController {
     res.cookie('Refresh', refreshToken, refreshOption);
   }
 
-  // 테스트용
+  @Get('refresh')
+  @UseGuards(AuthGuard('refresh'))
+  refresh(@Req() req, @Res({ passthrough: true }) res) {
+    const { user } = req;
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.id);
+    res.cookie('Authentication', accessToken, accessOption);
+  }
+
+  // accessToken 테스트용
   @Get('/test')
   @UseGuards(AuthGuard('jwt'))
   test(@Req() req) {
-    console.log('req', req);
+    console.log('req.user', req.user);
   }
 }

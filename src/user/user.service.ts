@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { hash } from 'bcryptjs';
+import { hash, compare } from 'bcryptjs';
 import { UserEntity } from '../entities/Users';
 
 @Injectable()
@@ -39,6 +39,17 @@ export class UserService {
     }
   }
 
+  async getById(id: number) {
+    const user = await this.userRepository.findOne({ id });
+    if (user) {
+      return user;
+    }
+    throw new HttpException(
+      'User with this id does not exist',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
   async getByIntraUsername(intraUsername: string): Promise<UserEntity> {
     return this.userRepository.findOne({ intraUsername });
   }
@@ -72,5 +83,19 @@ export class UserService {
   async setCurrentRefreshToken(refreshToken: string, id: number) {
     const currentHashedRefreshToken = await hash(refreshToken, 10);
     await this.userRepository.update(id, { currentHashedRefreshToken });
+  }
+
+  async getUserIfRefreshTokenMatches(refreshToken: string, id: number) {
+    const user = await this.getById(id);
+
+    const isRefreshTokenMatching = await compare(
+      refreshToken,
+      user.currentHashedRefreshToken,
+    );
+
+    if (isRefreshTokenMatching) {
+      return user;
+    }
+    return null;
   }
 }
