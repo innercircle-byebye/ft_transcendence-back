@@ -89,6 +89,8 @@ export class UserController {
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
+      // 파일 용량 제한
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
   async uploadProfileImage(@UploadedFile() file: Express.Multer.File) {
