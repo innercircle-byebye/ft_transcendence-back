@@ -8,7 +8,8 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { UserDto } from 'src/common/dto/user.dto';
 import { RegisterRequestDto } from './dto/register.request.dto';
 import { UserService } from './user.service';
 
@@ -23,6 +24,7 @@ export class UserController {
   }
 
   // TODO: connect.sid 를 통해 현재 자기자신 조회할 수 있도록 업데이트 필요
+  @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '유저 확인' })
   @Get('/:id')
   async getUser(@Param('id') userId) {

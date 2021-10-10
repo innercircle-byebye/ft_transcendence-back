@@ -66,11 +66,26 @@ export class User {
     enum: UserStatus,
     default: UserStatus.ONLINE,
   })
+  @ApiProperty({
+    description: '유저 상태',
+    required: true,
+    example: UserStatus.ONLINE,
+    examples: UserStatus,
+  })
   status: UserStatus;
 
+  @ApiProperty({
+    description: '유저 경험치',
+    required: true,
+    example: 42,
+  })
   @Column('integer', { name: 'experience' })
   experience: number;
 
+  @ApiProperty({
+    description: '유저 랭크',
+    example: 1,
+  })
   @Column('integer', { name: 'rank_id', nullable: true })
   rankId: number | null; // 안써도 잘 동작하는데 명시적으로 넣은듯
 
