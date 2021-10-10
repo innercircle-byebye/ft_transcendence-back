@@ -16,9 +16,9 @@ import { GoogleStrategy } from './strategies/google.strategy';
     PassportModule,
     HttpModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN,
+        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
       },
     }),
     UserModule,

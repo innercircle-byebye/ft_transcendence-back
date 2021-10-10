@@ -33,8 +33,15 @@ export class AuthController {
       user = await this.userService.createNewUserByIntraInfo(req.user);
     }
 
-    const accessToken = this.authService.generateAccessToken(user.id);
-    res.cookie('pong_acess_token', accessToken);
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.id);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.id);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user.id);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
   }
 
   @Get('ft_login')
@@ -53,8 +60,15 @@ export class AuthController {
       user = await this.userService.createNewUserByIntraInfo(req.user);
     }
 
-    const accessToken = this.authService.generateAccessToken(user.id);
-    res.cookie('pong_acess_token', accessToken);
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.id);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.id);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user.id);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
   }
 
   // 테스트용
