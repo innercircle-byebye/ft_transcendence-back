@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { User } from '../entities/User';
+import { UpdateUserDto } from './dto/update.user.dto';
 
 @Injectable()
 export class UserService {
@@ -25,6 +26,40 @@ export class UserService {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
+    return targetUser;
+  }
+
+  // TODO: refactor
+  async updateUser(userId: number, updateInfo: UpdateUserDto) {
+    const {
+      nickname,
+      email,
+      imagePath,
+      status,
+      isHistoryPublic,
+      isStatusPublic,
+      experience,
+      rankId,
+      banDate,
+    } = updateInfo;
+    const targetUser = await this.userRepository.findOne({ where: { userId } });
+    if (!targetUser) {
+      // 이미 삭제 처리가 되어 있는 경우
+      throw new ForbiddenException('존재하지 않는 사용자입니다');
+    }
+    if (targetUser.nickname !== nickname) targetUser.nickname = nickname;
+    if (targetUser.status !== status) targetUser.status = status;
+    if (targetUser.email !== email) targetUser.email = email;
+    if (targetUser.imagePath !== imagePath) targetUser.imagePath = imagePath;
+    if (targetUser.isHistoryPublic !== isHistoryPublic)
+      targetUser.isHistoryPublic = isHistoryPublic;
+    if (targetUser.isStatusPublic !== isStatusPublic)
+      targetUser.isStatusPublic = isStatusPublic;
+    if (targetUser.experience !== experience)
+      targetUser.experience = experience;
+    if (targetUser.rankId !== rankId) targetUser.rankId = rankId;
+    if (targetUser.banDate !== banDate) targetUser.banDate = banDate;
+    await this.userRepository.save(targetUser);
     return targetUser;
   }
 

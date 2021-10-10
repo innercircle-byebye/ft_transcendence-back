@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   Res,
@@ -11,6 +12,7 @@ import {
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { UserDto } from 'src/user/dto/user.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
+import { UpdateUserDto } from './dto/update.user.dto';
 import { UserService } from './user.service';
 
 @Controller('api/user')
@@ -32,7 +34,7 @@ export class UserController {
   }
 
   @ApiOkResponse({ type: UserDto })
-  @ApiOperation({ summary: '회원 가입' })
+  @ApiOperation({ summary: '유저 회원 가입' })
   @Post()
   async postUser(@Body() data: RegisterUserDto) {
     return this.userService.registerUser(
@@ -41,6 +43,13 @@ export class UserController {
       data.nickname,
       data.imagePath,
     );
+  }
+
+  @ApiOkResponse({ type: UserDto })
+  @ApiOperation({ summary: '유저 정보 업데이트' })
+  @Patch('/:id')
+  async updateUser(@Param('id') userId, @Body() updateData: UpdateUserDto) {
+    return this.userService.updateUser(userId, updateData);
   }
 
   @ApiOperation({ summary: '로그인' })
