@@ -1,104 +1,32 @@
-import {
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { User } from '../entities/User';
-import { UpdateUserDto } from './dto/update.user.dto';
+import { UserEntity } from '../entities/Users';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
     private connection: Connection,
   ) {}
 
-  getAllUsers() {
-    return this.userRepository.find();
-  }
-
-  async getUser(userId: number) {
-    const targetUser = await this.userRepository.findOne({ where: { userId } });
-    if (!targetUser) {
-      // 이미 삭제 처리가 되어 있는 경우
-      throw new ForbiddenException('존재하지 않는 사용자입니다');
-    }
-    return targetUser;
-  }
-
-  // TODO: refactor
-  async updateUser(userId: number, updateInfo: UpdateUserDto) {
-    const {
-      nickname,
-      email,
-      imagePath,
-      status,
-      isHistoryPublic,
-      isStatusPublic,
-      experience,
-      rankId,
-      banDate,
-    } = updateInfo;
-    const targetUser = await this.userRepository.findOne({ where: { userId } });
-    if (!targetUser) {
-      // 이미 삭제 처리가 되어 있는 경우
-      throw new ForbiddenException('존재하지 않는 사용자입니다');
-    }
-    if (targetUser.nickname !== nickname) targetUser.nickname = nickname;
-    if (targetUser.status !== status) targetUser.status = status;
-    if (targetUser.email !== email) targetUser.email = email;
-    if (targetUser.imagePath !== imagePath) targetUser.imagePath = imagePath;
-    if (targetUser.isHistoryPublic !== isHistoryPublic)
-      targetUser.isHistoryPublic = isHistoryPublic;
-    if (targetUser.isStatusPublic !== isStatusPublic)
-      targetUser.isStatusPublic = isStatusPublic;
-    if (targetUser.experience !== experience)
-      targetUser.experience = experience;
-    if (targetUser.rankId !== rankId) targetUser.rankId = rankId;
-    if (targetUser.banDate !== banDate) targetUser.banDate = banDate;
-    await this.userRepository.save(targetUser);
-    return targetUser;
-  }
-
-  async registerUser(
-    intraUsername: string,
-    email: string,
-    nickname: string,
-    imagePath: string,
-  ) {
+  async postUser(nickname: string, profileImage: string) {
+    console.log(nickname);
+    console.log(profileImage);
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const duplicateIntra = await queryRunner.manager
-      .getRepository(User)
-      .findOne({ where: [{ intraUsername }] });
-    if (duplicateIntra) {
-      throw new UnauthorizedException(
-        '이미 존재하는 사용자입니다. (인트라 ID 확인)',
-      );
+    const user = await queryRunner.manager
+      .getRepository(UserEntity)
+      .findOne({ where: { nickname } });
+    if (user) {
+      return;
     }
-    const duplicateEmail = await queryRunner.manager
-      .getRepository(User)
-      .findOne({ where: [{ email }] });
-    if (duplicateEmail) {
-      throw new UnauthorizedException(
-        '이미 존재하는 사용자입니다. (이메일 확인)',
-      );
-    }
-    let createdUser;
     try {
-      createdUser = await queryRunner.manager.getRepository(User).save({
-        intraUsername,
-        email,
+      await queryRunner.manager.getRepository(UserEntity).save({
         nickname,
-        imagePath,
-        // 기본값 (추후 수정필요)
-        experience: 42,
-        rankId: 1,
-        // 기본값 (추후 수정필요)
+        profileImage,
       });
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -108,17 +36,5 @@ export class UserService {
     } finally {
       await queryRunner.release();
     }
-    return createdUser;
-  }
-
-  async deleteUser(userId: number) {
-    console.log(`user id:${userId}`);
-    const targetUser = await this.userRepository.findOne({ where: { userId } });
-    if (!targetUser) {
-      // 이미 삭제 처리가 되어 있는 경우
-      throw new ForbiddenException('존재하지 않는 사용자입니다');
-    }
-    targetUser.is_deleted = true;
-    return this.userRepository.softRemove(targetUser);
   }
 }

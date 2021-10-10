@@ -8,9 +8,6 @@ alias back-dev-db-rm='docker volume rm $(docker volume ls -q --filter dangling=t
 
 ## typeorm
 alias back-dev-typeorm='docker compose -f docker-compose.dev.yml exec dev npm run typeorm'
-alias back-dev-seed='docker compose -f docker-compose.dev.yml exec dev npm run seed'
-alias back-dev-seed-config='docker compose -f docker-compose.dev.yml exec dev npm run seed:config'
-alias back-dev-seed-run='docker compose -f docker-compose.dev.yml exec dev npm run seed:run'
 
 ##docker related commands
 alias docker-rm-all-images='docker rmi $(docker images -a -q)'
