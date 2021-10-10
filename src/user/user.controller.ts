@@ -9,8 +9,8 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { UserDto } from 'src/common/dto/user.dto';
-import { RegisterRequestDto } from './dto/register.request.dto';
+import { UserDto } from 'src/user/dto/user.dto';
+import { RegisterUserDto } from './dto/register.user.dto';
 import { UserService } from './user.service';
 
 @Controller('api/user')
@@ -31,16 +31,16 @@ export class UserController {
     return this.userService.getUser(userId);
   }
 
+  @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '회원 가입' })
   @Post()
-  async postUser(@Body() data: RegisterRequestDto) {
-    await this.userService.registerUser(
+  async postUser(@Body() data: RegisterUserDto) {
+    return this.userService.registerUser(
       data.intraUsername,
       data.email,
       data.nickname,
       data.imagePath,
     );
-    return 'ok';
   }
 
   @ApiOperation({ summary: '로그인' })
@@ -55,6 +55,7 @@ export class UserController {
     res.send('ok');
   }
 
+  @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '유저 삭제' })
   @Delete('/:id')
   async deleteUser(@Param('id') userId) {

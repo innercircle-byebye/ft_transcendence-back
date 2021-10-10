@@ -18,6 +18,10 @@ export enum UserStatus {
 
 @Entity('user')
 export class User {
+  @ApiProperty({
+    description: '유저 DB테이블 ID번호',
+    example: 1,
+  })
   @PrimaryGeneratedColumn({ type: 'int', name: 'user_id' })
   userId: number;
 
@@ -32,7 +36,6 @@ export class User {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
   @ApiProperty({
     description: '42 인트라 ID',
     example: 'marvin',
@@ -42,7 +45,6 @@ export class User {
   intraUsername: string;
 
   @IsString()
-  @IsNotEmpty()
   @ApiProperty({
     description: '사용자 닉네임',
     example: '퐁게임너무재미있네',
@@ -52,7 +54,6 @@ export class User {
   nickname: string;
 
   @IsUrl()
-  @IsNotEmpty()
   @ApiProperty({
     description: '프로필 이미지 경로',
     required: true,
@@ -77,6 +78,7 @@ export class User {
   @ApiProperty({
     description: '유저 경험치',
     required: true,
+    default: 42,
     example: 42,
   })
   @Column('integer', { name: 'experience' })
@@ -84,26 +86,60 @@ export class User {
 
   @ApiProperty({
     description: '유저 랭크',
+    default: 1,
     example: 1,
   })
   @Column('integer', { name: 'rank_id', nullable: true })
   rankId: number | null; // 안써도 잘 동작하는데 명시적으로 넣은듯
 
-  @Column({ type: 'timestamptz', name: 'ban_date', nullable: true })
+  @ApiProperty({
+    description: '유저 밴 기한',
+    nullable: true,
+    default: null,
+  })
+  @Column({
+    type: 'timestamptz',
+    name: 'ban_date',
+  })
   banDate: Date | null;
 
+  @ApiProperty({
+    description: '유저 상태 공개 유무',
+    nullable: true,
+    default: true,
+    examples: [true, false],
+  })
   @Column({ name: 'is_status_pubic', type: 'boolean', default: true })
   isStatusPublic: boolean;
 
+  @ApiProperty({
+    description: '유저 게임 기록 공개 유무',
+    nullable: true,
+    default: true,
+    examples: [true, false],
+  })
   @Column({ name: 'is_history_public', type: 'boolean', default: true })
   isHistoryPublic: boolean;
 
+  @ApiProperty({
+    description: '유저 생성 일시',
+    readOnly: true,
+  })
   @CreateDateColumn({ name: 'created_at' })
   readonly createdAt: Date;
 
+  @ApiProperty({
+    description: '유저 정보 수정 일시',
+    readOnly: true,
+  })
   @UpdateDateColumn({ name: 'last_modified_at' })
   readonly lastModifiedAt: Date;
 
+  @ApiProperty({
+    description: '유저 삭제 일시',
+    readOnly: true,
+    default: null,
+  })
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 

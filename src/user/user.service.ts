@@ -53,9 +53,9 @@ export class UserService {
         '이미 존재하는 사용자입니다. (이메일 확인)',
       );
     }
-
+    let createdUser;
     try {
-      await queryRunner.manager.getRepository(User).save({
+      createdUser = await queryRunner.manager.getRepository(User).save({
         intraUsername,
         email,
         nickname,
@@ -73,6 +73,7 @@ export class UserService {
     } finally {
       await queryRunner.release();
     }
+    return createdUser;
   }
 
   async deleteUser(userId: number) {
