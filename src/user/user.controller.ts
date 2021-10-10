@@ -85,13 +85,14 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './files',
+        destination: './profile_image',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
     }),
   )
-  async uploadProfileImage(@UploadedFile() file) {
+  async uploadProfileImage(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
     const response = {
       originalName: file.originalname,
       filename: file.filename,
@@ -101,6 +102,6 @@ export class UserController {
 
   // @Get('/:imgpath')
   // seeUploadedFile(@Param('imgpath') image, @Res() res) {
-  //   return res.sendFile(image, { root: './files' });
+  //   return res.sendFile(image, { root: './profile_image' });
   // }
 }
