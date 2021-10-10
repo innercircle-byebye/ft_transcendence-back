@@ -83,12 +83,13 @@ export class User {
     default: 1,
     example: 1,
   })
-  @Column('integer', { name: 'rank_id', nullable: true })
-  rankId: number | null; // 안써도 잘 동작하는데 명시적으로 넣은듯
+  // nullable 하면 업데이트시 null로 초기화 됨
+  // @Column('integer', { name: 'rank_id', nullable: true })
+  @Column('integer', { name: 'rank_id' })
+  rankId: number; // 안써도 잘 동작하는데 명시적으로 넣은듯
 
   @ApiProperty({
     description: '유저 밴 기한',
-    nullable: true,
     default: null,
   })
   @Column({

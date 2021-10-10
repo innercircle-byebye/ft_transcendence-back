@@ -118,6 +118,7 @@ export class UserService {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
+    targetUser.is_deleted = true;
     return this.userRepository.softRemove(targetUser);
   }
 }

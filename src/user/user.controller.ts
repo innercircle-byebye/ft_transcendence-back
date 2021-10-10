@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,12 +10,13 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserDto } from 'src/user/dto/user.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { UserService } from './user.service';
 
+@ApiTags('User')
 @Controller('api/user')
 export class UserController {
   constructor(private userService: UserService) {}
@@ -45,10 +47,13 @@ export class UserController {
     );
   }
 
-  @ApiOkResponse({ type: UserDto })
+  @ApiOkResponse({ type: UpdateUserDto })
   @ApiOperation({ summary: '유저 정보 업데이트' })
   @Patch('/:id')
   async updateUser(@Param('id') userId, @Body() updateData: UpdateUserDto) {
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException('요청값 비어있음');
+    }
     return this.userService.updateUser(userId, updateData);
   }
 
