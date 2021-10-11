@@ -22,7 +22,10 @@ import { UserModule } from './user/user.module';
     UserModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () =>
-        Object.assign(await ormconfig, { autoLoadEntities: true }),
+        Object.assign(await ormconfig, {
+          autoLoadEntities: true,
+          keepConnectionAlive: true,
+        }),
     }),
     MulterModule.register({
       dest: './profile_image',
