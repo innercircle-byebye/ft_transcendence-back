@@ -12,7 +12,6 @@ declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-
   app.useGlobalPipes(
     new ValidationPipe({
       // ref: https://darrengwon.tistory.com/848
@@ -24,7 +23,6 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.useStaticAssets(join(__dirname, '..', 'profile_image'));
-
 
   const config = new DocumentBuilder()
     .setTitle('Pong Game API')
