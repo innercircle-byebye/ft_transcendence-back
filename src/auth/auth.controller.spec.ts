@@ -2,7 +2,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { UserEntity } from 'src/entities/Users';
+import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
 import { Connection } from 'typeorm';
 import { AuthController } from './auth.controller';
@@ -39,7 +39,7 @@ describe('AuthController', () => {
         AuthService,
         UserService,
         {
-          provide: getRepositoryToken(UserEntity),
+          provide: getRepositoryToken(User),
           useValue: mockUserRepository(),
         },
         {
