@@ -1,7 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
+
 import { join } from 'path';
+
 import { AppModule } from './app.module';
 
 declare const module: any;
@@ -30,6 +33,8 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  app.use(cookieParser());
 
   await app.listen(process.env.PORT);
 

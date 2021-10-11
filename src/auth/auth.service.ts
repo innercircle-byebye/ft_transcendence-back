@@ -5,11 +5,52 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  generateAccessToken(user: any) {
-    // user는 OAuth를 생성된 값이다.
-    // user정보에 해당하는 User가 DB에 저장되어있으면 그 값을 가져오고,
-    // 유저상태가 not_register로 바로 생성하고 값을 가져온다.
-    const payload = { intraId: user.intraId };
-    return this.jwtService.sign(payload);
+  getCookieWithJwtAccessToken(userId: number) {
+    const payload = { userId };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME}s`,
+    });
+
+    return {
+      accessToken: token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      maxAge: Number(process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME) * 1000,
+    };
+  }
+
+  getCookieWithJwtRefreshToken(userId: number) {
+    const payload = { userId };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}s`,
+    });
+
+    return {
+      refreshToken: token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      maxAge: Number(process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME) * 1000,
+    };
+  }
+
+  getCookiesForLogOut() {
+    return {
+      accessOption: {
+        domain: 'localhost',
+        path: '/',
+        httpOnly: true,
+        maxAge: 0,
+      },
+      refreshOption: {
+        domain: 'localhost',
+        path: '/',
+        httpOnly: true,
+        maxAge: 0,
+      },
+    };
   }
 }
