@@ -1,11 +1,11 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
-
 import { join } from 'path';
-
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './http-exception.filter';
 
 declare const module: any;
 
