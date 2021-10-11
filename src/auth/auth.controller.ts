@@ -101,7 +101,7 @@ export class AuthController {
     const { accessOption, refreshOption } =
       this.authService.getCookiesForLogOut();
 
-    await this.userService.removeRefreshToken(req.user.id);
+    await this.userService.removeRefreshToken(req.user.userId);
 
     res.cookie('Authentication', '', accessOption);
     res.cookie('Refresh', '', refreshOption);
