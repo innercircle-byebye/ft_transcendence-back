@@ -79,7 +79,7 @@ export class AuthController {
   refresh(@Req() req, @Res({ passthrough: true }) res) {
     const { user } = req;
     const { accessToken, ...accessOption } =
-      this.authService.getCookieWithJwtAccessToken(user.id);
+      this.authService.getCookieWithJwtAccessToken(user.userId);
     res.cookie('Authentication', accessToken, accessOption);
   }
 

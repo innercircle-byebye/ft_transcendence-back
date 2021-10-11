@@ -77,8 +77,8 @@ export class UserController {
     // TODO: form-data DTO도 생성할 수 있는지 확인하기
     @Body() data,
   ) {
-    console.log(data);
-    console.log(req);
+    // console.log(data);
+    console.log(req.user);
     // const response = {
     //   originalName: file.originalname,
     //   filename: file.filename,
