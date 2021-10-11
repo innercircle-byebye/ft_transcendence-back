@@ -1,15 +1,14 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './http-exception.filter';
 
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,6 +21,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.useStaticAssets(join(__dirname, '..', 'profile_image'));
+
 
   const config = new DocumentBuilder()
     .setTitle('Pong Game API')
