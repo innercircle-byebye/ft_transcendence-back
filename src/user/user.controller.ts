@@ -81,6 +81,7 @@ export class UserController {
     return this.userService.deleteUser(userId);
   }
 
+  @ApiOperation({ summary: '프로필 사진 업로드 ' })
   @Post('/upload_profile')
   @UseInterceptors(
     FileInterceptor('image', {
