@@ -28,6 +28,7 @@
     "@typescript-eslint/no-explicit-any": "off",
     "import/prefer-default-export": "off",
     // for nestjs syntax
+    "@typescript-eslint/indent": "off",
     "class-methods-use-this": "off",
     // for nestjs syntax
     "prettier/prettier": [

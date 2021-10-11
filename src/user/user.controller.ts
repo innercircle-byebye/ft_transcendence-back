@@ -8,17 +8,17 @@ import {
   Patch,
   Post,
   Req,
-  Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserDto } from 'src/user/dto/user.dto';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
-import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
+import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('User')
@@ -40,18 +40,6 @@ export class UserController {
     return this.userService.getUser(userId);
   }
 
-  @ApiOkResponse({ type: UserDto })
-  @ApiOperation({ summary: '유저 회원 가입' })
-  @Post()
-  async postUser(@Body() data: RegisterUserDto) {
-    return this.userService.registerUser(
-      data.intraUsername,
-      data.email,
-      data.nickname,
-      data.imagePath,
-    );
-  }
-
   @ApiOkResponse({ type: UpdateUserDto })
   @ApiOperation({ summary: '유저 정보 업데이트' })
   @Patch('/:id')
@@ -62,18 +50,6 @@ export class UserController {
     return this.userService.updateUser(userId, updateData);
   }
 
-  @ApiOperation({ summary: '로그인' })
-  @Post('login')
-  login() {}
-
-  @ApiOperation({ summary: '로그아웃' })
-  @Post('logout')
-  logout(@Req() req, @Res() res) {
-    req.logout();
-    res.clearCooke('connect.sid', { httpOnly: true });
-    res.send('ok');
-  }
-
   @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '유저 삭제' })
   @Delete('/:id')
@@ -81,8 +57,8 @@ export class UserController {
     return this.userService.deleteUser(userId);
   }
 
-  @ApiOperation({ summary: '프로필 사진 업로드 ' })
-  @Post('/upload_profile')
+  @ApiOperation({ summary: '회원 가입' })
+  @Post('/register')
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -94,16 +70,27 @@ export class UserController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
-  async uploadProfileImage(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    const response = {
-      originalName: file.originalname,
-      filename: file.filename,
-    };
-    return response;
+  @UseGuards(AuthGuard('jwt'))
+  async registerUserWithUploadProfileImage(
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+    // TODO: form-data DTO도 생성할 수 있는지 확인하기
+    @Body() data,
+  ) {
+    // const response = {
+    //   originalName: file.originalname,
+    //   filename: file.filename,
+    // };
+    return this.userService.registerUser(
+      data.userId,
+      data.nickname,
+      data.imagePath,
+    );
   }
 
-  // @Get('/:imgpath')
+  // TODO: user 프로파일 이미지
+  // auth guard image
+  // @Get('/profile_image')
   // seeUploadedFile(@Param('imgpath') image, @Res() res) {
   //   return res.sendFile(image, { root: './profile_image' });
   // }

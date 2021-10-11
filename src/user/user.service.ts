@@ -3,7 +3,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -66,43 +65,36 @@ export class UserService {
     return targetUser;
   }
 
-  async registerUser(
-    intraUsername: string,
-    email: string,
-    nickname: string,
-    imagePath: string,
-  ) {
+  async registerUser(userId: number, nickname: string, imagePath: string) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const duplicateIntra = await queryRunner.manager
-      .getRepository(User)
-      .findOne({ where: [{ intraUsername }] });
-    if (duplicateIntra) {
-      throw new UnauthorizedException(
-        '이미 존재하는 사용자입니다. (인트라 ID 확인)',
-      );
-    }
-    const duplicateEmail = await queryRunner.manager
-      .getRepository(User)
-      .findOne({ where: [{ email }] });
-    if (duplicateEmail) {
-      throw new UnauthorizedException(
-        '이미 존재하는 사용자입니다. (이메일 확인)',
-      );
-    }
+    // const duplicateIntra = await queryRunner.manager
+    //   .getRepository(User)
+    //   .findOne({ where: [{ userId }] });
+    // if (duplicateIntra) {
+    //   throw new UnauthorizedException(
+    //     '이미 존재하는 사용자입니다. (인트라 ID 확인)',
+    //   );
+    // }
+    // const duplicateEmail = await queryRunner.manager
+    //   .getRepository(User)
+    //   .findOne({ where: [{ email }] });
+    // if (duplicateEmail) {
+    //   throw new UnauthorizedException(
+    //     '이미 존재하는 사용자입니다. (이메일 확인)',
+    //   );
+    // }
     let createdUser;
     try {
-      createdUser = await queryRunner.manager.getRepository(User).save({
-        intraUsername,
-        email,
-        nickname,
-        imagePath,
-        // 기본값 (추후 수정필요)
-        experience: 42,
-        rankId: 1,
-        // 기본값 (추후 수정필요)
-      });
+      const foundUser = await queryRunner.manager
+        .getRepository(User)
+        .findOne({ where: [{ userId }] });
+      foundUser.imagePath = imagePath;
+      if (foundUser.nickname !== nickname) foundUser.nickname = nickname;
+      createdUser = await queryRunner.manager
+        .getRepository(User)
+        .save(foundUser);
       await queryRunner.commitTransaction();
     } catch (error) {
       console.error(error);
@@ -141,6 +133,7 @@ export class UserService {
   }
 
   async createNewUserByIntraInfo(intraInfo: any): Promise<User> {
+    console.log(intraInfo);
     const { intraId, email, imageUrl } = intraInfo;
 
     const queryRunner = this.connection.createQueryRunner();
@@ -153,7 +146,9 @@ export class UserService {
         intraUsername: intraId,
         nickname: intraId,
         email,
-        profileImage: imageUrl,
+        imagePath: imageUrl,
+        experience: 42,
+        rankId: 1,
       });
       await queryRunner.commitTransaction();
     } catch (error) {
