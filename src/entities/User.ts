@@ -95,6 +95,7 @@ export class User {
   @Column({
     type: 'timestamptz',
     name: 'ban_date',
+    nullable: true,
   })
   banDate: Date | null;
 
