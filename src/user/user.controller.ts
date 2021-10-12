@@ -17,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
+import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
@@ -75,25 +76,21 @@ export class UserController {
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
     // TODO: form-data DTO도 생성할 수 있는지 확인하기
-    @Body() data,
+    @Body() formData: RegisterUserDto,
   ) {
-    // console.log(data);
-    console.log(req.user);
-    // const response = {
-    //   originalName: file.originalname,
-    //   filename: file.filename,
-    // };
+    if (file === undefined) {
+      return this.userService.registerUser(
+        req.user.userId,
+        formData.nickname,
+        formData.email,
+        req.user.imagePath,
+      );
+    }
     return this.userService.registerUser(
-      data.userId,
-      data.nickname,
-      data.imagePath,
+      req.user.userId,
+      formData.nickname,
+      formData.email,
+      `http://localhost:3005/profile_image/${file.filename}`,
     );
   }
-
-  // TODO: user 프로파일 이미지
-  // auth guard image
-  // @Get('/profile_image')
-  // seeUploadedFile(@Param('imgpath') image, @Res() res) {
-  //   return res.sendFile(image, { root: './profile_image' });
-  // }
 }

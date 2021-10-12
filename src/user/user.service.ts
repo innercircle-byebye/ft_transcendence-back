@@ -65,7 +65,12 @@ export class UserService {
     return targetUser;
   }
 
-  async registerUser(userId: number, nickname: string, imagePath: string) {
+  async registerUser(
+    userId: number,
+    email: string,
+    nickname: string,
+    imagePath: string,
+  ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -90,8 +95,9 @@ export class UserService {
       const foundUser = await queryRunner.manager
         .getRepository(User)
         .findOne({ where: [{ userId }] });
-      foundUser.imagePath = imagePath;
+      if (foundUser.imagePath !== imagePath) foundUser.imagePath = imagePath;
       if (foundUser.nickname !== nickname) foundUser.nickname = nickname;
+      if (foundUser.email !== email) foundUser.email = email;
       createdUser = await queryRunner.manager
         .getRepository(User)
         .save(foundUser);
@@ -133,7 +139,7 @@ export class UserService {
   }
 
   async createNewUserByIntraInfo(intraInfo: any): Promise<User> {
-    console.log(intraInfo);
+    // console.log(intraInfo);
     const { intraId, email, imageUrl } = intraInfo;
 
     const queryRunner = this.connection.createQueryRunner();

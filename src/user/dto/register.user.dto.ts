@@ -1,4 +1,4 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { User } from 'src/entities/User';
 
@@ -11,14 +11,6 @@ export class RegisterUserDto extends PickType(User, [
   'email',
   'imagePath',
 ] as const) {
-  @ApiProperty({
-    description: '유저 DB테이블 ID번호',
-    example: 1,
-  })
-  @IsString()
-  @IsNotEmpty()
-  intraUsername: string;
-
   @IsString()
   @IsNotEmpty()
   nickname: string;
@@ -27,8 +19,5 @@ export class RegisterUserDto extends PickType(User, [
   @IsNotEmpty()
   email: string;
 
-  // TODO: isUrl class validation으로 수정
-  @IsNotEmpty()
-  @IsString()
   imagePath: string;
 }
