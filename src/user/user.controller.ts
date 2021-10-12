@@ -58,6 +58,7 @@ export class UserController {
     return this.userService.deleteUser(userId);
   }
 
+  @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '회원 가입' })
   @Post('/register')
   @UseInterceptors(
