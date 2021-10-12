@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
@@ -14,7 +15,6 @@ export enum UserStatus {
   IN_GAME = 'in_game',
   NOT_REGISTERED = 'not_registered',
 }
-
 @Entity('user')
 export class User {
   @ApiProperty({
@@ -142,6 +142,11 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_deleted: boolean;
 
+  @Exclude()
   @Column({ nullable: true })
   currentHashedRefreshToken: string;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 }

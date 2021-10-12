@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -22,6 +23,7 @@ import { UpdateUserDto } from './dto/update.user.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('User')
 @Controller('api/user')
 export class UserController {
