@@ -86,6 +86,7 @@ export class UserController {
         req.user.imagePath,
       );
     }
+    // TODO: production 환경 일 경우
     return this.userService.registerUser(
       req.user.userId,
       formData.nickname,
