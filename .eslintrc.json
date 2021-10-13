@@ -14,7 +14,7 @@
     "airbnb-typescript/base"
   ],
   "parserOptions": {
-    "project": "./back/tsconfig.json",
+    "project": "./tsconfig.json",
     "ecmaFeatures": {
       "jsx": true
     },
