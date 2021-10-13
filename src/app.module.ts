@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserModule } from './user/user.module';
       rootPath: join(__dirname, '..', 'profile_image'),
       serveRoot: '/profile_image',
     }),
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
