@@ -1,4 +1,4 @@
-import { PickType } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { User } from 'src/entities/User';
 
@@ -6,7 +6,6 @@ import { User } from 'src/entities/User';
 // ref: https://docs.nestjs.com/graphql/mapped-types#mapped-types
 
 export class RegisterUserDto extends PickType(User, [
-  'intraUsername',
   'nickname',
   'email',
   'imagePath',
@@ -19,5 +18,6 @@ export class RegisterUserDto extends PickType(User, [
   @IsNotEmpty()
   email: string;
 
+  @ApiProperty({ type: 'file', description: '업로드 된 이미지 파일의 경로' })
   imagePath: string;
 }

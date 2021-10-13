@@ -15,7 +15,12 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
@@ -69,6 +74,7 @@ export class UserController {
     return this.userService.deleteUser(userId);
   }
 
+  @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '회원 가입' })
   @Post('/register')

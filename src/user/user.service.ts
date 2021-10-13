@@ -124,6 +124,17 @@ export class UserService {
     return this.userRepository.softRemove(targetUser);
   }
 
+  async restoreDeletedUser(userId: number) {
+    console.log(`user id:${userId}`);
+    const targetUser = await this.userRepository.findOne({ where: { userId } });
+    if (!targetUser) {
+      // 이미 삭제 처리가 되어 있는 경우
+      throw new ForbiddenException('존재하지 않는 사용자입니다');
+    }
+    targetUser.isDeleted = false;
+    return this.userRepository.restore(targetUser);
+  }
+
   async getById(id: number) {
     const user = await this.userRepository.findOne({ userId: id });
     if (user) {
