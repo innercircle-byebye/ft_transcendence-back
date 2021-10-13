@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
-import { User } from 'src/entities/User';
+import { User, UserStatus } from 'src/entities/User';
 import { UpdateUserDto } from './dto/update.user.dto';
 
 @Injectable()
@@ -98,6 +98,7 @@ export class UserService {
       if (foundUser.imagePath !== imagePath) foundUser.imagePath = imagePath;
       if (foundUser.nickname !== nickname) foundUser.nickname = nickname;
       if (foundUser.email !== email) foundUser.email = email;
+      foundUser.status = UserStatus.ONLINE;
       createdUser = await queryRunner.manager
         .getRepository(User)
         .save(foundUser);
@@ -119,7 +120,7 @@ export class UserService {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
-    targetUser.is_deleted = true;
+    targetUser.isDeleted = true;
     return this.userRepository.softRemove(targetUser);
   }
 
@@ -152,6 +153,7 @@ export class UserService {
         intraUsername: intraId,
         nickname: intraId,
         email,
+        status: UserStatus.NOT_REGISTERED,
         imagePath: imageUrl,
         experience: 42,
         rankId: 1,
@@ -186,8 +188,10 @@ export class UserService {
     return null;
   }
 
-  async removeRefreshToken(id: number) {
+  async removeRefreshToken(id: number, status: UserStatus) {
     return this.userRepository.update(id, {
+      status:
+        status !== UserStatus.NOT_REGISTERED ? UserStatus.OFFLINE : status,
       currentHashedRefreshToken: null,
     });
   }
