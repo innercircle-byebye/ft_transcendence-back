@@ -102,16 +102,16 @@ export class UserController {
     if (file === undefined) {
       return this.userService.registerUser(
         req.user.userId,
-        formData.nickname,
         formData.email,
+        formData.nickname,
         req.user.imagePath,
       );
     }
     // TODO: production 환경 일 경우
     return this.userService.registerUser(
       req.user.userId,
-      formData.nickname,
       formData.email,
+      formData.nickname,
       `http://localhost:3005/profile_image/${file.filename}`,
     );
   }
