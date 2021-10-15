@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IChannelChat } from './interfaces/IChannelChat';
+import { IUser } from './interfaces/IUser';
 
 export enum UserStatus {
   ONLINE = 'online',
@@ -16,7 +19,7 @@ export enum UserStatus {
   NOT_REGISTERED = 'not_registered',
 }
 @Entity('user')
-export class User {
+export class User implements IUser {
   @ApiProperty({
     description: '유저 DB테이블 ID번호',
     example: 1,
@@ -145,6 +148,9 @@ export class User {
   @Exclude()
   @Column({ nullable: true })
   currentHashedRefreshToken: string;
+
+  @OneToMany('ChannelChat', 'user')
+  channelChats: IChannelChat[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);
