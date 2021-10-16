@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Channel } from './Channel';
+import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
 import { IUser } from './interfaces/IUser';
 
@@ -19,8 +19,8 @@ export class ChannelChat implements IChannelChat {
     description: '채널 내 채팅 id 번호 (사용자 메세지)',
     example: 1,
   })
-  @PrimaryGeneratedColumn({ type: 'int', name: 'channel_id' })
-  channelId: number;
+  @PrimaryGeneratedColumn({ type: 'int', name: 'channel_chat_id' })
+  channelChatId: number;
 
   @ApiProperty({
     description: '채팅 내용',
@@ -60,5 +60,5 @@ export class ChannelChat implements IChannelChat {
 
   @ManyToOne('Channel', 'channelChats')
   @JoinColumn({ name: 'channel_id' })
-  channel: Channel;
+  channel: IChannel;
 }

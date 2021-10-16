@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
 import { IUser } from './interfaces/IUser';
 
@@ -151,6 +152,9 @@ export class User implements IUser {
 
   @OneToMany('ChannelChat', 'user')
   channelChats: IChannelChat[];
+
+  @OneToMany('Channel', 'user')
+  channelOwner: IChannel[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

@@ -1,5 +1,5 @@
 export interface IChannelChat {
-  channelId: number;
+  channelChatId: number;
 
   content: string;
 

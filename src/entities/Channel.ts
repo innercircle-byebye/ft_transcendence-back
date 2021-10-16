@@ -4,14 +4,18 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
+import { IUser } from './interfaces/IUser';
 
 @Entity('channel')
-export class Channel {
+export class Channel implements IChannel {
   @ApiProperty({
     description: '채널 DB테이블 ID 번호',
     example: 1,
@@ -67,4 +71,8 @@ export class Channel {
 
   @OneToMany('ChannelChat', 'channel')
   channelChats: IChannelChat[];
+
+  @ManyToOne('User', 'channelOwner')
+  @JoinColumn({ name: 'owner_id' })
+  ownerId: IUser;
 }
