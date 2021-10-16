@@ -34,7 +34,7 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  await app.listen(process.env.PORT);
+  await app.listen(process.env.BACK_PORT);
 
   if (module.hot) {
     module.hot.accept();
