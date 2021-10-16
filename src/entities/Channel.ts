@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
+import { IChannelMember } from './interfaces/IChannelMember';
 import { IUser } from './interfaces/IUser';
 
 @Entity('channel')
@@ -75,4 +76,7 @@ export class Channel implements IChannel {
   @ManyToOne('User', 'channelOwner')
   @JoinColumn({ name: 'owner_id' })
   ownerId: IUser;
+
+  @OneToMany('ChannelMember', 'channel')
+  channelMember: IChannelMember[];
 }

@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
+import { IChannelMember } from './interfaces/IChannelMember';
 import { IUser } from './interfaces/IUser';
 
 export enum UserStatus {
@@ -155,6 +156,9 @@ export class User implements IUser {
 
   @OneToMany('Channel', 'user')
   channelOwner: IChannel[];
+
+  @OneToMany('ChannelMember', 'user')
+  channelMember: IChannelMember[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);
