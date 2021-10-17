@@ -11,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
+import { RelationModule } from './relation/relation.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AdminModule } from './admin/admin.module';
       serveRoot: '/profile_image',
     }),
     AdminModule,
+    RelationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
