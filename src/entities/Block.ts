@@ -31,10 +31,10 @@ export class Block {
 
   // TODO: User와 관계 형성해야함
   @ManyToOne(() => User)
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
+  @JoinColumn([{ name: 'user_id', referencedColumnName: 'userId' }])
   user: User;
 
   @ManyToOne(() => User)
-  @JoinColumn([{ name: 'blockedUserId', referencedColumnName: 'userId' }])
+  @JoinColumn([{ name: 'blocked_user_id', referencedColumnName: 'userId' }])
   blockedUser: User;
 }
