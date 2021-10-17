@@ -180,9 +180,13 @@ export class UserService {
     return createdUser;
   }
 
-  async setCurrentRefreshToken(refreshToken: string, id: number) {
+  async setCurrentRefreshToken(refreshToken: string, user: User) {
     const currentHashedRefreshToken = await hash(refreshToken, 10);
-    await this.userRepository.update(id, { currentHashedRefreshToken });
+    const { userId, status } = user;
+    await this.userRepository.update(userId, {
+      status: status !== UserStatus.NOT_REGISTERED ? UserStatus.ONLINE : status,
+      currentHashedRefreshToken,
+    });
   }
 
   async getUserIfRefreshTokenMatches(refreshToken: string, id: number) {
