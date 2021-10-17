@@ -1,4 +1,11 @@
-import { Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RelationService } from './relation.service';
 
@@ -21,6 +28,27 @@ export class RelationController {
       code: 201,
       data: {
         blockedUser,
+      },
+    };
+  }
+
+  @Delete('block/:unblock_user_id')
+  async unblockUser(
+    @Req() req,
+    @Param('unblock_user_id') unblockUserId: number,
+  ) {
+    const { user } = req;
+
+    const unblockedUser = await this.relationService.unblockUser(
+      user.userId,
+      unblockUserId,
+    );
+
+    return {
+      success: true,
+      code: 200,
+      data: {
+        unblockedUser,
       },
     };
   }
