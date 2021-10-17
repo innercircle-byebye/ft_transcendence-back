@@ -91,11 +91,20 @@ export class ChannelService {
     return this.channelMemberRepository.save(channelMember);
   }
 
+  // TODO: 예외처리
   async createChannelChat(name: string, content: string, userId: number) {
     const targetChannel = await this.channelRepository.findOne({
       where: { name },
     });
     const chats = new ChannelChat();
     chats.content = content;
+    chats.userId = userId;
+    chats.channelId = targetChannel.channelId;
+    const savedChat = await this.channelChatRepository.save(chats);
+    const chatWithUser = await this.channelChatRepository.findOne({
+      where: { channelChatId: savedChat.channelChatId },
+      // relations: ['user', 'channel'],
+    });
+    console.log(chatWithUser);
   }
 }

@@ -22,6 +22,20 @@ export class ChannelChat implements IChannelChat {
   @PrimaryGeneratedColumn({ type: 'int', name: 'channel_chat_id' })
   channelChatId: number;
 
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @ManyToOne('User', 'channelChats')
+  @JoinColumn({ name: 'user_id' })
+  user: IUser;
+
+  @Column({ name: 'channel_id' })
+  channelId: number;
+
+  @ManyToOne('Channel', 'channelChats')
+  @JoinColumn({ name: 'channel_id' })
+  channel: IChannel;
+
   @ApiProperty({
     description: '채팅 내용',
     required: true,
@@ -53,15 +67,4 @@ export class ChannelChat implements IChannelChat {
 
   @Column({ name: 'is_deleted', type: 'boolean', default: false })
   isDeleted: boolean;
-
-  @Column({ name: 'user_id' })
-  userId: number;
-
-  @ManyToOne('User', 'channelChats')
-  @JoinColumn({ name: 'user_id' })
-  user: IUser;
-
-  @ManyToOne('Channel', 'channelChats')
-  @JoinColumn({ name: 'channel_id' })
-  channel: IChannel;
 }

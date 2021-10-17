@@ -30,4 +30,13 @@ export class ChannelController {
       body.password,
     );
   }
+
+  @Post('/:name/chat')
+  createChannelChat(@Param('name') channelName, @Body() body) {
+    return this.channelService.createChannelChat(
+      channelName,
+      body.content,
+      body.userId,
+    );
+  }
 }
