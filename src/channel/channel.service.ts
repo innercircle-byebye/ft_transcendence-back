@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
@@ -26,15 +26,25 @@ export class ChannelService {
     password: string,
     maxParticipantNum: number,
   ) {
-    console.log(ownerId);
+    if (maxParticipantNum < 3 || maxParticipantNum > 100)
+      throw new UnauthorizedException(
+        '채팅방 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
+      );
+    const existChatroom = await this.channelRepository.findOne({
+      where: [{ name }],
+    });
+    if (existChatroom)
+      throw new UnauthorizedException('이미 존재하는 채팅방 이름입니다.');
+
     const channel = new Channel();
     channel.name = name;
-    channel.password = password;
+    if (password !== undefined) channel.password = password;
     channel.maxParticipantNum = maxParticipantNum;
     const channelReturned = await this.channelRepository.save(channel);
     const channelMember = new ChannelMember();
     channelMember.userId = ownerId;
     channelMember.channelId = channelReturned.channelId;
     await this.channelMemberRepository.save(channelMember);
+    return channel;
   }
 }

@@ -29,13 +29,18 @@ export class Channel implements IChannel {
     example: '게임하다가 심심한데 대화 히실분 구함',
     required: true,
   })
-  @Column('varchar', { name: 'name', length: 100 })
+  @Column('varchar', { name: 'name', length: 100, unique: true })
   name: string;
 
   @ApiProperty({
     description: '채널 입장 비밀번호',
   })
-  @Column('varchar', { name: 'password', length: 100, select: false })
+  @Column('varchar', {
+    name: 'password',
+    length: 100,
+    select: false,
+    nullable: true,
+  })
   password: string;
 
   @ApiProperty({

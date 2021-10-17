@@ -15,6 +15,20 @@ import { IUser } from './interfaces/IUser';
 
 @Entity('channel_member')
 export class ChannelMember implements IChannelMember {
+  @PrimaryColumn({ name: 'user_id' })
+  userId: number;
+
+  @ManyToOne('User', 'channelMember', { primary: true })
+  @JoinColumn({ name: 'user_id' })
+  user: IUser;
+
+  @PrimaryColumn({ name: 'channel_id' })
+  channelId: number;
+
+  @ManyToOne('Channel', 'channelMember', { primary: true })
+  @JoinColumn({ name: 'channel_id' })
+  channel: IChannel;
+
   @ApiProperty({
     description: '채널 내 유저 음소거 기한',
     default: null,
@@ -70,18 +84,4 @@ export class ChannelMember implements IChannelMember {
 
   @Column({ name: 'is_deleted', type: 'boolean', default: false })
   isDeleted: boolean;
-
-  @PrimaryColumn({ name: 'user_id' })
-  userId: number;
-
-  @ManyToOne('User', 'channelMember', { primary: true })
-  @JoinColumn({ name: 'user_id' })
-  user: IUser;
-
-  @PrimaryColumn({ name: 'channel_id' })
-  channelId: number;
-
-  @ManyToOne('Channel', 'channelMember', { primary: true })
-  @JoinColumn({ name: 'channel_id' })
-  channel: IChannel;
 }
