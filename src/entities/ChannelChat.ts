@@ -54,6 +54,9 @@ export class ChannelChat implements IChannelChat {
   @Column({ name: 'is_deleted', type: 'boolean', default: false })
   isDeleted: boolean;
 
+  @Column({ name: 'user_id' })
+  userId: number;
+
   @ManyToOne('User', 'channelChats')
   @JoinColumn({ name: 'user_id' })
   user: IUser;

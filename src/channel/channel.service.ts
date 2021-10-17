@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
@@ -46,5 +50,52 @@ export class ChannelService {
     channelMember.channelId = channelReturned.channelId;
     await this.channelMemberRepository.save(channelMember);
     return channel;
+  }
+
+  async getChannelMembers(name: string) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName)
+      throw new BadRequestException('존재하지 않는 채널입니다.');
+    return this.channelMemberRepository
+      .createQueryBuilder('channelmembers')
+      .innerJoin(
+        'channelmembers.channel',
+        'members',
+        'members.channelId= :name',
+        {
+          name: channelIdByName.channelId,
+        },
+      )
+      .getMany();
+  }
+
+  async createChannelMember(name: string, userId: number, password: string) {
+    const channel = await this.channelRepository.findOne({ where: { name } });
+    if (!channel) {
+      throw new BadRequestException('채널이 존재하지 않습니다.');
+    }
+    if (channel.password !== password)
+      throw new BadRequestException('잘못된 비밀번호입니다');
+    const user = await this.userRepository.findOne({ where: { userId } });
+    if (!user) {
+      throw new BadRequestException('존재하지 않는 사용자입니다');
+    }
+    // TOOD: 이미 참여중인 방입니다, 채널 정원 초과입니다.
+    const currentChatMemberCount = await this.getChannelMembers(name);
+    console.log(Object.keys(currentChatMemberCount).length);
+    const channelMember = new ChannelMember();
+    channelMember.channelId = channel.channelId;
+    channelMember.userId = user.userId;
+    return this.channelMemberRepository.save(channelMember);
+  }
+
+  async createChannelChat(name: string, content: string, userId: number) {
+    const targetChannel = await this.channelRepository.findOne({
+      where: { name },
+    });
+    const chats = new ChannelChat();
+    chats.content = content;
   }
 }

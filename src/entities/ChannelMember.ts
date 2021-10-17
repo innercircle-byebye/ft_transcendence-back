@@ -18,7 +18,7 @@ export class ChannelMember implements IChannelMember {
   @PrimaryColumn({ name: 'user_id' })
   userId: number;
 
-  @ManyToOne('User', 'channelMember', { primary: true })
+  @ManyToOne('User', 'ChannelMembers', { primary: true })
   @JoinColumn({ name: 'user_id' })
   user: IUser;
 

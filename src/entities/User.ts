@@ -158,7 +158,7 @@ export class User implements IUser {
   channelOwner: IChannel[];
 
   @OneToMany('ChannelMember', 'user')
-  channelMember: IChannelMember[];
+  ChannelMembers: IChannelMember[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);
