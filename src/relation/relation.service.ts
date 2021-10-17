@@ -11,6 +11,20 @@ export class RelationService {
     @InjectRepository(Block) private blockRepository: Repository<Block>,
   ) {}
 
+  async getBlockedUserList(userId: number) {
+    const result = await this.blockRepository
+      .createQueryBuilder('block')
+      .where('block.userId = :userId', { userId })
+      .innerJoinAndSelect('block.blockedUser', 'blockedUser')
+      .getMany();
+
+    const blockedUserList = result.map((block) => {
+      const { currentHashedRefreshToken, ...blockedUser } = block.blockedUser;
+      return blockedUser;
+    });
+    return blockedUserList;
+  }
+
   async blockUser(userId: number, blockUserId: number) {
     if (userId === blockUserId) {
       throw new BadRequestException('본인을 차단할 수 없습니다.');

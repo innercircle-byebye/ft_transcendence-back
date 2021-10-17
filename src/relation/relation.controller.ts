@@ -1,6 +1,7 @@
 import {
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   Req,
@@ -13,6 +14,23 @@ import { RelationService } from './relation.service';
 @Controller('api')
 export class RelationController {
   constructor(private relationService: RelationService) {}
+
+  @Get('/block/list')
+  async getBlockedUserList(@Req() req) {
+    const { user } = req;
+
+    const blockedUserList = await this.relationService.getBlockedUserList(
+      user.userId,
+    );
+
+    return {
+      success: true,
+      code: 200,
+      data: {
+        blockedUserList,
+      },
+    };
+  }
 
   @Post('block/:block_user_id')
   async blockUser(@Req() req, @Param('block_user_id') blockUserId: number) {
