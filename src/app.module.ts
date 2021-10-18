@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
+import { RelationModule } from './relation/relation.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ChannelModule } from './channel/channel.module';
     }),
     AdminModule,
     ChannelModule,
+    RelationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
