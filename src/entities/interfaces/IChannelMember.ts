@@ -10,6 +10,4 @@ export interface IChannelMember {
   readonly lastModifiedAt: Date;
 
   deletedAt: Date;
-
-  isDeleted: boolean;
 }

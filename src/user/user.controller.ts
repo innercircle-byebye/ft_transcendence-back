@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -22,8 +21,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
+import { User } from '../entities/User';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { UserDto } from './dto/user.dto';
@@ -46,8 +47,8 @@ export class UserController {
   @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '유저 확인' })
   @Get('/me')
-  async getUser(@Req() req) {
-    return this.userService.getUser(req.user.userId);
+  async getUser(@AuthUser() user: User) {
+    return this.userService.getUser(user.userId);
   }
 
   @ApiOkResponse({ type: UserDto })
@@ -90,26 +91,26 @@ export class UserController {
     }),
   )
   async registerUserWithUploadProfileImage(
-    @Req() req,
+    @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
     // TODO: form-data DTO도 생성할 수 있는지 확인하기
     @Body() formData: RegisterUserDto,
   ) {
-    if (req.user.status !== UserStatus.NOT_REGISTERED)
+    if (user.status !== UserStatus.NOT_REGISTERED)
       throw new BadRequestException(
         '잘못된 요청입니다 (회원가입 이미 되어 있음)',
       );
     if (file === undefined) {
       return this.userService.registerUser(
-        req.user.userId,
+        user.userId,
         formData.email,
         formData.nickname,
-        req.user.imagePath,
+        user.imagePath,
       );
     }
     // TODO: production 환경 일 경우
     return this.userService.registerUser(
-      req.user.userId,
+      user.userId,
       formData.email,
       formData.nickname,
       `http://localhost:3005/profile_image/${file.filename}`,

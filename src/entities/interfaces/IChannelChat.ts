@@ -8,6 +8,4 @@ export interface IChannelChat {
   readonly lastModifiedAt: Date;
 
   deletedAt: Date;
-
-  isDeleted: boolean;
 }

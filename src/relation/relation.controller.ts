@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,6 +13,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AuthUser } from 'src/decorators/auth-user.decorator';
+import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
 import { RelationService } from './relation.service';
 
@@ -33,9 +34,7 @@ export class RelationController {
     description: '내가 차단한 사용자들의 목록',
   })
   @Get('/block/list')
-  async getBlockedUserList(@Req() req) {
-    const { user } = req;
-
+  async getBlockedUserList(@AuthUser() user: User) {
     const blockedUserList = await this.relationService.getBlockedUserList(
       user.userId,
     );
@@ -53,9 +52,10 @@ export class RelationController {
     description: '차단된 사용자 정보',
   })
   @Post('block/:block_user_id')
-  async blockUser(@Req() req, @Param('block_user_id') blockUserId: number) {
-    const { user } = req;
-
+  async blockUser(
+    @AuthUser() user: User,
+    @Param('block_user_id') blockUserId: number,
+  ) {
     const blockedUser = await this.relationService.blockUser(
       user.userId,
       blockUserId,
@@ -71,11 +71,9 @@ export class RelationController {
   @ApiOkResponse({ type: UserDto, description: '차단 해제된 사용자 정보' })
   @Delete('block/:unblock_user_id')
   async unblockUser(
-    @Req() req,
+    @AuthUser() user: User,
     @Param('unblock_user_id') unblockUserId: number,
   ) {
-    const { user } = req;
-
     const unblockedUser = await this.relationService.unblockUser(
       user.userId,
       unblockUserId,

@@ -81,7 +81,4 @@ export class ChannelMember implements IChannelMember {
   })
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted: boolean;
 }
