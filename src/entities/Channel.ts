@@ -72,9 +72,6 @@ export class Channel implements IChannel {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted: boolean;
-
   @OneToMany('ChannelChat', 'channel')
   channelChats: IChannelChat[];
 

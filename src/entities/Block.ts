@@ -26,9 +26,6 @@ export class Block {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted: boolean;
-
   // TODO: User와 관계 형성해야함
   @ManyToOne(() => User)
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'userId' }])
