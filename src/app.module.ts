@@ -14,6 +14,7 @@ import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
 import { EventsModule } from './events/events.module';
 import { EventsGateway } from './events/events.gateway';
+import { RelationModule } from './relation/relation.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { EventsGateway } from './events/events.gateway';
     AdminModule,
     ChannelModule,
     EventsModule,
+    RelationModule,
   ],
   controllers: [AppController],
   providers: [AppService, EventsGateway],
