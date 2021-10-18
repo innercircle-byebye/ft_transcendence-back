@@ -12,6 +12,8 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
+import { EventsModule } from './events/events.module';
+import { EventsGateway } from './events/events.gateway';
 
 @Module({
   imports: [
@@ -36,8 +38,9 @@ import { ChannelModule } from './channel/channel.module';
     }),
     AdminModule,
     ChannelModule,
+    EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EventsGateway],
 })
 export class AppModule {}
