@@ -11,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
+import { ChannelModule } from './channel/channel.module';
 import { RelationModule } from './relation/relation.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { RelationModule } from './relation/relation.module';
       serveRoot: '/profile_image',
     }),
     AdminModule,
+    ChannelModule,
     RelationModule,
   ],
   controllers: [AppController],
