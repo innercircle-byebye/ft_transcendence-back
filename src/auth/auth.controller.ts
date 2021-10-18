@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthUser } from 'src/decorators/auth-user.decorator';
+import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 
@@ -87,8 +89,7 @@ export class AuthController {
   @ApiOperation({ summary: 'refreshToken을 이용해서 accessToken 재발급' })
   @Get('refresh')
   @UseGuards(AuthGuard('refresh'))
-  refresh(@Req() req, @Res({ passthrough: true }) res) {
-    const { user } = req;
+  refresh(@AuthUser() user: User, @Res({ passthrough: true }) res) {
     const { accessToken, ...accessOption } =
       this.authService.getCookieWithJwtAccessToken(user.userId);
     res.cookie('Authentication', accessToken, accessOption);
@@ -97,11 +98,11 @@ export class AuthController {
   @ApiOperation({ summary: '로그아웃 (refreshToken 있어야만 로그아웃가능)' })
   @Get('logout')
   @UseGuards(AuthGuard('refresh'))
-  async logOut(@Req() req, @Res({ passthrough: true }) res) {
+  async logOut(@AuthUser() user: User, @Res({ passthrough: true }) res) {
     const { accessOption, refreshOption } =
       this.authService.getCookiesForLogOut();
 
-    await this.userService.removeRefreshToken(req.user.userId, req.user.status);
+    await this.userService.removeRefreshToken(user.userId, user.status);
 
     res.cookie('Authentication', '', accessOption);
     res.cookie('Refresh', '', refreshOption);
@@ -110,8 +111,8 @@ export class AuthController {
   @ApiOperation({ summary: 'accessToken 테스트용' })
   @Get('/test')
   @UseGuards(AuthGuard('jwt'))
-  test(@Req() req) {
-    console.log('req.user', req.user);
-    return { userId: req.user.userId };
+  test(@AuthUser() user: User) {
+    console.log('req.user', user);
+    return { userId: user.userId };
   }
 }

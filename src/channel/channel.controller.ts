@@ -1,17 +1,25 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthUser } from 'src/decorators/auth-user.decorator';
+import { User } from 'src/entities/User';
 import { ChannelService } from './channel.service';
 
+@UseGuards(AuthGuard('jwt'))
 @ApiTags('Channel')
 @Controller('api/channel')
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
   @Post('/:name')
-  createChannel(@Param('name') channelName, @Body() body) {
+  createChannel(
+    @Param('name') channelName,
+    @AuthUser() user: User,
+    @Body() body,
+  ) {
     return this.channelService.createChannel(
       channelName,
-      body.ownerId,
+      user.userId,
       body.password,
       body.maxParticipantNum,
     );
