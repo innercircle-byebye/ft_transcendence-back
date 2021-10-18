@@ -37,7 +37,6 @@ export class AuthController {
     }
 
     let user = await this.userService.getByIntraUsername(req.user.intraId);
-    // user.status = UserStatus.ONLINE;
     if (!user) {
       user = await this.userService.createNewUserByIntraInfo(req.user);
     }
@@ -47,7 +46,7 @@ export class AuthController {
     const { refreshToken, ...refreshOption } =
       this.authService.getCookieWithJwtRefreshToken(user.userId);
 
-    await this.userService.setCurrentRefreshToken(refreshToken, user.userId);
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
 
     res.cookie('Authentication', accessToken, accessOption);
     res.cookie('Refresh', refreshToken, refreshOption);
@@ -79,7 +78,7 @@ export class AuthController {
     const { refreshToken, ...refreshOption } =
       this.authService.getCookieWithJwtRefreshToken(user.userId);
 
-    await this.userService.setCurrentRefreshToken(refreshToken, user.userId);
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
 
     res.cookie('Authentication', accessToken, accessOption);
     res.cookie('Refresh', refreshToken, refreshOption);
