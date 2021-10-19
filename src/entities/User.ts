@@ -144,9 +144,6 @@ export class User implements IUser {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted: boolean;
-
   @Exclude()
   @Column({ nullable: true })
   currentHashedRefreshToken: string;

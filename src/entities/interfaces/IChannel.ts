@@ -12,6 +12,4 @@ export interface IChannel {
   readonly lastModifiedAt: Date;
 
   deletedAt: Date;
-
-  isDeleted: boolean;
 }

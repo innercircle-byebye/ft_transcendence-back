@@ -25,7 +25,5 @@ export interface IUser {
 
   deletedAt: Date;
 
-  isDeleted: boolean;
-
   currentHashedRefreshToken: string;
 }
