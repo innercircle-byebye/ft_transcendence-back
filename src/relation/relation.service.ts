@@ -90,7 +90,7 @@ export class RelationService {
   // - 내가 대기중인 친구 목록 조회하기
 
   // - 친구 요청하기
-  async friendRequest(requester: User, respondentId: number) {
+  async requestFriendRelation(requester: User, respondentId: number) {
     if (requester.userId === respondentId) {
       throw new BadRequestException('본인에게 친구 요청할 수 없습니다.');
     }
@@ -172,7 +172,7 @@ export class RelationService {
   }
 
   //   - 친구 요청 취소하기
-  async friendRequestCancel(requester: User, respondentId: number) {
+  async cancelFriendRequest(requester: User, respondentId: number) {
     if (requester.userId === respondentId) {
       throw new BadRequestException(
         '본인에게 친구 요청할 수도 요청 취소할 수도 없습니다.',
@@ -204,7 +204,7 @@ export class RelationService {
   }
 
   //   - 친구 요청 승인하기
-  async friendRequestApprove(respondent: User, requesterId: number) {
+  async approveFriendRequest(respondent: User, requesterId: number) {
     if (respondent.userId === requesterId) {
       throw new BadRequestException('본인에게 친구요청 승인을 할 수 없습니다.');
     }
@@ -235,7 +235,7 @@ export class RelationService {
   }
 
   //   - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
-  async friendRequestReject(respondent: User, requesterId: number) {
+  async rejectFriendRequest(respondent: User, requesterId: number) {
     if (respondent.userId === requesterId) {
       throw new BadRequestException(
         '본인에게 친구 요청받을 수도, 거절할 수도 없습니다.',

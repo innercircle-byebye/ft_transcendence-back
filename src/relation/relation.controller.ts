@@ -98,11 +98,11 @@ export class RelationController {
   // 요청: POST / api / friend / { respondent_id } / request(request body 없음)
   // 응답: 대상유저
   @Post('friend/:respondent_id/request')
-  async friendRequest(
+  async requestFriendRelation(
     @AuthUser() user: User,
     @Param('respondent_id') respondentId: number,
   ) {
-    const respondentUser = await this.relationService.friendRequest(
+    const respondentUser = await this.relationService.requestFriendRelation(
       user,
       respondentId,
     );
@@ -113,11 +113,11 @@ export class RelationController {
   // 요청: DELETE / api / friend / { respondent_id } / request_cancel
   // 응답: 대상유저
   @Delete('friend/:respondent_id/request_cancel')
-  async friendRequestCancel(
+  async cancelFriendRequest(
     @AuthUser() user: User,
     @Param('respondent_id') respondentId: number,
   ) {
-    const respondentUser = await this.relationService.friendRequestCancel(
+    const respondentUser = await this.relationService.cancelFriendRequest(
       user,
       respondentId,
     );
@@ -128,11 +128,11 @@ export class RelationController {
   // 요청: PATCH / api / friend / { requester_id } / approve(request body 없음)
   // 응답: 대상유저
   @Patch('friend/:requester_id/approve')
-  async friendRequestApprove(
+  async approveFriendRequest(
     @AuthUser() user: User,
     @Param('requester_id') requesterId: number,
   ) {
-    const requesterUser = await this.relationService.friendRequestApprove(
+    const requesterUser = await this.relationService.approveFriendRequest(
       user,
       requesterId,
     );
@@ -143,11 +143,11 @@ export class RelationController {
   // 요청: DELETE / api / friend / { requester_id } / reject
   // 응답: 대상유저
   @Delete('friend/:requester_id/reject')
-  async friendREquestReject(
+  async rejectFriendRequest(
     @AuthUser() user: User,
     @Param('requester_id') requesterId: number,
   ) {
-    const requesterUser = await this.relationService.friendRequestReject(
+    const requesterUser = await this.relationService.rejectFriendRequest(
       user,
       requesterId,
     );
