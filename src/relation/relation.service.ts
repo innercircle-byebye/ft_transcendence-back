@@ -52,8 +52,8 @@ export class RelationService {
       blockedUser: blockUser,
     });
 
-    const { currentHashedRefreshToken, ...blockedUser } = result.blockedUser;
-    return blockedUser;
+    delete result.blockedUser.currentHashedRefreshToken;
+    return result.blockedUser;
   }
 
   async unblockUser(userId: number, unblockUserId: number) {
@@ -81,8 +81,8 @@ export class RelationService {
 
     await this.blockRepository.softRemove(previousBlockData);
 
-    const { currentHashedRefreshToken, ...unblockedUser } = unblockUser;
-    return unblockedUser;
+    delete unblockUser.currentHashedRefreshToken;
+    return unblockUser;
   }
 
   // - 내 친구 목록 조회하기
@@ -167,8 +167,8 @@ export class RelationService {
       },
     );
 
-    const { currentHashedRefreshToken, ...newRespondent } = result.respondent;
-    return newRespondent;
+    delete result.respondent.currentHashedRefreshToken;
+    return result.respondent;
   }
 
   //   - 친구 요청 취소하기
@@ -199,8 +199,8 @@ export class RelationService {
 
     await this.friendRepository.softRemove(friendRequestData);
 
-    const { currentHashedRefreshToken, ...deletedRespondent } = respondent;
-    return deletedRespondent;
+    delete respondent.currentHashedRefreshToken;
+    return respondent;
   }
 
   //   - 친구 요청 승인하기
