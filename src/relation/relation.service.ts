@@ -115,6 +115,22 @@ export class RelationService {
   }
 
   // - 나한테 새로 들어온 친구 목록 조회하기
+  async getNewFriendRequestUserList(userId: number) {
+    const result = await this.friendRepository
+      .createQueryBuilder('friend')
+      .where('friend.respondentId = :userId', { userId })
+      .andWhere('friend.status = :status', { status: FriendStatus.WAIT })
+      .innerJoinAndSelect('friend.requester', 'requester')
+      .getMany();
+
+    const newFriendRequestUserList = result.map((friend) => {
+      const { currentHashedRefreshToken, ...newFriendRequestUser } =
+        friend.requester;
+      return newFriendRequestUser;
+    });
+
+    return newFriendRequestUserList;
+  }
   // - 내가 대기중인 친구 목록 조회하기
 
   // - 친구 요청하기

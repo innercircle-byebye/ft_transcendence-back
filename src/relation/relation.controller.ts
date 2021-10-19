@@ -96,6 +96,12 @@ export class RelationController {
   // - 나한테 새로 들어온 친구 목록 조회하기
   // 요청: GET / api / friend / new
   // 응답 :  user 목록
+  @Get('friend/new')
+  async getNewFriendRequestUserList(@AuthUser() user: User) {
+    const newFriendRequestUserList =
+      await this.relationService.getNewFriendRequestUserList(user.userId);
+    return newFriendRequestUserList;
+  }
 
   // - 내가 대기중인 친구 목록 조회하기
   // 요청: GET / api / friend / wait
