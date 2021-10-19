@@ -268,4 +268,39 @@ export class RelationService {
   }
 
   //   - 친구 관계 삭제하기
+  async deleteFriend(user: User, targetUserId: number) {
+    if (user.userId === targetUserId) {
+      throw new BadRequestException(
+        '혼자 친구관계를 만들 수도 삭제할 수도 없습니다.',
+      );
+    }
+
+    const targetUser: User = await this.userRepository.findOne(targetUserId);
+    if (!targetUser) {
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
+    const friendRequestData: Friend = await this.friendRepository.findOne({
+      where: [
+        {
+          requesterId: user.userId,
+          respondentId: targetUser.userId,
+          status: FriendStatus.APPROVE,
+        },
+        {
+          requesterId: targetUser.userId,
+          respondentId: user.userId,
+          status: FriendStatus.APPROVE,
+        },
+      ],
+    });
+    if (!friendRequestData) {
+      throw new BadRequestException('삭제할 친구 관계가 없습니다.');
+    }
+
+    await this.friendRepository.softRemove(friendRequestData);
+
+    delete targetUser.currentHashedRefreshToken;
+    return targetUser;
+  }
 }

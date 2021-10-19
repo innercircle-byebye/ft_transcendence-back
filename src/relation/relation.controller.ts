@@ -125,7 +125,7 @@ export class RelationController {
   }
 
   // - 친구 요청 승인하기
-  // 요청: PATCH / api / friend / { user_id } / approve(request body 없음)
+  // 요청: PATCH / api / friend / { requester_id } / approve(request body 없음)
   // 응답: 대상유저
   @Patch('friend/:requester_id/approve')
   async friendRequestApprove(
@@ -140,7 +140,7 @@ export class RelationController {
   }
 
   // - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
-  // 요청: DELETE / api / friend / { user_id } / reject
+  // 요청: DELETE / api / friend / { requester_id } / reject
   // 응답: 대상유저
   @Delete('friend/:requester_id/reject')
   async friendREquestReject(
@@ -155,6 +155,17 @@ export class RelationController {
   }
 
   // - 친구 관계 삭제하기
-  // 요청: DELETE / api / friend / { id }
+  // 요청: DELETE / api / friend / { user_id }
   // 응답: 대상유저
+  @Delete('friend/:user_id')
+  async deleteFriend(
+    @AuthUser() user: User,
+    @Param('user_id') targetUserId: number,
+  ) {
+    const targetUser = await this.relationService.deleteFriend(
+      user,
+      targetUserId,
+    );
+    return targetUser;
+  }
 }
