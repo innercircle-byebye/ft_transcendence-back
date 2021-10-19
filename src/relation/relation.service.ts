@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Block } from 'src/entities/Block';
+import { Friend, FriendStatus } from 'src/entities/Friend';
 import { User } from 'src/entities/User';
 import { Repository } from 'typeorm';
 
@@ -9,6 +10,7 @@ export class RelationService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Block) private blockRepository: Repository<Block>,
+    @InjectRepository(Friend) private friendRepository: Repository<Friend>,
   ) {}
 
   async getBlockedUserList(userId: number) {
@@ -82,4 +84,95 @@ export class RelationService {
     const { currentHashedRefreshToken, ...unblockedUser } = unblockUser;
     return unblockedUser;
   }
+
+  // - 내 친구 목록 조회하기
+  // - 나한테 새로 들어온 친구 목록 조회하기
+  // - 내가 대기중인 친구 목록 조회하기
+
+  // - 친구 요청하기
+  async friendRequest(requester: User, respondentId: number) {
+    if (requester.userId === respondentId) {
+      throw new BadRequestException('본인에게 친구 신청할 수 없습니다.');
+    }
+
+    const respondent: User = await this.userRepository.findOne(respondentId);
+    if (!respondent) {
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
+    const previousFriendData: Friend = await this.friendRepository.findOne({
+      where: [
+        {
+          requesterId: requester.userId,
+          respondentId: respondent.userId,
+        },
+        {
+          requesterId: respondent.userId,
+          respondentId: requester.userId,
+        },
+      ],
+    });
+
+    if (previousFriendData) {
+      if (previousFriendData.status === FriendStatus.APPROVE) {
+        throw new BadRequestException('이미 친구관계 입니다.');
+      }
+      if (previousFriendData.status === FriendStatus.WAIT) {
+        if (previousFriendData.requesterId === requester.userId) {
+          throw new BadRequestException('현재 친구 요청 대기 중입니다.');
+        }
+        if (previousFriendData.requesterId === respondent.userId) {
+          throw new BadRequestException(
+            '해당 사용자로부터 들어온 친구 요청이 존재합니다.',
+          );
+        }
+      }
+      if (
+        previousFriendData.status === FriendStatus.REJECT &&
+        previousFriendData.requesterId === requester.userId
+      ) {
+        const now = new Date();
+        const refuseEndDate = new Date(
+          previousFriendData.lastModifiedAt.getTime(),
+        );
+        refuseEndDate.setDate(refuseEndDate.getDate() + 7);
+
+        if (now < refuseEndDate) {
+          let remainSecond = Math.floor(
+            (refuseEndDate.getTime() - now.getTime()) / 1000,
+          );
+          const remainDay = Math.floor(remainSecond / (24 * 60 * 60));
+          remainSecond -= remainDay * (24 * 60 * 60);
+          const remainHour = Math.floor(remainSecond / (60 * 60));
+          remainSecond -= remainHour * (60 * 60);
+          const remainMinute = Math.floor(remainSecond / 60);
+          remainSecond -= remainMinute * 60;
+          throw new BadRequestException(
+            `친구 요청이 거절된 기록이 있습니다. ${remainDay}일 ${remainHour}시간 ${remainMinute}분 ${remainSecond}초 뒤에 친구 요청이 가능합니다.`,
+          );
+        }
+      }
+    }
+
+    const result = await this.friendRepository.manager.transaction(
+      async (em) => {
+        if (previousFriendData?.status === FriendStatus.REJECT) {
+          await em.softRemove(Friend, previousFriendData);
+        }
+        return em.save(Friend, {
+          requester,
+          respondent,
+          status: FriendStatus.WAIT,
+        });
+      },
+    );
+
+    const { currentHashedRefreshToken, ...newRespondent } = result.respondent;
+    return newRespondent;
+  }
+
+  //   - 친구 요청 취소하기
+  //   - 친구 요청 승낙하기
+  //   - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
+  //   - 친구 관계 삭제하기
 }

@@ -80,4 +80,48 @@ export class RelationController {
     );
     return unblockedUser;
   }
+
+  // - 내 친구 목록 조회하기
+  // 요청: GET / api / friend / list
+  // 응답: 친구인 user 목록
+
+  // - 나한테 새로 들어온 친구 목록 조회하기
+  // 요청: GET / api / friend / new
+  // 응답 :  user 목록
+
+  // - 내가 대기중인 친구 목록 조회하기
+  // 요청: GET / api / friend / wait
+  // 응답: user 목록
+
+  // - 친구 요청하기
+  // 요청: POST / api / friend / { respondent_id } / request(request body 없음)
+  // 응답: 대상유저
+  @Post('friend/:respondent_id/request')
+  async friendRequest(
+    @AuthUser() user: User,
+    @Param('respondent_id') respondentId: number,
+  ) {
+    const respondentUser = await this.relationService.friendRequest(
+      user,
+      respondentId,
+    );
+
+    return respondentUser;
+  }
+
+  // - 친구 요청 취소하기
+  // 요청: DELETE / api / friend / { user_id } / request_cancel
+  // 응답: 대상유저
+
+  // - 친구 요청 승낙하기
+  // 요청: PATCH / api / friend / { user_id } / approve(request body 없음)
+  // 응답: 대상유저
+
+  // - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
+  // 요청: DELETE / api / friend / { user_id } / reject
+  // 응답: 대상유저
+
+  // - 친구 관계 삭제하기
+  // 요청: DELETE / api / friend / { id }
+  // 응답: 대상유저
 }

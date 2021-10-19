@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Block } from 'src/entities/Block';
+import { Friend } from 'src/entities/Friend';
 import { User } from 'src/entities/User';
 import { RelationService } from './relation.service';
 
@@ -12,6 +13,13 @@ const mockUserRepository = () => ({
 });
 
 const mockBlockRepository = () => ({
+  save: jest.fn(),
+  find: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
+
+const mockFriendRepository = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
@@ -32,6 +40,10 @@ describe('RelationService', () => {
         {
           provide: getRepositoryToken(Block),
           useValue: mockBlockRepository(),
+        },
+        {
+          provide: getRepositoryToken(Friend),
+          useValue: mockFriendRepository(),
         },
       ],
     }).compile();
