@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Block } from 'src/entities/Block';
 import { Friend, FriendStatus } from 'src/entities/Friend';
 import { User } from 'src/entities/User';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 @Injectable()
 export class RelationService {
@@ -86,6 +86,34 @@ export class RelationService {
   }
 
   // - 내 친구 목록 조회하기
+  async getFriendUserList(userId: number) {
+    const result = await this.friendRepository
+      .createQueryBuilder('friend')
+      .where(
+        new Brackets((qb) => {
+          qb.where('friend.requesterId = :userId', { userId }).orWhere(
+            'friend.respondentId = :userId',
+            { userId },
+          );
+        }),
+      )
+      .andWhere('friend.status = :status', { status: FriendStatus.APPROVE })
+      .innerJoinAndSelect('friend.requester', 'requester')
+      .innerJoinAndSelect('friend.respondent', 'respondent')
+      .getMany();
+
+    const friendUserList = result.map((friend) => {
+      if (friend.requester.userId === userId) {
+        const { currentHashedRefreshToken, ...friendUser } = friend.respondent;
+        return friendUser;
+      }
+      const { currentHashedRefreshToken, ...friendUser } = friend.requester;
+      return friendUser;
+    });
+
+    return friendUserList;
+  }
+
   // - 나한테 새로 들어온 친구 목록 조회하기
   // - 내가 대기중인 친구 목록 조회하기
 

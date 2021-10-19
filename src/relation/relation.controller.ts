@@ -85,6 +85,13 @@ export class RelationController {
   // - 내 친구 목록 조회하기
   // 요청: GET / api / friend / list
   // 응답: 친구인 user 목록
+  @Get('friend/list')
+  async getFriendUserList(@AuthUser() user: User) {
+    const friendUserList = await this.relationService.getFriendUserList(
+      user.userId,
+    );
+    return friendUserList;
+  }
 
   // - 나한테 새로 들어온 친구 목록 조회하기
   // 요청: GET / api / friend / new
