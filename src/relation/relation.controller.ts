@@ -3,6 +3,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -123,9 +124,20 @@ export class RelationController {
     return respondentUser;
   }
 
-  // - 친구 요청 승낙하기
+  // - 친구 요청 승인하기
   // 요청: PATCH / api / friend / { user_id } / approve(request body 없음)
   // 응답: 대상유저
+  @Patch('friend/:requester_id/approve')
+  async friendRequestApprove(
+    @AuthUser() user: User,
+    @Param('requester_id') requesterId: number,
+  ) {
+    const requesterUser = await this.relationService.friendRequestApprove(
+      user,
+      requesterId,
+    );
+    return requesterUser;
+  }
 
   // - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
   // 요청: DELETE / api / friend / { user_id } / reject

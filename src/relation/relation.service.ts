@@ -203,7 +203,37 @@ export class RelationService {
     return deletedRespondent;
   }
 
-  //   - 친구 요청 승낙하기
+  //   - 친구 요청 승인하기
+  async friendRequestApprove(respondent: User, requesterId: number) {
+    if (respondent.userId === requesterId) {
+      throw new BadRequestException('본인에게 친구요청 승인을 할 수 없습니다.');
+    }
+
+    const requester: User = await this.userRepository.findOne(requesterId);
+    if (!requester) {
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
+    const friendRequestData: Friend = await this.friendRepository.findOne({
+      where: [
+        {
+          requesterId: requester.userId,
+          respondentId: respondent.userId,
+          status: FriendStatus.WAIT,
+        },
+      ],
+    });
+    if (!friendRequestData) {
+      throw new BadRequestException('승인할 친구 요청이 없습니다.');
+    }
+
+    friendRequestData.status = FriendStatus.APPROVE;
+    await this.friendRepository.save(friendRequestData);
+
+    delete requester.currentHashedRefreshToken;
+    return requester;
+  }
+
   //   - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
   //   - 친구 관계 삭제하기
 }
