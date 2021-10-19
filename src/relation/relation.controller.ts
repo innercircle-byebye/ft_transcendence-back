@@ -105,13 +105,23 @@ export class RelationController {
       user,
       respondentId,
     );
-
     return respondentUser;
   }
 
   // - 친구 요청 취소하기
-  // 요청: DELETE / api / friend / { user_id } / request_cancel
+  // 요청: DELETE / api / friend / { respondent_id } / request_cancel
   // 응답: 대상유저
+  @Delete('friend/:respondent_id/request_cancel')
+  async friendRequestCancel(
+    @AuthUser() user: User,
+    @Param('respondent_id') respondentId: number,
+  ) {
+    const respondentUser = await this.relationService.friendRequestCancel(
+      user,
+      respondentId,
+    );
+    return respondentUser;
+  }
 
   // - 친구 요청 승낙하기
   // 요청: PATCH / api / friend / { user_id } / approve(request body 없음)
