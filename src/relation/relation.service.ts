@@ -131,7 +131,24 @@ export class RelationService {
 
     return newFriendRequestUserList;
   }
+
   // - 내가 대기중인 친구 목록 조회하기
+  async getWaitFriendRequestUserList(userId: number) {
+    const result = await this.friendRepository
+      .createQueryBuilder('friend')
+      .where('friend.requesterId = :userId', { userId })
+      .andWhere('friend.status = :status', { status: FriendStatus.WAIT })
+      .innerJoinAndSelect('friend.respondent', 'respondent')
+      .getMany();
+
+    const waitFriendRequestUserList = result.map((friend) => {
+      const { currentHashedRefreshToken, ...waitFriendRequestUser } =
+        friend.respondent;
+      return waitFriendRequestUser;
+    });
+
+    return waitFriendRequestUserList;
+  }
 
   // - 친구 요청하기
   async requestFriendRelation(requester: User, respondentId: number) {

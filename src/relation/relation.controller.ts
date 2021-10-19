@@ -106,6 +106,12 @@ export class RelationController {
   // - 내가 대기중인 친구 목록 조회하기
   // 요청: GET / api / friend / wait
   // 응답: user 목록
+  @Get('friend/wait')
+  async getWaitFriendRequestUserList(@AuthUser() user: User) {
+    const waitFriendRequestUserList =
+      await this.relationService.getWaitFriendRequestUserList(user.userId);
+    return waitFriendRequestUserList;
+  }
 
   // - 친구 요청하기
   // 요청: POST / api / friend / { respondent_id } / request(request body 없음)
