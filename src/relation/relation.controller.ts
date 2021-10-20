@@ -85,6 +85,16 @@ export class RelationController {
   // - 내 친구 목록 조회하기
   // 요청: GET / api / friend / list
   // 응답: 친구인 user 목록
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구목록 조회',
+    description: '나와 친구관계인 사용자들의 목록을 조회한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    isArray: true,
+    description: '나와 친구인 사용자들의 목록',
+  })
   @Get('friend/list')
   async getFriendUserList(@AuthUser() user: User) {
     const friendUserList = await this.relationService.getFriendUserList(
@@ -96,6 +106,16 @@ export class RelationController {
   // - 나한테 새로 들어온 친구 목록 조회하기
   // 요청: GET / api / friend / new
   // 응답 :  user 목록
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구요청목록 조회',
+    description: '나에게 친구관계를 요청한 사용자들의 목록을 조회한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    isArray: true,
+    description: '나에게 친구요청한 사용자들의 목록',
+  })
   @Get('friend/new')
   async getNewFriendRequestUserList(@AuthUser() user: User) {
     const newFriendRequestUserList =
@@ -106,6 +126,16 @@ export class RelationController {
   // - 내가 대기중인 친구 목록 조회하기
   // 요청: GET / api / friend / wait
   // 응답: user 목록
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구대기목록 조회',
+    description: '내가 친구관계를 요청한 사용자들의 목록을 조회한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    isArray: true,
+    description: '내가 친구요청한 사용자들의 목록',
+  })
   @Get('friend/wait')
   async getWaitFriendRequestUserList(@AuthUser() user: User) {
     const waitFriendRequestUserList =
@@ -116,6 +146,15 @@ export class RelationController {
   // - 친구 요청하기
   // 요청: POST / api / friend / { respondent_id } / request(request body 없음)
   // 응답: 대상유저
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구 요청하기',
+    description: '특정 사용자에게 친구관계를 요청한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    description: '내가 친구요청한 사용자 정보',
+  })
   @Post('friend/:respondent_id/request')
   async requestFriendRelation(
     @AuthUser() user: User,
@@ -131,6 +170,15 @@ export class RelationController {
   // - 친구 요청 취소하기
   // 요청: DELETE / api / friend / { respondent_id } / request_cancel
   // 응답: 대상유저
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구 요청 취소하기',
+    description: '대기중인 친구요청을 취소한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    description: '내가 친구요청했던 사용자 정보',
+  })
   @Delete('friend/:respondent_id/request_cancel')
   async cancelFriendRequest(
     @AuthUser() user: User,
@@ -146,6 +194,15 @@ export class RelationController {
   // - 친구 요청 승인하기
   // 요청: PATCH / api / friend / { requester_id } / approve(request body 없음)
   // 응답: 대상유저
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구 요청 승인하기',
+    description: '나에게 들어온 친구요청을 승인한다.(친구가 된다.)',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    description: '나에게 친구요청한 사용자 정보',
+  })
   @Patch('friend/:requester_id/approve')
   async approveFriendRequest(
     @AuthUser() user: User,
@@ -161,6 +218,15 @@ export class RelationController {
   // - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
   // 요청: DELETE / api / friend / { requester_id } / reject
   // 응답: 대상유저
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구 요청 거절하기',
+    description: '나에게 들어온 친구요청을 거절한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    description: '나에게 친구요청한 사용자 정보',
+  })
   @Delete('friend/:requester_id/reject')
   async rejectFriendRequest(
     @AuthUser() user: User,
@@ -176,6 +242,15 @@ export class RelationController {
   // - 친구 관계 삭제하기
   // 요청: DELETE / api / friend / { user_id }
   // 응답: 대상유저
+  @ApiTags('Friend')
+  @ApiOperation({
+    summary: '친구 관계 삭제하기',
+    description: '친구 관계를 삭제한다.',
+  })
+  @ApiOkResponse({
+    type: UserDto,
+    description: '나와 친구관계였던 사용자 정보',
+  })
   @Delete('friend/:user_id')
   async deleteFriend(
     @AuthUser() user: User,
