@@ -16,12 +16,20 @@ export class ChannelController {
     return this.channelService.getAllChannels();
   }
 
+  @Get('/:name')
+  getChannelInfo(@Param('name') channelName) {
+    return this.channelService.getChannelInformation(channelName);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/:name')
   createChannel(
     @Param('name') channelName,
     @AuthUser() user: User,
     @Body() body,
   ) {
+    console.log(user);
+    console.log(body);
     return this.channelService.createChannel(
       channelName,
       user.userId,
@@ -51,15 +59,20 @@ export class ChannelController {
 
   @Get('/:name/chat')
   getChannelChatsByChannelName(@Param('name') channelName) {
+    console.log(channelName);
     return this.channelService.getChannelChatsByChannelName(channelName);
   }
 
   @Post('/:name/chat')
-  createChannelChat(@Param('name') channelName, @Body() body) {
+  createChannelChat(
+    @Param('name') channelName,
+    @AuthUser() user: User,
+    @Body() body,
+  ) {
     return this.channelService.createChannelChat(
       channelName,
       body.content,
-      body.userId,
+      user.userId,
     );
   }
 }

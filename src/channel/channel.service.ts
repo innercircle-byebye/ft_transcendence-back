@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
@@ -30,6 +26,10 @@ export class ChannelService {
     return this.channelRepository.find();
   }
 
+  getChannelInformation(name: string) {
+    return this.channelRepository.findOne({ where: { name } });
+  }
+
   async createChannel(
     name: string,
     ownerId: number,
@@ -37,14 +37,14 @@ export class ChannelService {
     maxParticipantNum: number,
   ) {
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
-      throw new UnauthorizedException(
+      throw new BadRequestException(
         '채팅방 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
     const existChatroom = await this.channelRepository.findOne({
       where: [{ name }],
     });
     if (existChatroom)
-      throw new UnauthorizedException('이미 존재하는 채팅방 이름입니다.');
+      throw new BadRequestException('이미 존재하는 채팅방 이름입니다.');
 
     const channel = new Channel();
     channel.name = name;
@@ -99,12 +99,14 @@ export class ChannelService {
   }
 
   async getChannelChatsByChannelName(name: string) {
+    console.log(name);
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
+    console.log(channelIdByName);
     return this.channelChatRepository
       .createQueryBuilder('channelChats')
-      .where('friend.channelId = :id', { channelIdByName })
+      .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
       .getMany();
   }
 
@@ -122,11 +124,8 @@ export class ChannelService {
       where: { channelChatId: savedChat.channelChatId },
       // relations: ['user', 'channel'],
     });
-    console.log(chatWithUser);
+    console.log('hellow');
 
-    this.eventsGateway.server
-      .of('/chat')
-      .to(`${savedChat.channelId}`)
-      .emit('message', chatWithUser);
+    this.eventsGateway.server.emit('message', chatWithUser);
   }
 }
