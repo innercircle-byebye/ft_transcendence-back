@@ -152,7 +152,8 @@ export class RelationController {
     summary: '친구 요청하기',
     description: '특정 사용자에게 친구관계를 요청한다.',
   })
-  @ApiOkResponse({
+  @ApiResponse({
+    status: 201,
     type: UserDto,
     description: '내가 친구요청한 사용자 정보',
   })
