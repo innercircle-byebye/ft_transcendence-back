@@ -85,7 +85,6 @@ export class RelationService {
     return unblockUser;
   }
 
-  // - 내 친구 목록 조회하기
   async getFriendUserList(userId: number) {
     const result = await this.friendRepository
       .createQueryBuilder('friend')
@@ -114,7 +113,6 @@ export class RelationService {
     return friendUserList;
   }
 
-  // - 나한테 새로 들어온 친구 목록 조회하기
   async getNewFriendRequestUserList(userId: number) {
     const result = await this.friendRepository
       .createQueryBuilder('friend')
@@ -132,7 +130,6 @@ export class RelationService {
     return newFriendRequestUserList;
   }
 
-  // - 내가 대기중인 친구 목록 조회하기
   async getWaitFriendRequestUserList(userId: number) {
     const result = await this.friendRepository
       .createQueryBuilder('friend')
@@ -150,7 +147,6 @@ export class RelationService {
     return waitFriendRequestUserList;
   }
 
-  // - 친구 요청하기
   async requestFriendRelation(requester: User, respondentId: number) {
     if (requester.userId === respondentId) {
       throw new BadRequestException('본인에게 친구 요청할 수 없습니다.');
@@ -232,7 +228,6 @@ export class RelationService {
     return result.respondent;
   }
 
-  //   - 친구 요청 취소하기
   async cancelFriendRequest(requester: User, respondentId: number) {
     if (requester.userId === respondentId) {
       throw new BadRequestException(
@@ -264,7 +259,6 @@ export class RelationService {
     return respondent;
   }
 
-  //   - 친구 요청 승인하기
   async approveFriendRequest(respondent: User, requesterId: number) {
     if (respondent.userId === requesterId) {
       throw new BadRequestException('본인에게 친구요청 승인을 할 수 없습니다.');
@@ -295,7 +289,6 @@ export class RelationService {
     return requester;
   }
 
-  //   - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
   async rejectFriendRequest(respondent: User, requesterId: number) {
     if (respondent.userId === requesterId) {
       throw new BadRequestException(
@@ -328,7 +321,6 @@ export class RelationService {
     return requester;
   }
 
-  //   - 친구 관계 삭제하기
   async deleteFriend(user: User, targetUserId: number) {
     if (user.userId === targetUserId) {
       throw new BadRequestException(

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
+  ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
   ApiResponse,
@@ -52,6 +53,12 @@ export class RelationController {
     type: UserDto,
     description: '차단된 사용자 정보',
   })
+  @ApiBadRequestResponse({
+    description:
+      '본인을 차단할 수 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '이미 차단된 회원입니다.',
+  })
   @Post('block/:block_user_id')
   async blockUser(
     @AuthUser() user: User,
@@ -70,6 +77,12 @@ export class RelationController {
     description: '내가 차단한 사용자를 차단 해제한다.',
   })
   @ApiOkResponse({ type: UserDto, description: '차단 해제된 사용자 정보' })
+  @ApiBadRequestResponse({
+    description:
+      '본인을 차단할 수도, 차단 해제할 수도 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '차단된 기록이 없습니다.',
+  })
   @Delete('block/:unblock_user_id')
   async unblockUser(
     @AuthUser() user: User,
@@ -82,9 +95,6 @@ export class RelationController {
     return unblockedUser;
   }
 
-  // - 내 친구 목록 조회하기
-  // 요청: GET / api / friend / list
-  // 응답: 친구인 user 목록
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구목록 조회',
@@ -103,9 +113,6 @@ export class RelationController {
     return friendUserList;
   }
 
-  // - 나한테 새로 들어온 친구 목록 조회하기
-  // 요청: GET / api / friend / new
-  // 응답 :  user 목록
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구요청목록 조회',
@@ -123,9 +130,6 @@ export class RelationController {
     return newFriendRequestUserList;
   }
 
-  // - 내가 대기중인 친구 목록 조회하기
-  // 요청: GET / api / friend / wait
-  // 응답: user 목록
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구대기목록 조회',
@@ -143,9 +147,6 @@ export class RelationController {
     return waitFriendRequestUserList;
   }
 
-  // - 친구 요청하기
-  // 요청: POST / api / friend / { respondent_id } / request(request body 없음)
-  // 응답: 대상유저
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구 요청하기',
@@ -154,6 +155,15 @@ export class RelationController {
   @ApiOkResponse({
     type: UserDto,
     description: '내가 친구요청한 사용자 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '본인에게 친구 요청할 수 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '이미 친구관계 입니다.\n\n' +
+      '현재 친구 요청 대기 중입니다.\n\n' +
+      '해당 사용자로부터 들어온 친구 요청이 존재합니다.\n\n' +
+      '친구 요청이 거절된 기록이 있습니다. ? 일 ? 시간 ? 분 ? 초 뒤에 친구 요청이 가능합니다.',
   })
   @Post('friend/:respondent_id/request')
   async requestFriendRelation(
@@ -167,9 +177,6 @@ export class RelationController {
     return respondentUser;
   }
 
-  // - 친구 요청 취소하기
-  // 요청: DELETE / api / friend / { respondent_id } / request_cancel
-  // 응답: 대상유저
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구 요청 취소하기',
@@ -178,6 +185,12 @@ export class RelationController {
   @ApiOkResponse({
     type: UserDto,
     description: '내가 친구요청했던 사용자 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '본인에게 친구 요청할 수도 요청 취소할 수도 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '취소할 친구 요청이 없습니다.',
   })
   @Delete('friend/:respondent_id/request_cancel')
   async cancelFriendRequest(
@@ -191,9 +204,6 @@ export class RelationController {
     return respondentUser;
   }
 
-  // - 친구 요청 승인하기
-  // 요청: PATCH / api / friend / { requester_id } / approve(request body 없음)
-  // 응답: 대상유저
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구 요청 승인하기',
@@ -202,6 +212,12 @@ export class RelationController {
   @ApiOkResponse({
     type: UserDto,
     description: '나에게 친구요청한 사용자 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '본인에게 친구요청 승인을 할 수 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '승인할 친구 요청이 없습니다.',
   })
   @Patch('friend/:requester_id/approve')
   async approveFriendRequest(
@@ -215,9 +231,6 @@ export class RelationController {
     return requesterUser;
   }
 
-  // - 친구 요청 거절하기(내가 거절하면 상대방은 일주일동안 친구신청 다시 못한다.)
-  // 요청: DELETE / api / friend / { requester_id } / reject
-  // 응답: 대상유저
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구 요청 거절하기',
@@ -226,6 +239,12 @@ export class RelationController {
   @ApiOkResponse({
     type: UserDto,
     description: '나에게 친구요청한 사용자 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '본인에게 친구 요청받을 수도, 거절할 수도 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '거절할 친구 요청이 없습니다.',
   })
   @Delete('friend/:requester_id/reject')
   async rejectFriendRequest(
@@ -239,9 +258,6 @@ export class RelationController {
     return requesterUser;
   }
 
-  // - 친구 관계 삭제하기
-  // 요청: DELETE / api / friend / { user_id }
-  // 응답: 대상유저
   @ApiTags('Friend')
   @ApiOperation({
     summary: '친구 관계 삭제하기',
@@ -250,6 +266,12 @@ export class RelationController {
   @ApiOkResponse({
     type: UserDto,
     description: '나와 친구관계였던 사용자 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '혼자 친구관계를 만들 수도 삭제할 수도 없습니다.\n\n' +
+      '존재하지 않는 사용자입니다.\n\n' +
+      '삭제할 친구 관계가 없습니다.',
   })
   @Delete('friend/:user_id')
   async deleteFriend(
