@@ -11,6 +11,11 @@ import { ChannelService } from './channel.service';
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
+  @Get('')
+  getChannels() {
+    return this.channelService.getAllChannels();
+  }
+
   @Post('/:name')
   createChannel(
     @Param('name') channelName,
@@ -30,13 +35,23 @@ export class ChannelController {
     return this.channelService.getChannelMembers(channelName);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('/:name/join')
-  joinChannel(@Param('name') channelName, @Body() body) {
+  joinChannel(
+    @Param('name') channelName,
+    @AuthUser() user: User,
+    @Body() body,
+  ) {
     return this.channelService.createChannelMember(
       channelName,
-      body.userId,
+      user.userId,
       body.password,
     );
+  }
+
+  @Get('/:name/chat')
+  getChannelChatsByChannelName(@Param('name') channelName) {
+    return this.channelService.getChannelChatsByChannelName(channelName);
   }
 
   @Post('/:name/chat')

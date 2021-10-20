@@ -24,6 +24,10 @@ export class ChannelService {
     private connection: Connection,
   ) {}
 
+  getAllChannels() {
+    return this.channelRepository.find();
+  }
+
   async createChannel(
     name: string,
     ownerId: number,
@@ -72,6 +76,7 @@ export class ChannelService {
   }
 
   async createChannelMember(name: string, userId: number, password: string) {
+    console.log(userId);
     const channel = await this.channelRepository.findOne({ where: { name } });
     if (!channel) {
       throw new BadRequestException('채널이 존재하지 않습니다.');
@@ -89,6 +94,16 @@ export class ChannelService {
     channelMember.channelId = channel.channelId;
     channelMember.userId = user.userId;
     return this.channelMemberRepository.save(channelMember);
+  }
+
+  async getChannelChatsByChannelName(name: string) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    return this.channelChatRepository
+      .createQueryBuilder('channelChats')
+      .where('friend.channelId = :id', { channelIdByName })
+      .getMany();
   }
 
   // TODO: 예외처리
