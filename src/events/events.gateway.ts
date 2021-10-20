@@ -12,7 +12,7 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { onlineMap } from './onlineMap';
 
-@WebSocketGateway({ namespace: /\/ws-.+/ })
+@WebSocketGateway({ namespace: '/chat' })
 // eslint-disable-next-line prettier/prettier
 export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
@@ -20,27 +20,33 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   private logger: Logger = new Logger('AppGateway');
 
   afterInit(server: Server): any {
-    this.logger.log('WebSocket server initialized');
+    this.logger.log('chat namespace initialized');
   }
 
   handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log('connected', socket.nsp.name);
-    if (!onlineMap[socket.nsp.name]) {
-      onlineMap[socket.nsp.name] = {};
-    }
-
-    socket.emit('hello', socket.nsp.name);
+    console.log(`${socket.id} connected to ${socket.nsp.name}`);
+    socket.emit('hello', socket.id);
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log('disconnected', socket.nsp.name);
-    const newNamespace = socket.nsp;
-    delete onlineMap[socket.nsp.name][socket.id];
-    newNamespace.emit('onlineList', Object.values(onlineMap[socket.nsp.name]));
+    console.log(`${socket.id} disconnected to ${socket.nsp.name}`);
+  }
+
+  @SubscribeMessage('joinChannel')
+  handleJoinChannel(client: any, userChannel: any) {
+    console.log(userChannel);
+    client.join(userChannel.channelId);
+    client.emit('joinChannel', userChannel);
   }
 
   @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): string {
-    return 'Hello world!';
+  handleMessage(client: any, channelMessage: any) {
+    console.log(channelMessage);
+  }
+
+  @SubscribeMessage('leaveChannel')
+  handleLeaveChannel(client: any, channel: any) {
+    client.leave(channel);
+    client.emit('leaveChannel', channel);
   }
 }

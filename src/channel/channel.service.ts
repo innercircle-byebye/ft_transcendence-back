@@ -8,6 +8,7 @@ import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
+import { EventsGateway } from 'src/events/events.gateway';
 import { Connection, Repository } from 'typeorm';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class ChannelService {
     @InjectRepository(ChannelChat)
     private channelChatRepository: Repository<ChannelChat>,
     private connection: Connection,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async createChannel(
@@ -106,5 +108,10 @@ export class ChannelService {
       // relations: ['user', 'channel'],
     });
     console.log(chatWithUser);
+
+    this.eventsGateway.server
+      .of('/chat')
+      .to(`${savedChat.channelId}`)
+      .emit('message', chatWithUser);
   }
 }
