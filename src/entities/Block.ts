@@ -26,7 +26,6 @@ export class Block {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  // TODO: User와 관계 형성해야함
   @ManyToOne(() => User)
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'userId' }])
   user: User;
