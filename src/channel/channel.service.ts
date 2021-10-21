@@ -145,7 +145,7 @@ export class ChannelService {
     console.log('hellow');
 
     this.eventsGateway.server
-      .to(`channel-${chatWithUser.channelId}`)
+      .to(`channel-${name}`)
       .emit('message', chatWithUser);
   }
 }
