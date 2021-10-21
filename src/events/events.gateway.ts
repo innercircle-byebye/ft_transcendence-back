@@ -24,7 +24,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log(`${socket.id} connected to ${socket.nsp.name}`);
+    console.log(`${socket.id} connected to 채팅`);
     socket.emit('hello', socket.id);
   }
 
