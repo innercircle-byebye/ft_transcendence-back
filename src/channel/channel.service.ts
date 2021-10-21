@@ -27,7 +27,15 @@ export class ChannelService {
   }
 
   getAllChannelsByUser(userId: number) {
-    return this.channelRepository.find({ where: { userId } });
+    const joinedChannelMember = this.channelMemberRepository
+      .createQueryBuilder('channelMember')
+      .where('channelMember.userId =: id', { userId });
+
+    return this.channelRepository.find({
+      where: {
+        channelId: joinedChannelMember.select('channel_id AS channelId'),
+      },
+    });
   }
 
   getChannelInformation(name: string) {
