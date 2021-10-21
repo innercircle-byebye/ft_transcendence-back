@@ -26,6 +26,10 @@ export class ChannelService {
     return this.channelRepository.find();
   }
 
+  getAllChannelsByUser(userId: number) {
+    return this.channelRepository.find({ where: { userId } });
+  }
+
   getChannelInformation(name: string) {
     return this.channelRepository.findOne({ where: { name } });
   }

@@ -11,9 +11,13 @@ import { ChannelService } from './channel.service';
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
-  @Get('')
+  @UseGuards(AuthGuard('jwt'))
   getChannels() {
     return this.channelService.getAllChannels();
+  }
+
+  getChannelsByUser(@AuthUser() user: User) {
+    return this.channelService.getAllChannelsByUser(user.userId);
   }
 
   @Get('/:name')
@@ -21,7 +25,6 @@ export class ChannelController {
     return this.channelService.getChannelInformation(channelName);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('/:name')
   createChannel(
     @Param('name') channelName,
