@@ -5,6 +5,7 @@ import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
 import { ChannelService } from './channel.service';
 
+@UseGuards(AuthGuard('jwt'))
 @ApiTags('Channel')
 @Controller('api/channel')
 export class ChannelController {
@@ -15,7 +16,6 @@ export class ChannelController {
     return this.channelService.getAllChannels();
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('/me')
   getChannelsByUser(@AuthUser() user: User) {
     return this.channelService.getAllChannelsByUser(user.userId);
@@ -26,7 +26,6 @@ export class ChannelController {
     return this.channelService.getChannelInformation(channelName);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('/:name')
   createChannel(
     @Param('name') channelName,
@@ -43,13 +42,11 @@ export class ChannelController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('/:name/channelmembers')
   getChannelMembers(@Param('name') channelName) {
     return this.channelService.getChannelMembers(channelName);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('/:name/join')
   joinChannel(
     @Param('name') channelName,
@@ -63,14 +60,12 @@ export class ChannelController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('/:name/chat')
   getChannelChatsByChannelName(@Param('name') channelName) {
     console.log(channelName);
     return this.channelService.getChannelChatsByChannelName(channelName);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('/:name/chat')
   createChannelChat(
     @Param('name') channelName,
