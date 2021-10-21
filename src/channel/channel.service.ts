@@ -26,16 +26,21 @@ export class ChannelService {
     return this.channelRepository.find();
   }
 
-  getAllChannelsByUser(userId: number) {
-    const joinedChannelMember = this.channelMemberRepository
+  async getAllChannelsByUser(userId: number) {
+    console.log('hello world');
+    const joinedChannelMember = await this.channelMemberRepository
       .createQueryBuilder('channelMember')
-      .where('channelMember.userId =: id', { userId });
+      .where('channelMember.userId = :id', { id: userId })
+      .innerJoinAndSelect('channelMember.channel', 'channel')
+      .getMany();
 
-    return this.channelRepository.find({
-      where: {
-        channelId: joinedChannelMember.select('channel_id AS channelId'),
-      },
+    console.log(joinedChannelMember);
+
+    const channelList = joinedChannelMember.map((channelMemeber) => {
+      return channelMemeber.channel;
     });
+
+    return channelList;
   }
 
   getChannelInformation(name: string) {
