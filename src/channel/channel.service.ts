@@ -122,10 +122,18 @@ export class ChannelService {
       where: { name },
     });
     console.log(channelIdByName);
-    return this.channelChatRepository
+    if (!channelIdByName) {
+      throw new BadRequestException('채널이 존재하지 않습니다.');
+    }
+    console.log(channelIdByName);
+    const channelChats = this.channelChatRepository
       .createQueryBuilder('channelChats')
       .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
+      .innerJoinAndSelect('channelChats.user', 'user')
+      .select(['channelChats', 'user.nickname', 'user.imagePath'])
       .getMany();
+
+    return channelChats;
   }
 
   // TODO: 예외처리
@@ -133,6 +141,9 @@ export class ChannelService {
     const targetChannel = await this.channelRepository.findOne({
       where: { name },
     });
+    if (!targetChannel) {
+      throw new BadRequestException('채널이 존재하지 않습니다.');
+    }
     const chats = new ChannelChat();
     chats.content = content;
     chats.userId = userId;
