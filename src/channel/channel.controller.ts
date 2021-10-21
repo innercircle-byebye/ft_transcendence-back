@@ -10,11 +10,13 @@ import { ChannelService } from './channel.service';
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
+  @Get()
   getChannels() {
     return this.channelService.getAllChannels();
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Get('/me')
   getChannelsByUser(@AuthUser() user: User) {
     return this.channelService.getAllChannelsByUser(user.userId);
   }
