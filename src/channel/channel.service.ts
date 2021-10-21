@@ -115,6 +115,7 @@ export class ChannelService {
     return this.channelMemberRepository.save(channelMember);
   }
 
+  // TODO: 채널 채팅 조회시 user 닉네임, 사진 같이 보내도록
   async getChannelChatsByChannelName(name: string) {
     console.log(name);
     const channelIdByName = await this.channelRepository.findOne({
@@ -143,6 +144,8 @@ export class ChannelService {
     });
     console.log('hellow');
 
-    this.eventsGateway.server.emit('message', chatWithUser);
+    this.eventsGateway.server
+      .to(`channel-${chatWithUser.channelId}`)
+      .emit('message', chatWithUser);
   }
 }

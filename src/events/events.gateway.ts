@@ -33,10 +33,10 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('joinChannel')
-  handleJoinChannel(client: any, userChannel: any) {
-    console.log(userChannel);
-    client.join(userChannel.channelId);
-    client.emit('joinChannel', userChannel);
+  handleJoinChannel(client: any, channelId: number) {
+    console.log(channelId);
+    client.join(`channel-${channelId}`);
+    client.emit('joinChannel', channelId);
   }
 
   @SubscribeMessage('message')
@@ -45,8 +45,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('leaveChannel')
-  handleLeaveChannel(client: any, channel: any) {
-    client.leave(channel);
-    client.emit('leaveChannel', channel);
+  handleLeaveChannel(client: any, channelId: number) {
+    client.leave(`channel-${channelId}`);
+    client.emit('leaveChannel', channelId);
   }
 }

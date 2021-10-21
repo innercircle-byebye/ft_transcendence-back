@@ -60,6 +60,7 @@ export class ChannelController {
     );
   }
 
+  // TODO: 채널 채팅 조회시 user 닉네임, 사진 같이 보내도록
   @Get('/:name/chat')
   getChannelChatsByChannelName(@Param('name') channelName) {
     console.log(channelName);
