@@ -156,4 +156,6 @@ export class ChannelController {
       user.userId,
     );
   }
+
+  // TODO: update channel 작성, leave chat 작성, createChannel 할 때 user id 배열로 조회
 }

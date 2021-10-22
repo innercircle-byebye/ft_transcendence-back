@@ -31,12 +31,11 @@ export class ChannelService {
 
     // TODO: 함수화, 재사용 가능하도록 처리
     const channelPasswordConverted = allChannelsWithPassword.map(
-      (channelMemeber: any) => {
-        if (channelMemeber.password === null)
-          channelMemeber.isProtected = false;
-        else channelMemeber.isProtected = true;
-        delete channelMemeber.password;
-        return channelMemeber;
+      (channelList: any) => {
+        if (channelList.password === null) channelList.isPrivate = false;
+        else channelList.isPrivate = true;
+        delete channelList.password;
+        return channelList;
       },
     );
     return channelPasswordConverted;
@@ -50,10 +49,11 @@ export class ChannelService {
       .addSelect('channel.password')
       .getMany();
 
+    // TODO: 함수화, 재사용 가능하도록 처리
     const channelList = joinedChannelMember.map((channelMemeber: any) => {
       if (channelMemeber.channel.password === null)
-        channelMemeber.channel.isProtected = false;
-      else channelMemeber.channel.isProtected = true;
+        channelMemeber.channel.isPrivate = false;
+      else channelMemeber.channel.isPrivate = true;
       delete channelMemeber.channel.password;
       return channelMemeber.channel;
     });
@@ -61,12 +61,21 @@ export class ChannelService {
     return channelList;
   }
 
-  getChannelInformation(name: string) {
-    const thisChannel = this.channelRepository.findOne({
-      where: { name },
-    });
+  async getChannelInformation(name: string) {
+    const thisChannel: any = await this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.name= :name', { name })
+      .addSelect('channel.password')
+      .getOne();
+
     if (!thisChannel)
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    if (thisChannel.password === null) thisChannel.isPrivate = false;
+    else thisChannel.isPrivate = true;
+    delete thisChannel.password;
+    thisChannel.currentChatMemberCount = Object.keys(
+      await this.getChannelMembers(name),
+    ).length;
     return thisChannel;
   }
 
@@ -88,7 +97,7 @@ export class ChannelService {
 
     const channel = new Channel();
     channel.name = name;
-    if (password !== undefined) channel.password = password;
+    if (password) channel.password = password;
     channel.maxParticipantNum = maxParticipantNum;
     const channelReturned = await this.channelRepository.save(channel);
     const channelMember = new ChannelMember();
@@ -177,7 +186,6 @@ export class ChannelService {
       where: { channelChatId: savedChat.channelChatId },
       // relations: ['user', 'channel'],
     });
-    console.log('hellow');
 
     this.eventsGateway.server
       .to(`channel-${name}`)
