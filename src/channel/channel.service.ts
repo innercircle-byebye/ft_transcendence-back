@@ -23,8 +23,22 @@ export class ChannelService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
-  getAllChannels() {
-    return this.channelRepository.find();
+  async getAllChannels() {
+    const allChannelsWithPassword = await this.channelRepository
+      .createQueryBuilder('channel')
+      .addSelect('channel.password')
+      .getMany();
+
+    const channelPasswordConverted = allChannelsWithPassword.map(
+      (channelMemeber: any) => {
+        if (channelMemeber.password === null)
+          channelMemeber.isProtected = false;
+        else channelMemeber.isProtected = true;
+        delete channelMemeber.password;
+        return channelMemeber;
+      },
+    );
+    return channelPasswordConverted;
   }
 
   async getAllChannelsByUser(userId: number) {
