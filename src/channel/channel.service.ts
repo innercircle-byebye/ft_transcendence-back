@@ -29,6 +29,7 @@ export class ChannelService {
       .addSelect('channel.password')
       .getMany();
 
+    // TODO: 함수화, 재사용 가능하도록 처리
     const channelPasswordConverted = allChannelsWithPassword.map(
       (channelMemeber: any) => {
         if (channelMemeber.password === null)
@@ -46,9 +47,14 @@ export class ChannelService {
       .createQueryBuilder('channelMember')
       .where('channelMember.userId = :id', { id: userId })
       .innerJoinAndSelect('channelMember.channel', 'channel')
+      .addSelect('channel.password')
       .getMany();
 
-    const channelList = joinedChannelMember.map((channelMemeber) => {
+    const channelList = joinedChannelMember.map((channelMemeber: any) => {
+      if (channelMemeber.channel.password === null)
+        channelMemeber.channel.isProtected = false;
+      else channelMemeber.channel.isProtected = true;
+      delete channelMemeber.channel.password;
       return channelMemeber.channel;
     });
 
