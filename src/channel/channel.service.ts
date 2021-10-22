@@ -7,6 +7,7 @@ import { User } from 'src/entities/User';
 import { EventsGateway } from 'src/events/events.gateway';
 import { Connection, Repository } from 'typeorm';
 
+// TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
 export class ChannelService {
   constructor(
@@ -27,14 +28,11 @@ export class ChannelService {
   }
 
   async getAllChannelsByUser(userId: number) {
-    console.log('hello world');
     const joinedChannelMember = await this.channelMemberRepository
       .createQueryBuilder('channelMember')
       .where('channelMember.userId = :id', { id: userId })
       .innerJoinAndSelect('channelMember.channel', 'channel')
       .getMany();
-
-    console.log(joinedChannelMember);
 
     const channelList = joinedChannelMember.map((channelMemeber) => {
       return channelMemeber.channel;
@@ -44,7 +42,12 @@ export class ChannelService {
   }
 
   getChannelInformation(name: string) {
-    return this.channelRepository.findOne({ where: { name } });
+    const thisChannel = this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!thisChannel)
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    return thisChannel;
   }
 
   async createChannel(
@@ -82,15 +85,17 @@ export class ChannelService {
     if (!channelIdByName)
       throw new BadRequestException('존재하지 않는 채널입니다.');
     return this.channelMemberRepository
-      .createQueryBuilder('channelmembers')
-      .innerJoin(
-        'channelmembers.channel',
+      .createQueryBuilder('channelMembers')
+      .innerJoinAndSelect(
+        'channelMembers.channel',
         'members',
-        'members.channelId= :name',
+        'members.name = :channelName',
         {
-          name: channelIdByName.channelId,
+          channelName: name,
         },
       )
+      .innerJoinAndSelect('channelMembers.user', 'user')
+      .select(['channelMembers', 'user.nickname', 'user.imagePath'])
       .getMany();
   }
 
@@ -115,7 +120,6 @@ export class ChannelService {
     return this.channelMemberRepository.save(channelMember);
   }
 
-  // TODO: 채널 채팅 조회시 user 닉네임, 사진 같이 보내도록
   async getChannelChatsByChannelName(name: string) {
     console.log(name);
     const channelIdByName = await this.channelRepository.findOne({
