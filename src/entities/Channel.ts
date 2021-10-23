@@ -83,6 +83,7 @@ export class Channel implements IChannel {
   channelChats: IChannelChat[];
 
   // 굳이 있을 필요가 있나싶음
+  // 이라고 생각 했으나 채널 소유자만 채널 삭제 권한이 있음.
   @ManyToOne('User', 'channelOwner')
   @JoinColumn({ name: 'owner_id' })
   owner: IUser;

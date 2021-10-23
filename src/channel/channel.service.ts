@@ -292,15 +292,12 @@ export class ChannelService {
   }
 
   async getChannelChatsByChannelName(name: string) {
-    console.log(name);
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
-    console.log(channelIdByName);
     if (!channelIdByName) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    console.log(channelIdByName);
     const channelChats = this.channelChatRepository
       .createQueryBuilder('channelChats')
       .where('channelChats.channelId = :id', { id: channelIdByName.channelId })

@@ -279,7 +279,6 @@ export class ChannelController {
   })
   @Get('/:name/chat')
   getChannelChatsByChannelName(@Param('name') channelName: string) {
-    console.log(channelName);
     return this.channelService.getChannelChatsByChannelName(channelName);
   }
 
