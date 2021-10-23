@@ -24,6 +24,9 @@ export class Channel implements IChannel {
   @PrimaryGeneratedColumn({ type: 'int', name: 'channel_id' })
   channelId: number;
 
+  @Column({ type: 'int', name: 'owner_id' })
+  ownerId: number;
+
   @ApiProperty({
     description: '채널명 (사용자가 입력, 수정 하는채널의 이름)',
     example: '게임하다가 심심한데 대화 히실분 구함',
@@ -75,9 +78,10 @@ export class Channel implements IChannel {
   @OneToMany('ChannelChat', 'channel')
   channelChats: IChannelChat[];
 
+  // 굳이 있을 필요가 있나싶음
   @ManyToOne('User', 'channelOwner')
   @JoinColumn({ name: 'owner_id' })
-  ownerId: IUser;
+  owner: IUser;
 
   @OneToMany('ChannelMember', 'channel')
   channelMember: IChannelMember[];
