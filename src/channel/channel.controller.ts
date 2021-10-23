@@ -24,6 +24,7 @@ import { ChannelUpdateDto } from './dto/channel-update.dto';
 import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
 import { ChannelChatListDto } from './dto/channelchat-list.dto';
+import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
 // TODO: createChannel 할 때 user id 배열 전달 동작(DM 구현 이후), updateChannelMember
@@ -71,7 +72,7 @@ export class ChannelController {
     description: '현재 선택한 채널의 정보',
   })
   @ApiBadRequestResponse({
-    description: '채널이 존재 하지 않습니다.',
+    description: '존재 하지 않는 채널입니다.\n\n 존재 하지 않는 사용자입니다.',
   })
   @Get('/:name')
   getChannelInfo(@Param('name') channelName: string) {
@@ -123,7 +124,7 @@ export class ChannelController {
   })
   @ApiBadRequestResponse({
     description:
-      '채널이 존재 하지 않습니다.\n\n' +
+      '존재 하지 않는 채널입니다.\n\n' +
       '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다\n\n' +
       '이미 존재하는 채널 이름입니다.\n\n' +
       '채널 수정 권한이 없습니다.\n\n',
@@ -153,7 +154,7 @@ export class ChannelController {
     description: '삭제된 채널의 정보',
   })
   @ApiBadRequestResponse({
-    description: '채널이 존재 하지 않습니다.\n\n 채널 삭제 권한이 없습니다.',
+    description: '존재 하지 않는 채널입니다.\n\n 채널 삭제 권한이 없습니다.',
   })
   @Delete('/:name')
   async deleteChannel(
@@ -236,7 +237,10 @@ export class ChannelController {
 
   @ApiOperation({
     summary: '채널에서 유저 업데이트',
-    description: '채널에서 유저의 상태를 변경합니다',
+    description:
+      '채널에서 유저의 상태를 변경합니다\n\n (mute 기한, ban 일시, 관리자 권한 유무)\n\n' +
+      '- mute의 경우, null을 전달 하게 되면 mute 상태가 해제됩니다.\n\n' +
+      '- ban 처리 이후 사용자는 현재 채널에서 삭제 처리됩니다.\n\n',
   })
   @ApiOkResponse({
     type: ChannelMemberDto,
@@ -249,7 +253,7 @@ export class ChannelController {
   updateChannelMember(
     @Param('name') channelName: string,
     @AuthUser() user: User,
-    @Body() body,
+    @Body() body: ChannelMemberUpdateDto,
   ) {
     return this.channelService.updateChannelMember(
       channelName,

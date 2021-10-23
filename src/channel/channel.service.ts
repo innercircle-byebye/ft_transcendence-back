@@ -127,7 +127,7 @@ export class ChannelService {
       where: [{ name }],
     });
     if (!targetChatroom)
-      throw new BadRequestException('채널이 존재 하지 않습니다.');
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
 
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
       throw new BadRequestException(
@@ -178,7 +178,7 @@ export class ChannelService {
       where: { name },
     });
     if (!channelIdByName)
-      throw new BadRequestException('채널이 존재 하지 않습니다.');
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
     return this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .innerJoinAndSelect(
@@ -241,7 +241,7 @@ export class ChannelService {
       where: { name },
     });
     if (!channelIdByName)
-      throw new BadRequestException('채널이 존재 하지 않습니다.');
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
@@ -262,14 +262,14 @@ export class ChannelService {
     userId: number,
     targetUserId: number,
     banDate: Date,
-    mutedDate: Date,
+    mutedDate: Date | null,
     isAdmin: boolean,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
     if (!channelIdByName)
-      throw new BadRequestException('채널이 존재 하지 않습니다.');
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
@@ -279,11 +279,16 @@ export class ChannelService {
         target: targetUserId || userId,
       })
       .getOne();
-    console.log(targetUser);
-    if (banDate) targetUser.banDate = banDate;
-    if (mutedDate) targetUser.mutedDate = mutedDate;
-    if (isAdmin) targetUser.isAdmin = isAdmin;
-    console.log(`${`${banDate} ${mutedDate}`}${isAdmin}`);
+    if (!targetUser)
+      throw new BadRequestException('존재 하지 않는 사용자입니다.');
+
+    targetUser.mutedDate = mutedDate;
+    targetUser.isAdmin = isAdmin;
+    if (banDate) {
+      targetUser.banDate = banDate;
+      return this.channelChatRepository.softRemove(targetUser);
+    }
+    return this.channelMemberRepository.save(targetUser);
   }
 
   async getChannelChatsByChannelName(name: string) {

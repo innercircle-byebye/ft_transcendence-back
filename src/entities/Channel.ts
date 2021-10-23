@@ -24,6 +24,10 @@ export class Channel implements IChannel {
   @PrimaryGeneratedColumn({ type: 'int', name: 'channel_id' })
   channelId: number;
 
+  @ApiProperty({
+    description: '채널 소유자의 유저 ID 번호',
+    example: 1,
+  })
   @Column({ type: 'int', name: 'owner_id' })
   ownerId: number;
 
