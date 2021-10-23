@@ -1,7 +1,7 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ChannelChat } from 'src/entities/ChannelChat';
 
-export class ChannelChatListDto extends OmitType(ChannelChat, ['user']) {
+export class ChannelChatDto extends OmitType(ChannelChat, ['user']) {
   @ApiProperty({
     type: 'object',
     properties: {

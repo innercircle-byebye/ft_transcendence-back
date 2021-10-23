@@ -23,7 +23,7 @@ import { ChannelInfoDto } from './dto/channel-create.dto';
 import { ChannelUpdateDto } from './dto/channel-update.dto';
 import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
-import { ChannelChatListDto } from './dto/channelchat-list.dto';
+import { ChannelChatDto } from './dto/channelchat.dto';
 import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
@@ -270,7 +270,7 @@ export class ChannelController {
     description: '주어진 채널의 전체 채팅을 조회합니다.',
   })
   @ApiOkResponse({
-    type: ChannelChatListDto,
+    type: ChannelChatDto,
     isArray: true,
     description: '파라미터로 전달된 채널의 전체 채팅 모음',
   })
@@ -289,7 +289,7 @@ export class ChannelController {
       '해당 채널에 채팅을 생성합니다.\n\n 채팅 생성 후 연결 된 방으로 websocket서버로 채팅 내용을 전송합니다.',
   })
   @ApiOkResponse({
-    type: ChannelChatCreateDto,
+    type: ChannelChatDto,
     description: '파라미터로 전달된 채널의 채팅',
   })
   @ApiBadRequestResponse({

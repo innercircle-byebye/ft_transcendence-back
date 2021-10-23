@@ -324,15 +324,20 @@ export class ChannelService {
     chats.userId = userId;
     chats.channelId = targetChannel.channelId;
     const savedChat = await this.channelChatRepository.save(chats);
-    const chatWithUser = await this.channelChatRepository.findOne({
-      where: { channelChatId: savedChat.channelChatId },
-      // relations: ['user', 'channel'],
-    });
+
+    const chatWithUser = this.channelChatRepository
+      .createQueryBuilder('channelChats')
+      .where('channelChats.channelChatId = :id', {
+        id: savedChat.channelChatId,
+      })
+      .innerJoinAndSelect('channelChats.user', 'user')
+      .select(['channelChats', 'user.nickname', 'user.imagePath'])
+      .getOne();
 
     this.eventsGateway.server
       .to(`channel-${name}`)
       .emit('message', chatWithUser);
 
-    return savedChat;
+    return chatWithUser;
   }
 }
