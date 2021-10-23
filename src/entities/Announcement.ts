@@ -4,12 +4,16 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IAdmin } from './interfaces/IAdmin';
+import { IAnnouncement } from './interfaces/IAnnouncement';
 
 @Entity('announcement')
-export class Announcement {
+export class Announcement implements IAnnouncement {
   @ApiProperty({
     description: '공지사항 아이디 번호 (순번)',
     example: 1,
@@ -24,6 +28,10 @@ export class Announcement {
   })
   @Column({ type: 'int', name: 'admin_id' })
   adminId: number;
+
+  @ManyToOne('Admin', 'announcements')
+  @JoinColumn({ name: 'admin_id' })
+  admin: IAdmin;
 
   @ApiProperty({
     description: '제목',
