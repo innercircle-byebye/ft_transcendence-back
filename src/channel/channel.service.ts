@@ -261,8 +261,8 @@ export class ChannelService {
     name: string,
     userId: number,
     targetUserId: number,
-    banDate: string,
-    mutedDate: string,
+    banDate: Date,
+    mutedDate: Date,
     isAdmin: boolean,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
@@ -280,8 +280,10 @@ export class ChannelService {
       })
       .getOne();
     console.log(targetUser);
-
-    console.log(banDate + mutedDate + isAdmin);
+    if (banDate) targetUser.banDate = banDate;
+    if (mutedDate) targetUser.mutedDate = mutedDate;
+    if (isAdmin) targetUser.isAdmin = isAdmin;
+    console.log(`${`${banDate} ${mutedDate}`}${isAdmin}`);
   }
 
   async getChannelChatsByChannelName(name: string) {

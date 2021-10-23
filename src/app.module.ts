@@ -13,7 +13,6 @@ import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
 import { EventsModule } from './events/events.module';
-import { EventsGateway } from './events/events.gateway';
 import { RelationModule } from './relation/relation.module';
 
 @Module({
@@ -43,6 +42,6 @@ import { RelationModule } from './relation/relation.module';
     RelationModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventsGateway],
+  providers: [AppService],
 })
 export class AppModule {}
