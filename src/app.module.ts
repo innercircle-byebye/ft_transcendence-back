@@ -26,6 +26,7 @@ import { RelationModule } from './relation/relation.module';
         Object.assign(await ormconfig, {
           autoLoadEntities: true,
           keepConnectionAlive: true,
+          timezone: process.env.TZ,
         }),
     }),
     MulterModule.register({
