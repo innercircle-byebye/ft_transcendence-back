@@ -94,9 +94,13 @@ export class AuthController {
   @ApiOperation({ summary: 'refreshToken을 이용해서 accessToken 재발급' })
   @Get('refresh')
   @UseGuards(AuthGuard('refresh'))
-  refresh(@AuthUser() user: User, @Res({ passthrough: true }) res) {
+  refresh(@Req() req, @Res({ passthrough: true }) res) {
+    const { user, isTwoFactorAuthenticated } = req.user;
     const { accessToken, ...accessOption } =
-      this.authService.getCookieWithJwtAccessToken(user.userId);
+      this.authService.getCookieWithJwtAccessToken(
+        user.userId,
+        isTwoFactorAuthenticated,
+      );
     res.cookie('Authentication', accessToken, accessOption);
   }
 

@@ -13,8 +13,11 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  getCookieWithJwtAccessToken(userId: number) {
-    const payload = { userId };
+  getCookieWithJwtAccessToken(
+    userId: number,
+    isTwoFactorAuthenticated = false,
+  ) {
+    const payload = { userId, isTwoFactorAuthenticated };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME}s`,
@@ -29,8 +32,11 @@ export class AuthService {
     };
   }
 
-  getCookieWithJwtRefreshToken(userId: number) {
-    const payload = { userId };
+  getCookieWithJwtRefreshToken(
+    userId: number,
+    isTwoFactorAuthenticated = false,
+  ) {
+    const payload = { userId, isTwoFactorAuthenticated };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}s`,
