@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -147,10 +148,40 @@ export class AuthController {
     );
 
     if (!isCodeValid) {
-      throw new UnauthorizedException('Wrong two factor authentication code');
+      throw new UnauthorizedException('2FA 코드가 유효하지 않습니다.');
     }
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, true);
   }
 
   // TODO : 2fa/turn_off 해야함
+
+  @Post('2fa/authenticate')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'))
+  async authenticate(
+    @AuthUser() user: User,
+    @Res({ passthrough: true }) res,
+    @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
+  ) {
+    if (!user.isTwoFactorAuthEnabled || !user.twoFactorAuthSecret) {
+      throw new BadRequestException('2FA가 활성화되어있지 않습니다.');
+    }
+    const isCodeValid = this.authService.isTwoFactorAuthCodeValid(
+      user,
+      twoFactorAuthCode,
+    );
+    if (!isCodeValid) {
+      throw new UnauthorizedException('2FA 코드가 유효하지 않습니다.');
+    }
+
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.userId, true);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.userId, true);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
+  }
 }
