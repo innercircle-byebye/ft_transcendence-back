@@ -22,6 +22,10 @@ export class ChannelChat implements IChannelChat {
   @PrimaryGeneratedColumn({ type: 'int', name: 'channel_chat_id' })
   channelChatId: number;
 
+  @ApiProperty({
+    description: '유저 ID',
+    example: 1,
+  })
   @Column({ name: 'user_id' })
   userId: number;
 
@@ -29,6 +33,10 @@ export class ChannelChat implements IChannelChat {
   @JoinColumn({ name: 'user_id' })
   user: IUser;
 
+  @ApiProperty({
+    description: '채널 ID',
+    example: 1,
+  })
   @Column({ name: 'channel_id' })
   channelId: number;
 

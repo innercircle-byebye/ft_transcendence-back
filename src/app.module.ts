@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
+import { EventsModule } from './events/events.module';
 import { RelationModule } from './relation/relation.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { RelationModule } from './relation/relation.module';
         Object.assign(await ormconfig, {
           autoLoadEntities: true,
           keepConnectionAlive: true,
+          timezone: process.env.TZ,
         }),
     }),
     MulterModule.register({
@@ -37,6 +39,7 @@ import { RelationModule } from './relation/relation.module';
     }),
     AdminModule,
     ChannelModule,
+    EventsModule,
     RelationModule,
   ],
   controllers: [AppController],

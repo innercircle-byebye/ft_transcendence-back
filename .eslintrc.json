@@ -31,6 +31,7 @@
     "@typescript-eslint/indent": "off",
     "class-methods-use-this": "off",
     // for nestjs syntax
+    "no-param-reassign": "off",
     "prettier/prettier": [
       "error",
       {
