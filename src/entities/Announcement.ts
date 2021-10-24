@@ -22,7 +22,7 @@ export class Announcement implements IAnnouncement {
   announcementId: number;
 
   @ApiProperty({
-    description: '작성자(관리자) ID',
+    description: '관리자(공지사항 작성자) ID',
     example: 1,
     required: true,
   })

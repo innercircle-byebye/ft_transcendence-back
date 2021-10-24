@@ -30,7 +30,7 @@ export class Admin implements IAdmin {
   @ApiProperty({
     description: '관리자 비밀번호',
   })
-  @Column('varchar', { name: 'email', length: 100 })
+  @Column('varchar', { name: 'password', length: 100 })
   password: string;
 
   @ApiProperty({
