@@ -173,7 +173,7 @@ export class ChannelController {
   @ApiBadRequestResponse({
     description: '존재하지 않는 채널입니다.',
   })
-  @Get('/:name/channelmembers')
+  @Get('/:name/member')
   getChannelMembers(@Param('name') channelName: string) {
     return this.channelService.getChannelMembers(channelName);
   }
