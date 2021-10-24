@@ -130,6 +130,11 @@ export class AuthController {
   @Get('2fa/generate')
   @UseGuards(AuthGuard('jwt'))
   async generate2faQRcode(@AuthUser() user: User, @Res() res: Response) {
+    if (user.isTwoFactorAuthEnabled) {
+      throw new BadRequestException(
+        '2FA가 비활성화되어 있을 때만, 2FA용 QRcode를 생성할 수 있습니다.',
+      );
+    }
     const { otpAuthUrl } = await this.authService.generateTwoFactorAuthSecret(
       user,
     );
