@@ -11,7 +11,6 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
@@ -19,6 +18,11 @@ import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { TwoFactorAuthCodeDto } from './dto/two-factor-auth-code.dto';
+import { FtGuard } from './guards/ft.guard';
+import { GoogleGuard } from './guards/google.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { JwtTwoFactorGuard } from './guards/jwt-two-factor.guard';
+import { JwtGuard } from './guards/jwt.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -30,7 +34,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Google OAuth 로그인 화면요청' })
   @Get('google_login')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleGuard)
   googleLogin() {}
 
   @ApiOperation({
@@ -38,7 +42,7 @@ export class AuthController {
   })
   @Redirect('http://localhost:3000')
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleGuard)
   async googleAuthRedirect(@Req() req, @Res({ passthrough: true }) res) {
     if (!req.user) {
       throw new UnauthorizedException();
@@ -62,7 +66,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '42 OAuth 로그인 화면요청' })
   @Get('ft_login')
-  @UseGuards(AuthGuard('ft'))
+  @UseGuards(FtGuard)
   ftLogin() {}
 
   @ApiOperation({
@@ -70,7 +74,7 @@ export class AuthController {
   })
   @Redirect('http://localhost:3000')
   @Get('ft/callback')
-  @UseGuards(AuthGuard('ft'))
+  @UseGuards(FtGuard)
   async ftAuthRedirect(@Req() req, @Res({ passthrough: true }) res) {
     if (!req.user) {
       throw new UnauthorizedException();
@@ -94,7 +98,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'refreshToken을 이용해서 accessToken 재발급' })
   @Get('refresh')
-  @UseGuards(AuthGuard('refresh'))
+  @UseGuards(JwtRefreshGuard)
   refresh(@Req() req, @Res({ passthrough: true }) res) {
     const { user, isTwoFactorAuthenticated } = req.user;
     const { accessToken, ...accessOption } =
@@ -107,7 +111,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '로그아웃 (refreshToken 있어야만 로그아웃가능)' })
   @Get('logout')
-  @UseGuards(AuthGuard('refresh'))
+  @UseGuards(JwtRefreshGuard)
   async logOut(@Req() req, @Res({ passthrough: true }) res) {
     const { user } = req.user;
     const { accessOption, refreshOption } =
@@ -121,14 +125,14 @@ export class AuthController {
 
   @ApiOperation({ summary: 'accessToken with 2FA 테스트용' })
   @Get('/test')
-  @UseGuards(AuthGuard('jwt-two-factor'))
+  @UseGuards(JwtTwoFactorGuard)
   test(@AuthUser() user: User) {
     console.log('req.user', user);
     return { userId: user.userId };
   }
 
   @Get('2fa/generate')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtGuard)
   async generate2faQRcode(@AuthUser() user: User, @Res() res: Response) {
     if (user.isTwoFactorAuthEnabled) {
       throw new BadRequestException(
@@ -143,7 +147,7 @@ export class AuthController {
 
   @Post('2fa/turn_on')
   @HttpCode(200)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtGuard)
   async turnOnTwoFactorAuth(
     @AuthUser() user: User,
     @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
@@ -166,14 +170,14 @@ export class AuthController {
 
   @Post('2fa/turn_off')
   @HttpCode(200)
-  @UseGuards(AuthGuard('jwt-two-factor'))
+  @UseGuards(JwtTwoFactorGuard)
   async turnOffTwoFactorAuth(@AuthUser() user: User) {
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, false);
   }
 
   @Post('2fa/authenticate')
   @HttpCode(200)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtGuard)
   async authenticate(
     @AuthUser() user: User,
     @Res({ passthrough: true }) res,

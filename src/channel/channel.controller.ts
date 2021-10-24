@@ -8,13 +8,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
@@ -28,7 +28,7 @@ import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
 // TODO: createChannel 할 때 user id 배열 전달 동작(DM 구현 이후), updateChannelMember
-@UseGuards(AuthGuard('jwt-two-factor'))
+@UseGuards(JwtTwoFactorGuard)
 @ApiTags('Channel')
 @Controller('api/channel')
 export class ChannelController {
