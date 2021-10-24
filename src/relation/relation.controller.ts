@@ -20,7 +20,7 @@ import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
 import { RelationService } from './relation.service';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt-two-factor'))
 @Controller('api')
 export class RelationController {
   constructor(private relationService: RelationService) {}

@@ -119,9 +119,9 @@ export class AuthController {
     res.cookie('Refresh', '', refreshOption);
   }
 
-  @ApiOperation({ summary: 'accessToken 테스트용' })
+  @ApiOperation({ summary: 'accessToken with 2FA 테스트용' })
   @Get('/test')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt-two-factor'))
   test(@AuthUser() user: User) {
     console.log('req.user', user);
     return { userId: user.userId };

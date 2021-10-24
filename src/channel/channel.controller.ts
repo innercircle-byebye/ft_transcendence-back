@@ -28,7 +28,7 @@ import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
 // TODO: createChannel 할 때 user id 배열 전달 동작(DM 구현 이후), updateChannelMember
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt-two-factor'))
 @ApiTags('Channel')
 @Controller('api/channel')
 export class ChannelController {

@@ -32,7 +32,7 @@ import { UserService } from './user.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('User')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt-two-factor'))
 @Controller('api/user')
 export class UserController {
   constructor(private userService: UserService) {}

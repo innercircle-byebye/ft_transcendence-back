@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { FtStrategy } from './strategies/ft.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtTwoFactorStrategy } from './strategies/jwt-two-factor.strategy';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
     FtStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
+    JwtTwoFactorStrategy,
     GoogleStrategy,
   ],
   exports: [
@@ -37,6 +39,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
     FtStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
+    JwtTwoFactorStrategy,
     GoogleStrategy,
   ],
 })
