@@ -25,6 +25,13 @@ export class Channel implements IChannel {
   channelId: number;
 
   @ApiProperty({
+    description: '채널 소유자의 유저 ID 번호',
+    example: 1,
+  })
+  @Column({ type: 'int', name: 'owner_id' })
+  ownerId: number;
+
+  @ApiProperty({
     description: '채널명 (사용자가 입력, 수정 하는채널의 이름)',
     example: '게임하다가 심심한데 대화 히실분 구함',
     required: true,
@@ -75,9 +82,11 @@ export class Channel implements IChannel {
   @OneToMany('ChannelChat', 'channel')
   channelChats: IChannelChat[];
 
+  // 굳이 있을 필요가 있나싶음
+  // 이라고 생각 했으나 채널 소유자만 채널 삭제 권한이 있음.
   @ManyToOne('User', 'channelOwner')
   @JoinColumn({ name: 'owner_id' })
-  ownerId: IUser;
+  owner: IUser;
 
   @OneToMany('ChannelMember', 'channel')
   channelMember: IChannelMember[];

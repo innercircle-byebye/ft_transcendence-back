@@ -15,6 +15,10 @@ import { IUser } from './interfaces/IUser';
 
 @Entity('channel_member')
 export class ChannelMember implements IChannelMember {
+  @ApiProperty({
+    description: '유저 ID 번호',
+    example: 1,
+  })
   @PrimaryColumn({ name: 'user_id' })
   userId: number;
 
@@ -22,6 +26,10 @@ export class ChannelMember implements IChannelMember {
   @JoinColumn({ name: 'user_id' })
   user: IUser;
 
+  @ApiProperty({
+    description: '채널 ID 번호',
+    example: 1,
+  })
   @PrimaryColumn({ name: 'channel_id' })
   channelId: number;
 

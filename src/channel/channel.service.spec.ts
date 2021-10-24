@@ -4,6 +4,7 @@ import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
+import { EventsGateway } from 'src/events/events.gateway';
 import { Connection } from 'typeorm';
 import { ChannelService } from './channel.service';
 
@@ -39,6 +40,10 @@ const mockConnection = () => ({
   transaction: jest.fn(),
 });
 
+const mockGateway = () => ({
+  transaction: jest.fn(),
+});
+
 describe('ChannelService', () => {
   let service: ChannelService;
 
@@ -65,6 +70,10 @@ describe('ChannelService', () => {
         {
           provide: Connection,
           useFactory: mockConnection,
+        },
+        {
+          provide: EventsGateway,
+          useFactory: mockGateway,
         },
       ],
     }).compile();
