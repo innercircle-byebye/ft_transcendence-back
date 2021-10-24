@@ -4,12 +4,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { IAdmin } from './interfaces/IAdmin';
-import { IAnnouncement } from './interfaces/IAnnouncement';
 
 @Entity('admin')
 export class Admin implements IAdmin {
@@ -33,6 +34,9 @@ export class Admin implements IAdmin {
   @Column('varchar', { name: 'password', length: 100 })
   password: string;
 
+  @Column({ type: 'int', name: 'from_id' })
+  fromId: number;
+
   @ApiProperty({
     description: '관리자 생성 일시',
     readOnly: true,
@@ -55,6 +59,10 @@ export class Admin implements IAdmin {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @OneToMany('Announcement', 'admin')
-  announcements: IAnnouncement[];
+  @ManyToOne(() => Admin, (admin) => admin.childCategories)
+  @JoinColumn({ name: 'from_id' })
+  parentCategory: Admin;
+
+  @OneToMany(() => Admin, (category) => category.parentCategory)
+  childCategories: Admin[];
 }
