@@ -142,16 +142,12 @@ export class ChannelService {
     }
     const channelAdmin = await this.channelMemberRepository
       .createQueryBuilder('channelMember')
-      .innerJoinAndSelect(
-        'channelMember.channel',
-        'members',
-        'members.name = :channelName',
-        {
-          channelName: name,
-        },
-      )
       .where('channelMember.user_id = :adminId', { adminId })
+      .andWhere('channelMember.channel_id = :channelId', {
+        channelId: targetChatroom.channelId,
+      })
       .getOne();
+
     if (!channelAdmin || channelAdmin.isAdmin === false)
       throw new BadRequestException('채널 수정 권한이 없습니다.');
 
@@ -183,8 +179,8 @@ export class ChannelService {
       .createQueryBuilder('channelMembers')
       .innerJoinAndSelect(
         'channelMembers.channel',
-        'members',
-        'members.name = :channelName',
+        'channel',
+        'channel.name = :channelName',
         {
           channelName: name,
         },
@@ -194,14 +190,21 @@ export class ChannelService {
       .getMany();
   }
 
-  async createChannelMember(name: string, userId: number, password: string) {
+  async createChannelMember(
+    name: string,
+    userId: number,
+    targetUserId: number,
+    password: string,
+  ) {
     const channel = await this.channelRepository.findOne({ where: { name } });
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
     if (channel.password !== password)
       throw new BadRequestException('잘못된 비밀번호입니다.');
-    const user = await this.userRepository.findOne({ where: { userId } });
+    const user = await this.userRepository.findOne({
+      where: { userId: targetUserId || userId },
+    });
     if (!user) {
       throw new BadRequestException('존재하지 않는 사용자입니다.');
     }
@@ -218,7 +221,7 @@ export class ChannelService {
         channelId: channel.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: userId,
+        target: targetUserId || userId,
       })
       .withDeleted()
       .getOne();

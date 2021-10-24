@@ -88,7 +88,6 @@ export class ChannelController {
   })
   @ApiOkResponse({
     type: ChannelDto,
-    isArray: true,
     description: '생성된 채널의 정보',
   })
   @ApiBadRequestResponse({
@@ -119,7 +118,6 @@ export class ChannelController {
   })
   @ApiOkResponse({
     type: ChannelDto,
-    isArray: true,
     description: '업데이트 된 채널의 정보',
   })
   @ApiBadRequestResponse({
@@ -150,7 +148,6 @@ export class ChannelController {
   })
   @ApiOkResponse({
     type: ChannelDto,
-    isArray: true,
     description: '삭제된 채널의 정보',
   })
   @ApiBadRequestResponse({
@@ -186,8 +183,7 @@ export class ChannelController {
     description: '채널에 유저를 추가합니다.',
   })
   @ApiOkResponse({
-    type: UserDto,
-    isArray: true,
+    type: ChannelMemberDto,
     description: '파라미터로 전달된 채널의 정보',
   })
   @ApiBadRequestResponse({
@@ -204,6 +200,7 @@ export class ChannelController {
     return this.channelService.createChannelMember(
       channelName,
       user.userId,
+      body.targetUserId,
       body.password,
     );
   }
