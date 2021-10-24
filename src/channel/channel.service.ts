@@ -86,6 +86,10 @@ export class ChannelService {
     maxParticipantNum: number,
     invitedUsers: number[],
   ) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
       throw new BadRequestException(
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
@@ -96,24 +100,38 @@ export class ChannelService {
     if (existChatroom)
       throw new BadRequestException('이미 존재하는 채널 이름입니다.');
 
-    const channel = new Channel();
-    channel.name = name;
-    channel.ownerId = ownerId;
-    if (password) channel.password = password;
-    channel.maxParticipantNum = maxParticipantNum;
-    const channelReturned = await this.channelRepository.save(channel);
-    const channelMember = new ChannelMember();
-    channelMember.userId = ownerId;
-    channelMember.channelId = channelReturned.channelId;
-    channelMember.isAdmin = true;
-    await this.channelMemberRepository.save(channelMember);
+    let channelReturned;
+    try {
+      const channel = new Channel();
+      channel.name = name;
+      channel.ownerId = ownerId;
+      if (password) channel.password = password;
+      channel.maxParticipantNum = maxParticipantNum;
+      channelReturned = await queryRunner.manager
+        .getRepository(Channel)
+        .save(channel);
+      const channelMember = new ChannelMember();
+      channelMember.userId = ownerId;
+      channelMember.channelId = channelReturned.channelId;
+      channelMember.isAdmin = true;
+      await queryRunner.manager
+        .getRepository(ChannelMember)
+        .save(channelMember);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+
     // TODO: DM으로 해당 유저 초대 메시지 보내기
     // for(variinarray){
     //    output += array[i];
     // }
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
-    return channel;
+    return channelReturned;
   }
 
   async updateChannel(
@@ -177,7 +195,7 @@ export class ChannelService {
       throw new BadRequestException('존재 하지 않는 채널입니다.');
     return this.channelMemberRepository
       .createQueryBuilder('channelMembers')
-      .innerJoinAndSelect(
+      .innerJoin(
         'channelMembers.channel',
         'channel',
         'channel.name = :channelName',
