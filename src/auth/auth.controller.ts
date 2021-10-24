@@ -108,7 +108,8 @@ export class AuthController {
   @ApiOperation({ summary: '로그아웃 (refreshToken 있어야만 로그아웃가능)' })
   @Get('logout')
   @UseGuards(AuthGuard('refresh'))
-  async logOut(@AuthUser() user: User, @Res({ passthrough: true }) res) {
+  async logOut(@Req() req, @Res({ passthrough: true }) res) {
+    const { user } = req.user;
     const { accessOption, refreshOption } =
       this.authService.getCookiesForLogOut();
 
