@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
@@ -114,5 +115,14 @@ export class AuthController {
   test(@AuthUser() user: User) {
     console.log('req.user', user);
     return { userId: user.userId };
+  }
+
+  @Get('2fa_generate')
+  @UseGuards(AuthGuard('jwt'))
+  async generate2faQRcode(@AuthUser() user: User, @Res() res: Response) {
+    const { otpAuthUrl } = await this.authService.generateTwoFactorAuthSecret(
+      user,
+    );
+    return this.authService.pipeQrCodeStream(res, otpAuthUrl);
   }
 }

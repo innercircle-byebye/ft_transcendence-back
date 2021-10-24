@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { authenticator } from 'otplib';
+import { User } from 'src/entities/User';
+import { UserService } from 'src/user/user.service';
+import { toFileStream } from 'qrcode';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
+  ) {}
 
   getCookieWithJwtAccessToken(userId: number) {
     const payload = { userId };
@@ -52,5 +60,23 @@ export class AuthService {
         maxAge: 0,
       },
     };
+  }
+
+  async generateTwoFactorAuthSecret(user: User) {
+    const secret = authenticator.generateSecret();
+
+    const otpAuthUrl = authenticator.keyuri(
+      user.email,
+      process.env.TWO_FACTOR_AUTH_APP_NAME,
+      secret,
+    );
+
+    await this.userService.setTwoFactorAuthSecret(user.userId, secret);
+
+    return { secret, otpAuthUrl };
+  }
+
+  async pipeQrCodeStream(stream: Response, otpauthUrl: string) {
+    return toFileStream(stream, otpauthUrl);
   }
 }
