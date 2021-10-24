@@ -1,6 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
+  HttpCode,
+  Post,
   Redirect,
   Req,
   Res,
@@ -14,6 +17,7 @@ import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
+import { TwoFactorAuthCodeDto } from './dto/two-factor-auth-code.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -117,7 +121,7 @@ export class AuthController {
     return { userId: user.userId };
   }
 
-  @Get('2fa_generate')
+  @Get('2fa/generate')
   @UseGuards(AuthGuard('jwt'))
   async generate2faQRcode(@AuthUser() user: User, @Res() res: Response) {
     const { otpAuthUrl } = await this.authService.generateTwoFactorAuthSecret(
@@ -125,4 +129,24 @@ export class AuthController {
     );
     return this.authService.pipeQrCodeStream(res, otpAuthUrl);
   }
+
+  @Post('2fa/turn_on')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'))
+  async turnOnTwoFactorAuth(
+    @AuthUser() user: User,
+    @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
+  ) {
+    const isCodeValid = this.authService.isTwoFactorAuthCodeValid(
+      user,
+      twoFactorAuthCode,
+    );
+
+    if (!isCodeValid) {
+      throw new UnauthorizedException('Wrong two factor authentication code');
+    }
+    await this.userService.onAndOffTwoFactorAuthentication(user.userId, true);
+  }
+
+  // TODO : 2fa/turn_off 해야함
 }
