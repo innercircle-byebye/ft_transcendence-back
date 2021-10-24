@@ -142,6 +142,11 @@ export class AuthController {
     @AuthUser() user: User,
     @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
   ) {
+    if (!user.twoFactorAuthSecret) {
+      throw new BadRequestException(
+        '2FA에서 사용할 QRcode를 먼저 생성해야합니다.',
+      );
+    }
     const isCodeValid = this.authService.isTwoFactorAuthCodeValid(
       user,
       twoFactorAuthCode,
