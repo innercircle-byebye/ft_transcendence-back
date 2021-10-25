@@ -144,8 +144,29 @@ export class User implements IUser {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
+  @Column({
+    name: 'is_two_factor_auth_enabled',
+    type: 'boolean',
+    default: false,
+  })
+  isTwoFactorAuthEnabled: boolean;
+
   @Exclude()
-  @Column({ nullable: true })
+  @Column({
+    name: 'two_factor_auth_secret',
+    type: 'varchar',
+    nullable: true,
+    length: 100,
+  })
+  twoFactorAuthSecret: string;
+
+  @Exclude()
+  @Column({
+    name: 'current_hashed_refresh_token',
+    type: 'varchar',
+    nullable: true,
+    length: 100,
+  })
   currentHashedRefreshToken: string;
 
   @OneToMany('ChannelChat', 'user')
