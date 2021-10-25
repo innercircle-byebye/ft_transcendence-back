@@ -29,14 +29,15 @@ export class ChannelService {
       .addSelect('channel.password')
       .getMany();
 
-    // TODO: 함수화, 재사용 가능하도록 처리
-    const channelPasswordConverted = allChannelsWithPassword.map(
-      (channelList: any) => {
+    const channelPasswordConverted = await Promise.all(
+      allChannelsWithPassword.map(async (channelList: any) => {
         if (channelList.password === null) channelList.isPrivate = false;
         else channelList.isPrivate = true;
         delete channelList.password;
+        channelList.currentChatMemberCount =
+          await this.getCurrentChannelMemberCount(channelList.name);
         return channelList;
-      },
+      }),
     );
     return channelPasswordConverted;
   }
@@ -73,9 +74,8 @@ export class ChannelService {
     if (thisChannel.password === null) thisChannel.isPrivate = false;
     else thisChannel.isPrivate = true;
     delete thisChannel.password;
-    thisChannel.currentChatMemberCount = Object.keys(
-      await this.getChannelMembers(name),
-    ).length;
+    thisChannel.currentChatMemberCount =
+      await this.getCurrentChannelMemberCount(name);
     return thisChannel;
   }
 
@@ -208,6 +208,27 @@ export class ChannelService {
       .getMany();
   }
 
+  async getCurrentChannelMemberCount(name: string) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName)
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
+    return this.channelMemberRepository
+      .createQueryBuilder('channelMembers')
+      .innerJoin(
+        'channelMembers.channel',
+        'channel',
+        'channel.name = :channelName',
+        {
+          channelName: name,
+        },
+      )
+      .innerJoinAndSelect('channelMembers.user', 'user')
+      .select(['channelMembers', 'user.nickname', 'user.imagePath'])
+      .getCount();
+  }
+
   async createChannelMember(
     name: string,
     userId: number,
@@ -226,10 +247,9 @@ export class ChannelService {
     if (!user) {
       throw new BadRequestException('존재하지 않는 사용자입니다.');
     }
-    // TOOD: 이미 참여중인 방입니다.
-    const currentChatMemberCount = Object.keys(
-      await this.getChannelMembers(name),
-    ).length;
+    const currentChatMemberCount = await this.getCurrentChannelMemberCount(
+      name,
+    );
     if (channel.maxParticipantNum <= currentChatMemberCount)
       throw new BadRequestException('채널 정원 초과입니다.');
     // 나간 사용자가 다시 들어오고 싶을 때
