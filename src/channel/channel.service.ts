@@ -34,7 +34,6 @@ export class ChannelService {
         if (channelList.password === null) channelList.isPrivate = false;
         else channelList.isPrivate = true;
         delete channelList.password;
-        console.log(channelList.name);
         channelList.currentChatMemberCount =
           await this.getCurrentChannelMemberCount(channelList.name);
         return channelList;
