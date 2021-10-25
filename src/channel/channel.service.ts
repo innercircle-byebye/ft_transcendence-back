@@ -29,14 +29,17 @@ export class ChannelService {
       .addSelect('channel.password')
       .getMany();
 
-    // TODO: 함수화, 재사용 가능하도록 처리
-    const channelPasswordConverted = allChannelsWithPassword.map(
-      (channelList: any) => {
+    const channelPasswordConverted = await Promise.all(
+      allChannelsWithPassword.map(async (channelList: any) => {
         if (channelList.password === null) channelList.isPrivate = false;
         else channelList.isPrivate = true;
         delete channelList.password;
+        console.log(channelList.name);
+        channelList.currentChatMemberCount = Object.keys(
+          await this.getChannelMembers(channelList.name),
+        ).length;
         return channelList;
-      },
+      }),
     );
     return channelPasswordConverted;
   }
