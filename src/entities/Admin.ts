@@ -29,6 +29,13 @@ export class Admin implements IAdmin {
   email: string;
 
   @ApiProperty({
+    description: '관리자 이름',
+    example: '관리자 1번',
+  })
+  @Column('varchar', { name: 'nickname', length: 20, unique: true })
+  nickname: string;
+
+  @ApiProperty({
     description: '관리자 비밀번호',
   })
   @Column('varchar', { name: 'password', length: 100 })

@@ -33,6 +33,7 @@ export class AdminController {
   createAdmin(@Body() body: AdminJoinDto) {
     return this.adminService.createAdmin(
       body.email,
+      body.nickname,
       body.password,
       body.fromId,
     );
