@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
+  ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -75,13 +76,16 @@ export class DmController {
     description:
       "별도 응답은 없음. ('dm'이벤트가 emit되고 sender, receiver 정보를 포함한 DM객체를 보내준다.)",
   })
+  @ApiBadRequestResponse({
+    description: '존재하지 않는 사용자입니다.',
+  })
   @Post('/:userId/chats')
   async createDMChats(
     @AuthUser() user: User,
     @Param('userId') receiverId: number,
     @Body() { content }: DMContentDto,
   ) {
-    this.dmService.createDMChats(user.userId, receiverId, content);
+    await this.dmService.createDMChats(user.userId, receiverId, content);
   }
 
   //  - 특정 사용자에게 이미지 보내기

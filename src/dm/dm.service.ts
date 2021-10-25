@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
@@ -51,6 +51,11 @@ export class DmService {
   }
 
   async createDMChats(senderId: number, receiverId: number, content: string) {
+    const receiver = await this.userRepository.findOne({ userId: receiverId });
+    if (!receiver) {
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
     const savedDM = await this.dmRepository.save({
       senderId,
       receiverId,
