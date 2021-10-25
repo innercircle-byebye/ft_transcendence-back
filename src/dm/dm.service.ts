@@ -17,6 +17,39 @@ export class DmService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
+  async getAllDMChats(userId: number, opponentId: number) {
+    return this.dmRepository
+      .createQueryBuilder('dm')
+      .innerJoinAndSelect('dm.sender', 'sender')
+      .innerJoinAndSelect('dm.receiver', 'receiver')
+      .andWhere(
+        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :opponentId AND dm.senderId = :userId))',
+        { userId, opponentId },
+      )
+      .orderBy('dm.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getDMChats(
+    userId: number,
+    opponentId: number,
+    perPage: number,
+    page: number,
+  ) {
+    return this.dmRepository
+      .createQueryBuilder('dm')
+      .innerJoinAndSelect('dm.sender', 'sender')
+      .innerJoinAndSelect('dm.receiver', 'receiver')
+      .andWhere(
+        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :opponentId AND dm.senderId = :userId))',
+        { userId, opponentId },
+      )
+      .orderBy('dm.createdAt', 'DESC')
+      .take(perPage)
+      .skip(perPage * (page - 1))
+      .getMany();
+  }
+
   async createDMChats(senderId: number, receiverId: number, content: string) {
     const savedDM = await this.dmRepository.save({
       senderId,
