@@ -18,4 +18,8 @@ export class AdminController {
   getAnnouncement() {
     return this.adminService.getAnnouncement();
   }
+
+  // 관리자 생성, 수정 삭제
+  // 공지사항 생성, 수정, 삭제
+  // 신고내용 조회, 처리/수정, 삭제
 }
