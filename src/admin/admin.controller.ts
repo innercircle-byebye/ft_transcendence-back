@@ -1,9 +1,13 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthAdmin } from 'src/decorators/auth-admin.decorator';
+import { Admin } from 'typeorm';
 import { AdminService } from './admin.service';
 import { AdminJoinDto } from './dto/admin-join.dto';
 import { AdminDto } from './dto/admin.dto';
 import { AnnoumcementDto } from './dto/announcement.dto';
+import { LocalAdminGuard } from './local-admin.guard';
+import { NotLoggedInAdminGuard } from './not-logged-in-admin.guard';
 
 @ApiTags('Admin')
 @Controller('api/admin')
@@ -29,14 +33,23 @@ export class AdminController {
     type: AdminDto,
     description: '생성된 관리자의 정보',
   })
-  @Post('/')
+  @UseGuards(NotLoggedInAdminGuard)
+  @Post()
   createAdmin(@Body() body: AdminJoinDto) {
+    console.log(body.email);
     return this.adminService.createAdmin(
       body.email,
       body.nickname,
       body.password,
       body.fromId,
     );
+  }
+
+  @ApiOperation({ summary: '로그인' })
+  @UseGuards(LocalAdminGuard)
+  @Post('login')
+  async login(@AuthAdmin() admin: Admin) {
+    return admin;
   }
 
   // 관리자 생성, 수정 삭제

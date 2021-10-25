@@ -22,6 +22,26 @@ export class AdminService {
     return this.announcementRepository.find();
   }
 
+  async validateAdmin(email: string, password: string) {
+    const admin = await this.adminRepository
+      .createQueryBuilder('admin')
+      .where('admin.email = :email', { email })
+      .addSelect('admin.password')
+      .getOne();
+
+    console.log(email, password, admin);
+    if (!admin) {
+      return null;
+    }
+    const result = await bcrypt.compare(password, admin.password);
+    if (result) {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const { password, ...userWithoutPassword } = admin;
+      return userWithoutPassword;
+    }
+    return null;
+  }
+
   async createAdmin(
     email: string,
     nickname: string,

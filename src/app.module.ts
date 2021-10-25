@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { PassportModule } from '@nestjs/passport';
 import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -41,6 +42,7 @@ import { RelationModule } from './relation/relation.module';
     ChannelModule,
     EventsModule,
     RelationModule,
+    PassportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
