@@ -11,7 +11,15 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
@@ -131,6 +139,20 @@ export class AuthController {
     return { userId: user.userId };
   }
 
+  @ApiOperation({
+    summary: '2FA용 QRcode 생성   (2FA 인증 하기 전에 접근)',
+    description:
+      '2FA를 활성화 하기위한 QRcode를 생성해준다. 생성된 QRcode를 google authenticator에 등록할 수 있다.',
+  })
+  @ApiProduces('image/png')
+  @ApiOkResponse({
+    type: 'image/png', // TODO : swagger에 이미지로 표시되도록 수정해야함
+    description: 'google authenticator 등록용 QRcode',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '2FA가 비활성화되어 있을 때만, 2FA용 QRcode를 생성할 수 있습니다.',
+  })
   @Get('2fa/generate')
   @UseGuards(JwtGuard)
   async generate2faQRcode(@AuthUser() user: User, @Res() res: Response) {
@@ -145,13 +167,33 @@ export class AuthController {
     return this.authService.pipeQrCodeStream(res, otpAuthUrl);
   }
 
+  @ApiOperation({
+    summary: '2FA 활성화    (2FA 인증 하기 전에 접근)',
+    description:
+      'google authenticator에서 발급받은 otp를 사용해서 2FA를 활성화한다.',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '2FA만 활성화되고 반환값 없음',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '2FA가 이미 활성화 되어있습니다.\n\n' +
+      '2FA에서 사용할 QRcode를 먼저 생성해야합니다.',
+  })
+  @ApiUnauthorizedResponse({
+    description: '2FA 코드가 유효하지 않습니다.',
+  })
   @Post('2fa/turn_on')
-  @HttpCode(200)
+  @HttpCode(204)
   @UseGuards(JwtGuard)
   async turnOnTwoFactorAuth(
     @AuthUser() user: User,
     @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
   ) {
+    if (user.isTwoFactorAuthEnabled) {
+      throw new BadRequestException('2FA가 이미 활성화 되어있습니다.');
+    }
     if (!user.twoFactorAuthSecret) {
       throw new BadRequestException(
         '2FA에서 사용할 QRcode를 먼저 생성해야합니다.',
@@ -168,15 +210,48 @@ export class AuthController {
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, true);
   }
 
+  @ApiOperation({
+    summary: '2FA 비활성화   (2FA 인증한 뒤 접근)',
+    description:
+      '2FA를 비활성화한다. (2FA 활성화하고 난 뒤에 사용이 가능하다.)',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '2FA만 비활성화되고 반환값 없음',
+  })
+  @ApiBadRequestResponse({
+    description: '2FA가 활성화되어있지 않습니다.',
+  })
+  @ApiUnauthorizedResponse({
+    description: '2FA 인증이 필요합니다.',
+  })
   @Post('2fa/turn_off')
-  @HttpCode(200)
+  @HttpCode(204)
   @UseGuards(JwtTwoFactorGuard)
   async turnOffTwoFactorAuth(@AuthUser() user: User) {
+    if (!user.isTwoFactorAuthEnabled) {
+      throw new BadRequestException('2FA가 활성화되어있지 않습니다.');
+    }
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, false);
   }
 
+  @ApiOperation({
+    summary: '2FA 인증   (2FA 인증 하기 전에 접근)',
+    description:
+      '2FA가 활성화되어있는 상태에서, google authenticator의 otp를 사용해 인증을 한다.',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '2FA 인증만되고 반환값 없음(새로운 토큰 쿠키에 담김)',
+  })
+  @ApiBadRequestResponse({
+    description: '2FA가 활성화되어있지 않습니다.',
+  })
+  @ApiUnauthorizedResponse({
+    description: '2FA 코드가 유효하지 않습니다.',
+  })
   @Post('2fa/authenticate')
-  @HttpCode(200)
+  @HttpCode(204)
   @UseGuards(JwtGuard)
   async authenticate(
     @AuthUser() user: User,
