@@ -158,16 +158,11 @@ export class ChannelService {
       if (existChatroom)
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
     }
-    const channelAdmin = await this.channelMemberRepository
-      .createQueryBuilder('channelMember')
-      .where('channelMember.user_id = :adminId', { adminId })
-      .andWhere('channelMember.channel_id = :channelId', {
-        channelId: targetChatroom.channelId,
-      })
-      .getOne();
+    const isOwner = await this.channelRepository.findOne({
+      where: { ownerId: adminId },
+    });
 
-    if (!channelAdmin || channelAdmin.isAdmin === false)
-      throw new BadRequestException('채널 수정 권한이 없습니다.');
+    if (!isOwner) throw new BadRequestException('채널 수정 권한이 없습니다.');
 
     if (password) targetChatroom.password = password;
     if (targetChatroom.maxParticipantNum !== maxParticipantNum)
@@ -239,20 +234,23 @@ export class ChannelService {
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    if (channel.password !== password)
-      throw new BadRequestException('잘못된 비밀번호입니다.');
+    // targetUserId가 전달 되었을 경우 -> 초대
+    // -> 비밀번호가 지정 되어 있으나 생략 가능하도록 처리
+    if (channel.password !== null && targetUserId === null)
+      if (channel.password !== password)
+        throw new BadRequestException('잘못된 비밀번호입니다.');
     const user = await this.userRepository.findOne({
       where: { userId: targetUserId || userId },
     });
     if (!user) {
-      throw new BadRequestException('존재하지 않는 사용자입니다.');
+      throw new BadRequestException('존재하지 않는 유저입니다.');
     }
     const currentChatMemberCount = await this.getCurrentChannelMemberCount(
       name,
     );
     if (channel.maxParticipantNum <= currentChatMemberCount)
       throw new BadRequestException('채널 정원 초과입니다.');
-    // 나간 사용자가 다시 들어오고 싶을 때
+    // 나간 유저가 다시 들어오고 싶을 때
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
@@ -266,7 +264,7 @@ export class ChannelService {
     if (targetUser) {
       return this.channelMemberRepository.recover(targetUser);
     }
-    // 나간 사용자가 다시 들어오고 싶을 때
+    // 나간 유저가 다시 들어오고 싶을 때
     const channelMember = new ChannelMember();
     channelMember.channelId = channel.channelId;
     channelMember.userId = user.userId;
@@ -304,27 +302,39 @@ export class ChannelService {
     targetUserId: number,
     banDate: Date,
     mutedDate: Date | null,
-    isAdmin: boolean,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
+
+    const adminUserCheck = await this.channelMemberRepository
+      .createQueryBuilder('channelMembers')
+      .where('channelMembers.channelId = :channelId', {
+        channelId: channelIdByName.channelId,
+      })
+      .andWhere('channelMembers.userId = :target', {
+        target: targetUserId,
+      })
+      .getOne();
+
+    if (!adminUserCheck.isAdmin)
+      throw new BadRequestException('유저 수정 권한이 없습니다.');
+
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
         channelId: channelIdByName.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: targetUserId || userId,
+        target: targetUserId,
       })
       .getOne();
     if (!targetUser)
-      throw new BadRequestException('존재 하지 않는 사용자입니다.');
+      throw new BadRequestException('존재 하지 않는 유저입니다.');
 
     targetUser.mutedDate = mutedDate;
-    targetUser.isAdmin = isAdmin;
     if (banDate) {
       targetUser.banDate = banDate;
       return this.channelChatRepository.softRemove(targetUser);

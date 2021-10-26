@@ -15,7 +15,4 @@ export class ChannelMemberUpdateDto extends PickType(ChannelMember, [
 
   @IsOptional()
   mutedDate: Date | null;
-
-  @IsOptional()
-  isAdmin: boolean;
 }

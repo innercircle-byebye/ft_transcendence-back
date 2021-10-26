@@ -20,6 +20,7 @@ import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
 import { ChannelService } from './channel.service';
 import { ChannelInfoDto } from './dto/channel-create.dto';
+import { ChannelJoinDto } from './dto/channel-join.dto';
 import { ChannelUpdateDto } from './dto/channel-update.dto';
 import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
@@ -72,7 +73,7 @@ export class ChannelController {
     description: '현재 선택한 채널의 정보',
   })
   @ApiBadRequestResponse({
-    description: '존재 하지 않는 채널입니다.\n\n 존재 하지 않는 사용자입니다.',
+    description: '존재 하지 않는 채널입니다.\n\n 존재 하지 않는 유저입니다.',
   })
   @Get('/:name')
   getChannelInfo(@Param('name') channelName: string) {
@@ -83,8 +84,8 @@ export class ChannelController {
     summary: '채널 생성하기',
     description:
       '파라미터로 전달 되는 채널을 생성합니다. \n\n' +
-      '채널 생성시 Body에 비밀번호, 최대 사용자 인원, 초대 할 사용자의 id(번호)의 배열이 전달됩니다.\n\n' +
-      '최대 사용자의 경우 필수이고, 비밀번호와, 초대 할 사용자의 배열의 경우 필수가 아닙니다.',
+      '채널 생성시 Body에 비밀번호, 최대 유저 인원, 초대 할 유저의 id(번호)의 배열이 전달됩니다.\n\n' +
+      '최대 유저의 경우 필수이고, 비밀번호와, 초대 할 유저의 배열의 경우 필수가 아닙니다.',
   })
   @ApiOkResponse({
     type: ChannelDto,
@@ -189,13 +190,13 @@ export class ChannelController {
   @ApiBadRequestResponse({
     description:
       '존재하지 않는 채널입니다.\n\n 잘못된 비밀번호입니다.\n\n' +
-      '존재하지 않는 사용자입니다.\n\n 채널 정원 초과입니다.',
+      '존재하지 않는 유저입니다.\n\n 채널 정원 초과입니다.',
   })
   @Post('/:name/member')
   joinChannel(
     @Param('name') channelName: string,
     @AuthUser() user: User,
-    @Body() body,
+    @Body() body: ChannelJoinDto,
   ) {
     return this.channelService.createChannelMember(
       channelName,
@@ -217,7 +218,7 @@ export class ChannelController {
   @ApiBadRequestResponse({
     description:
       '존재하지 않는 채널입니다.\n\n 잘못된 비밀번호입니다.\n\n' +
-      '존재하지 않는 사용자입니다.',
+      '존재하지 않는 유저입니다.',
   })
   @Delete('/:name/member')
   leaveChannel(
@@ -235,16 +236,17 @@ export class ChannelController {
   @ApiOperation({
     summary: '채널에서 유저 업데이트',
     description:
-      '채널에서 유저의 상태를 변경합니다\n\n (mute 기한, ban 일시, 관리자 권한 유무)\n\n' +
+      '채널에서 유저의 상태를 변경합니다\n\n (mute 기한, ban 일시)\n\n' +
       '- mute의 경우, null을 전달 하게 되면 mute 상태가 해제됩니다.\n\n' +
-      '- ban 처리 이후 사용자는 현재 채널에서 삭제 처리됩니다.\n\n',
+      '- ban 처리 이후 유저는 현재 채널에서 삭제 처리됩니다.\n\n',
   })
   @ApiOkResponse({
     type: ChannelMemberDto,
-    description: '채널 사용자의 정보',
+    description: '채널 유저의 정보',
   })
   @ApiBadRequestResponse({
-    description: '존재하지 않는 채널입니다.',
+    description:
+      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n  존재하지 않는 유저입니다.',
   })
   @Patch('/:name/member')
   updateChannelMember(
@@ -258,7 +260,6 @@ export class ChannelController {
       body.targetUserId,
       body.banDate,
       body.mutedDate,
-      body.isAdmin,
     );
   }
 
