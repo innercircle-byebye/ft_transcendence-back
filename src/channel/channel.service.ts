@@ -132,7 +132,7 @@ export class ChannelService {
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 
-    this.eventsGateway.server.emit('updateChannel', channelReturned);
+    this.eventsGateway.server.emit('channelList', channelReturned);
     return channelReturned;
   }
 
