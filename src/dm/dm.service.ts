@@ -4,7 +4,7 @@ import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { EventsGateway } from 'src/events/events.gateway';
 import { onlineMap } from 'src/events/onlineMap';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 
 function getKeyByValue(object, value) {
   return Object.keys(object).find((key) => object[key] === value);
@@ -72,5 +72,20 @@ export class DmService {
       Number(receiverId),
     );
     this.eventGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
+  }
+
+  async getDMUnreadsCount(userId: number, senderId: number, after: number) {
+    const sender = await this.userRepository.findOne({ userId: senderId });
+    if (!sender) {
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
+    return this.dmRepository.count({
+      where: {
+        senderId,
+        receiverId: userId,
+        createdAt: MoreThan(new Date(after)),
+      },
+    });
   }
 }

@@ -28,10 +28,6 @@ import { DMContentDto } from './dto/dm-content.dto';
 export class DmController {
   constructor(private dmService: DmService) {}
 
-  //  - 특정 사용자와의 DM목록 가져오기
-  // 요청: GET /api/dm/{userId}/chats
-  // query: { perPage: 페이지당개수(number), page: 페이지번호(number) }
-  // 응답: 200, DM 객체 목록(최신순으로)
   @ApiOperation({
     summary: 'DM 목록 조회하기',
     description:
@@ -59,11 +55,6 @@ export class DmController {
     return this.dmService.getDMChats(user.userId, opponentId, perPage, page);
   }
 
-  //  - 특정 사용자에게 DM 보내기
-  // 요청: POST /api/dm/{userId}/chats
-  // body: { content: string }
-  // 응답: 201, 없음
-  // dm 이벤트가 emit됨(DM객체 보내줌)
   @ApiOperation({
     summary: 'DM 보내기',
     description:
@@ -98,12 +89,26 @@ export class DmController {
     return 'hello';
   }
 
-  //  - 특정 사용자가 보낸 dm중 안읽은 개수 구하기
-  // 요청: GET /api/dm/{userId}/unreads
-  // query: { after: 기준시간(timestemp) }
-  // 응답: 200, 개수(number)
+  @ApiOperation({
+    summary: '안읽은 DM 개수 구하기',
+    description:
+      'after시간 이후로 해당 사용자로부터 새로 받은 DM의 개수\n\n' +
+      'after은 1970년 1월 1일 00:00:00 UTC 이후 경과 시간 (밀리 초)을 나타내는 숫자로 ' +
+      'Date객체에서 getTime()함수로 구한 값입니다.',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: 'after시간 이후로 해당 사용자로부터 새로 받은 DM의 개수',
+  })
+  @ApiBadRequestResponse({
+    description: '존재하지 않는 사용자입니다.',
+  })
   @Get('/:userId/unreads')
-  async getDMUnreads() {
-    return 'hello';
+  async getDMUnreads(
+    @AuthUser() user: User,
+    @Param('userId') senderId: number,
+    @Query('after') after: number,
+  ) {
+    return this.dmService.getDMUnreadsCount(user.userId, senderId, after);
   }
 }
