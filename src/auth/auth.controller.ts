@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   Redirect,
   Req,
@@ -273,6 +274,36 @@ export class AuthController {
       this.authService.getCookieWithJwtAccessToken(user.userId, true);
     const { refreshToken, ...refreshOption } =
       this.authService.getCookieWithJwtRefreshToken(user.userId, true);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
+  }
+
+  // TODO : 개발할때 테스트용임. 삭제해야함
+  @ApiOperation({
+    summary: 'nickname을 사용한 강제로그인 (테스트용)',
+  })
+  @ApiBadRequestResponse({
+    description: '존재 하지 않는 사용자 입니다.',
+  })
+  @Redirect('http://localhost:3000')
+  @Get('force_login/:nickname')
+  async forceLoginForTest(
+    @Req() req,
+    @Res({ passthrough: true }) res,
+    @Param('nickname') nickname: string,
+  ) {
+    const user = await this.userService.getByNickName(nickname);
+    if (!user) {
+      throw new BadRequestException('존재 하지 않는 사용자 입니다.');
+    }
+
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.userId);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.userId);
 
     await this.userService.setCurrentRefreshToken(refreshToken, user);
 

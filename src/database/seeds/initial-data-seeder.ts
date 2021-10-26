@@ -1,9 +1,7 @@
-import { Announcement } from 'src/entities/Announcement';
 import { Friend } from 'src/entities/Friend';
 import { User } from 'src/entities/User';
 import { Connection } from 'typeorm';
 import { Factory, Seeder } from 'typeorm-seeding';
-import { announcementInitData } from '../announcement-init-data';
 import { friendInitData } from '../friend-init-data';
 import { userInitData } from '../user-init-data';
 
@@ -26,11 +24,11 @@ export class InitialDataSeeder implements Seeder {
       .execute();
 
     // Announcement
-    await connection
-      .createQueryBuilder()
-      .insert()
-      .into(Announcement)
-      .values(announcementInitData)
-      .execute();
+    // await connection
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into(Announcement)
+    //   .values(announcementInitData)
+    //   .execute();
   }
 }

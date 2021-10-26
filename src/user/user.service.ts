@@ -148,6 +148,10 @@ export class UserService {
     return this.userRepository.findOne({ intraUsername });
   }
 
+  async getByNickName(nickname: string): Promise<User> {
+    return this.userRepository.findOne({ nickname });
+  }
+
   async createNewUserByIntraInfo(intraInfo: any): Promise<User> {
     // console.log(intraInfo);
     const { intraId, email, imageUrl } = intraInfo;
