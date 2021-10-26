@@ -38,7 +38,7 @@ export class Admin implements IAdmin {
   @ApiProperty({
     description: '관리자 비밀번호',
   })
-  @Column('varchar', { name: 'password', length: 100 })
+  @Column('varchar', { name: 'password', length: 100, select: false })
   password: string;
 
   @Column({ type: 'int', name: 'from_id' })
@@ -64,7 +64,7 @@ export class Admin implements IAdmin {
     default: null,
   })
   @DeleteDateColumn({ name: 'deleted_at' })
-  deletedAt: Date;
+  deletedAt: Date | null;
 
   @ManyToOne(() => Admin, (admin) => admin.childCategories)
   @JoinColumn({ name: 'from_id' })

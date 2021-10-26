@@ -6,8 +6,9 @@ import { AdminService } from './admin.service';
 import { AdminJoinDto } from './dto/admin-join.dto';
 import { AdminDto } from './dto/admin.dto';
 import { AnnoumcementDto } from './dto/announcement.dto';
-import { LocalAdminGuard } from './local-admin.guard';
-import { NotLoggedInAdminGuard } from './not-logged-in-admin.guard';
+import { LocalAdminGuard } from './guards/local-admin.guard';
+import { LoggedInAdminGuard } from './guards/logged-in-admin.guard';
+import { NotLoggedInAdminGuard } from './guards/not-logged-in-admin.guard';
 
 @ApiTags('Admin')
 @Controller('api/admin')
@@ -23,6 +24,21 @@ export class AdminController {
   @Get('/announcement')
   getAnnouncement() {
     return this.adminService.getAnnouncement();
+  }
+
+  @ApiOperation({
+    summary: '전체 관리자 조회',
+    description: '전체 관리자 목록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    type: AdminDto,
+    isArray: true,
+    description: '생성된 관리자의 정보',
+  })
+  // @UseGuards(LoggedInAdminGuard)
+  @Get()
+  getAllAdmin() {
+    return this.adminService.getAllAdmin();
   }
 
   @ApiOperation({

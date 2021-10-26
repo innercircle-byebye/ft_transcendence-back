@@ -7,7 +7,7 @@ import { Report } from 'src/entities/Report';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { LocalAdminSerializer } from './local-admin.serializer';
-import { LocalAdminStrategy } from './local-admin.strategy';
+import { LocalAdminStrategy } from './startegies/local-admin.strategy';
 
 @Module({
   imports: [

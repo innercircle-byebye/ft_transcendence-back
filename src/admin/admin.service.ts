@@ -22,6 +22,10 @@ export class AdminService {
     return this.announcementRepository.find();
   }
 
+  async getAllAdmin() {
+    return this.adminRepository.find();
+  }
+
   async validateAdmin(email: string, password: string) {
     const admin = await this.adminRepository
       .createQueryBuilder('admin')
