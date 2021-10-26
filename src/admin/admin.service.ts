@@ -76,27 +76,31 @@ export class AdminService {
     nickname: string,
     password: string,
   ) {
-    const targetAdmin = await this.adminRepository.findOne({
-      where: { adminId },
-    });
-    if (email) {
-      const checkEmail = this.adminRepository.findOne({ where: { email } });
-      if (checkEmail)
-        throw new ForbiddenException('이미 존재하는 이메일입니다.');
-      targetAdmin.email = email;
-    }
-    if (nickname) {
-      const checkNickname = this.adminRepository.findOne({
-        where: { nickname },
+    if (email || nickname || password) {
+      const targetAdmin = await this.adminRepository.findOne({
+        where: { adminId },
       });
-      if (checkNickname)
-        throw new ForbiddenException('이미 존재하는 닉네임입니다.');
-      targetAdmin.email = email;
+      if (email && email !== targetAdmin.email) {
+        const checkEmail = this.adminRepository.findOne({ where: { email } });
+        if (checkEmail)
+          throw new ForbiddenException('이미 존재하는 이메일입니다.');
+        targetAdmin.email = email;
+      }
+      if (nickname && targetAdmin.nickname) {
+        const checkNickname = this.adminRepository.findOne({
+          where: { nickname },
+        });
+        if (checkNickname)
+          throw new ForbiddenException('이미 존재하는 닉네임입니다.');
+        targetAdmin.email = email;
+      }
+      // 비밀번호는 중복 검사 필요없이 항상 업데이트 되도록
+      if (password) {
+        const newPassword = await bcrypt.hash(password, 12);
+        targetAdmin.password = newPassword;
+      }
+      return this.adminRepository.save(targetAdmin);
     }
-    if (password) {
-      const newPassword = await bcrypt.hash(password, 12);
-      targetAdmin.password = newPassword;
-    }
-    return this.adminRepository.save(targetAdmin);
+    return null;
   }
 }
