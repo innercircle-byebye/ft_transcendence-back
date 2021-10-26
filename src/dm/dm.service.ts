@@ -2,19 +2,20 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
+import { EventsGateway } from 'src/events/events.gateway';
+import { onlineMap } from 'src/events/onlineMap';
 import { Repository } from 'typeorm';
 
-/*
 function getKeyByValue(object, value) {
   return Object.keys(object).find((key) => object[key] === value);
 }
-*/
 
 @Injectable()
 export class DmService {
   constructor(
     @InjectRepository(DM) private dmRepository: Repository<DM>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    private readonly eventGateway: EventsGateway,
   ) {}
 
   async getAllDMChats(userId: number, opponentId: number) {
@@ -65,15 +66,11 @@ export class DmService {
       where: { dmId: savedDM.dmId },
       relations: ['sender', 'receiver'],
     });
-    console.log('----------------------------------------------------');
-    console.log(dmWithUsers);
-    console.log('----------------------------------------------------');
-    /*
+
     const receiverSocketId = getKeyByValue(
       onlineMap['/chat'],
       Number(receiverId),
     );
     this.eventGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
-    */
   }
 }

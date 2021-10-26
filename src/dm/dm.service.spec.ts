@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
+import { EventsGateway } from 'src/events/events.gateway';
 import { DmService } from './dm.service';
 
 const mockUserRepository = () => ({
@@ -25,6 +26,7 @@ describe('DmService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DmService,
+        EventsGateway,
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository(),
