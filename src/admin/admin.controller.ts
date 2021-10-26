@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBody,
+  ApiConsumes,
   ApiCookieAuth,
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -44,6 +46,7 @@ export class AdminController {
     return this.adminService.getAnnouncement();
   }
 
+  @ApiCookieAuth('connect.sid')
   @ApiOperation({
     summary: '전체 관리자 조회',
     description: '전체 관리자 목록을 조회합니다.',
@@ -91,6 +94,7 @@ export class AdminController {
     );
   }
 
+  @ApiCookieAuth('connect.sid')
   @ApiOperation({
     summary: '관리자 정보 수정',
     description: '관리자의 로그인정보, 닉네임을 변경합니다.',
@@ -117,6 +121,16 @@ export class AdminController {
     );
   }
 
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'admin4@aaa.com' },
+        password: { type: 'string', example: 'aabbccdd' },
+      },
+    },
+  })
   @ApiOperation({ summary: '로그인' })
   @UseGuards(LocalAdminGuard)
   @ApiUnauthorizedResponse({
