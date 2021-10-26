@@ -1,36 +1,25 @@
-import { FriendStatus } from 'src/entities/Friend';
-
-const friendInitData = [
+const adminInitData = [
   {
-    requesterId: 3,
-    respondentId: 1,
-    status: FriendStatus.WAIT,
+    adminId: 1,
+    email: 'admin1@aaa.com',
+    password: 'password',
+    nickname: '관리자1',
+    fromId: 1,
   },
   {
-    requesterId: 4,
-    respondentId: 1,
-    status: FriendStatus.WAIT,
+    adminId: 2,
+    email: 'admin2@aaa.com',
+    password: 'password',
+    nickname: '관리자2',
+    fromId: 1,
   },
   {
-    requesterId: 1,
-    respondentId: 5,
-    status: FriendStatus.APPROVE,
-  },
-  {
-    requesterId: 1,
-    respondentId: 6,
-    status: FriendStatus.REJECT,
-  },
-  {
-    requesterId: 7,
-    respondentId: 1,
-    status: FriendStatus.REJECT,
-  },
-  {
-    requesterId: 8,
-    respondentId: 1,
-    status: FriendStatus.REJECT,
+    adminId: 3,
+    email: 'admin3@aaa.com',
+    password: 'password',
+    nickname: '관리자3',
+    fromId: 2,
   },
 ];
 
-export { friendInitData };
+export { adminInitData };
