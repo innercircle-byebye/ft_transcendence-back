@@ -15,7 +15,6 @@ export class LocalAdminSerializer extends PassportSerializer {
   }
 
   serializeUser(admin: Admin, done: CallableFunction) {
-    console.log(admin);
     done(null, admin.adminId);
   }
 
@@ -23,7 +22,7 @@ export class LocalAdminSerializer extends PassportSerializer {
     return this.adminRepository
       .findOneOrFail({ where: { adminId } })
       .then((admin) => {
-        console.log('admin', admin);
+        console.log('deserialize success', admin);
         done(null, admin);
       })
       .catch((error) => done(error));

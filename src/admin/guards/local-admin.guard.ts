@@ -10,7 +10,6 @@ export class LocalAdminGuard extends AuthGuard('local') {
       console.log('login for cookie');
       await super.logIn(request);
     }
-
     return true;
   }
 }
