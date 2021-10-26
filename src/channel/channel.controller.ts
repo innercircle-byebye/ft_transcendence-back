@@ -234,9 +234,9 @@ export class ChannelController {
   }
 
   @ApiOperation({
-    summary: '채널에서 유저 업데이트',
+    summary: '채널의 유저 업데이트 (채널 관리자만 사용 가능)',
     description:
-      '채널에서 유저의 상태를 변경합니다\n\n (mute 기한, ban 일시)\n\n' +
+      '채널의 유저의 상태를 변경합니다\n\n (mute 기한, ban 일시)\n\n' +
       '- mute의 경우, null을 전달 하게 되면 mute 상태가 해제됩니다.\n\n' +
       '- ban 처리 이후 유저는 현재 채널에서 삭제 처리됩니다.\n\n',
   })
@@ -250,6 +250,33 @@ export class ChannelController {
   })
   @Patch('/:name/member')
   updateChannelMember(
+    @Param('name') channelName: string,
+    @AuthUser() user: User,
+    @Body() body: ChannelMemberUpdateDto,
+  ) {
+    return this.channelService.updateChannelMember(
+      channelName,
+      user.userId,
+      body.targetUserId,
+      body.banDate,
+      body.mutedDate,
+    );
+  }
+
+  @ApiOperation({
+    summary: '채널의 관리자 등록 (채널 소유자;owner 만 사용 가능)',
+    description: '채널의 관리자를 등록합니다\n\n',
+  })
+  @ApiOkResponse({
+    type: ChannelMemberDto,
+    description: '채널 유저의 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n 존재하지 않는 유저입니다.',
+  })
+  @Patch('/:name/admin')
+  setChannelMemberAnAdmin(
     @Param('name') channelName: string,
     @AuthUser() user: User,
     @Body() body: ChannelMemberUpdateDto,
