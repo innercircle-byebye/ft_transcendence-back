@@ -342,6 +342,35 @@ export class ChannelService {
     return this.channelMemberRepository.save(targetUser);
   }
 
+  async setChannelMemberAnAdmin(
+    name: string,
+    ownerId: number,
+    toBeAdminId: number,
+    isAdmin: boolean,
+  ) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName)
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
+    if (channelIdByName.ownerId !== ownerId)
+      throw new BadRequestException('유저 수정 권한이 없습니다.');
+    const targetUser = await this.channelMemberRepository
+      .createQueryBuilder('channelMembers')
+      .where('channelMembers.channelId = :channelId', {
+        channelId: channelIdByName.channelId,
+      })
+      .andWhere('channelMembers.userId = :target', {
+        target: toBeAdminId,
+      })
+      .getOne();
+    if (!targetUser)
+      throw new BadRequestException('존재 하지 않는 유저입니다.');
+
+    targetUser.isAdmin = isAdmin;
+    return this.channelMemberRepository.save(targetUser);
+  }
+
   async getChannelChatsByChannelName(name: string) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },

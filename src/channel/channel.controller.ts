@@ -281,12 +281,11 @@ export class ChannelController {
     @AuthUser() user: User,
     @Body() body: ChannelMemberUpdateDto,
   ) {
-    return this.channelService.updateChannelMember(
+    return this.channelService.setChannelMemberAnAdmin(
       channelName,
       user.userId,
       body.targetUserId,
-      body.banDate,
-      body.mutedDate,
+      body.isAdmin,
     );
   }
 
