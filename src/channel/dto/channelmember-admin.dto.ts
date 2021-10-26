@@ -14,6 +14,5 @@ export class ChannelMemberAdminDto extends PickType(ChannelMember, [
   targetUserId: number;
 
   @IsBoolean()
-  @ApiProperty({ description: '선택된 사용자의 관리자 유무', type: 'boolean' })
   isAdmin: boolean;
 }
