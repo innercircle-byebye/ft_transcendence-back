@@ -12,7 +12,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiConsumes,
@@ -21,6 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
@@ -32,7 +32,7 @@ import { UserService } from './user.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('User')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtTwoFactorGuard)
 @Controller('api/user')
 export class UserController {
   constructor(private userService: UserService) {}

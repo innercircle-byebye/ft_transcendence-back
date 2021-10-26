@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
@@ -15,12 +14,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
 import { RelationService } from './relation.service';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtTwoFactorGuard)
 @Controller('api')
 export class RelationController {
   constructor(private relationService: RelationService) {}
