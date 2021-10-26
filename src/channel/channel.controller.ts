@@ -25,6 +25,8 @@ import { ChannelUpdateDto } from './dto/channel-update.dto';
 import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
 import { ChannelChatDto } from './dto/channelchat.dto';
+import { ChannelMemberAdminDto } from './dto/channelmember-admin.dto';
+import { ChannelMemberDeleteDto } from './dto/channelmember-delete.dto';
 import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
@@ -167,7 +169,7 @@ export class ChannelController {
     description: '참여한 채널의 전체 유저를 조회합니다.',
   })
   @ApiOkResponse({
-    type: UserDto,
+    type: ChannelMemberDto,
     isArray: true,
     description: '파라미터로 전달된 채널의 전체 유저 목록',
   })
@@ -217,14 +219,14 @@ export class ChannelController {
   })
   @ApiBadRequestResponse({
     description:
-      '존재하지 않는 채널입니다.\n\n 잘못된 비밀번호입니다.\n\n' +
+      '존재하지 않는 채널입니다.\n\n유저 삭제 권한이 없습니다.\n\n' +
       '존재하지 않는 유저입니다.',
   })
   @Delete('/:name/member')
   leaveChannel(
     @Param('name') channelName: string,
     @AuthUser() user: User,
-    @Body() body,
+    @Body() body: ChannelMemberDeleteDto,
   ) {
     return this.channelService.deleteChannelMember(
       channelName,
@@ -273,13 +275,14 @@ export class ChannelController {
   })
   @ApiBadRequestResponse({
     description:
-      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n 존재하지 않는 유저입니다.',
+      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n' +
+      '잘못된 요청입니다.\n\n 존재하지 않는 유저입니다.',
   })
   @Patch('/:name/admin')
   setChannelMemberAnAdmin(
     @Param('name') channelName: string,
     @AuthUser() user: User,
-    @Body() body: ChannelMemberUpdateDto,
+    @Body() body: ChannelMemberAdminDto,
   ) {
     return this.channelService.setChannelMemberAnAdmin(
       channelName,

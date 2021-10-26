@@ -273,7 +273,7 @@ export class ChannelService {
 
   async deleteChannelMember(
     name: string,
-    userId: number,
+    ownerId: number,
     targetUserId: number,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
@@ -281,13 +281,15 @@ export class ChannelService {
     });
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
+    if (channelIdByName.ownerId !== ownerId)
+      throw new BadRequestException('유저 삭제 권한이 없습니다.');
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
         channelId: channelIdByName.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: targetUserId || userId,
+        target: targetUserId,
       })
       .getOne();
     if (!targetUser)
@@ -315,7 +317,7 @@ export class ChannelService {
         channelId: channelIdByName.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: targetUserId,
+        target: userId,
       })
       .getOne();
 
@@ -355,6 +357,9 @@ export class ChannelService {
       throw new BadRequestException('존재 하지 않는 채널입니다.');
     if (channelIdByName.ownerId !== ownerId)
       throw new BadRequestException('유저 수정 권한이 없습니다.');
+    if (ownerId === toBeAdminId)
+      throw new BadRequestException('잘못된 요청입니다.');
+
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
