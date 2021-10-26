@@ -1,7 +1,22 @@
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from 'src/entities/User';
+import { UserService } from 'src/user/user.service';
+import { Connection } from 'typeorm';
 import { AuthService } from './auth.service';
+
+const mockUserRepository = () => ({
+  save: jest.fn(),
+  find: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
+
+const mockConnection = () => ({
+  transaction: jest.fn(),
+});
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -9,7 +24,6 @@ describe('AuthService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        // ConfigModule.forRoot(),
         PassportModule,
         JwtModule.register({
           secret: process.env.JWT_ACCESS_TOKEN_SECRET,
@@ -18,7 +32,18 @@ describe('AuthService', () => {
           },
         }),
       ],
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        UserService,
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository(),
+        },
+        {
+          provide: Connection,
+          useFactory: mockConnection,
+        },
+      ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);

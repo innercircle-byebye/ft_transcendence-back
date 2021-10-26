@@ -148,6 +148,10 @@ export class UserService {
     return this.userRepository.findOne({ intraUsername });
   }
 
+  async getByNickName(nickname: string): Promise<User> {
+    return this.userRepository.findOne({ nickname });
+  }
+
   async createNewUserByIntraInfo(intraInfo: any): Promise<User> {
     // console.log(intraInfo);
     const { intraId, email, imageUrl } = intraInfo;
@@ -206,6 +210,18 @@ export class UserService {
       status:
         status !== UserStatus.NOT_REGISTERED ? UserStatus.OFFLINE : status,
       currentHashedRefreshToken: null,
+    });
+  }
+
+  async setTwoFactorAuthSecret(userId: number, secret: string) {
+    return this.userRepository.update(userId, {
+      twoFactorAuthSecret: secret,
+    });
+  }
+
+  async onAndOffTwoFactorAuthentication(userId: number, isTurnOn: boolean) {
+    return this.userRepository.update(userId, {
+      isTwoFactorAuthEnabled: isTurnOn,
     });
   }
 }
