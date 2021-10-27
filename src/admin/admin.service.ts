@@ -45,15 +45,17 @@ export class AdminService {
     password: string,
     fromId: number,
   ) {
-    const user = await this.adminRepository.findOne({ where: { email } });
-    if (user) {
-      throw new ForbiddenException('이미 존재하는 이메일입니다');
+    const checkEmail = await this.adminRepository.findOne({ where: { email } });
+    if (checkEmail) {
+      throw new ForbiddenException('이미 존재하는 이메일입니다.');
+    }
+    const checkNickname = await this.adminRepository.findOne({
+      where: { nickname },
+    });
+    if (checkNickname) {
+      throw new ForbiddenException('이미 존재하는 닉네임입니다.');
     }
     const hashedPassword = await bcrypt.hash(password, 12);
-
-    const fromAdmin = await this.adminRepository.findOne({ where: { fromId } });
-    if (!fromAdmin)
-      throw new BadRequestException('존재하지 않는 관리자 ID입니다.');
 
     const newAdmin = new Admin();
     newAdmin.email = email;
@@ -74,18 +76,20 @@ export class AdminService {
         where: { adminId },
       });
       if (email && email !== targetAdmin.email) {
-        const checkEmail = this.adminRepository.findOne({ where: { email } });
+        const checkEmail = await this.adminRepository.findOne({
+          where: { email },
+        });
         if (checkEmail)
           throw new ForbiddenException('이미 존재하는 이메일입니다.');
         targetAdmin.email = email;
       }
-      if (nickname && targetAdmin.nickname) {
-        const checkNickname = this.adminRepository.findOne({
+      if (nickname && nickname !== targetAdmin.nickname) {
+        const checkNickname = await this.adminRepository.findOne({
           where: { nickname },
         });
         if (checkNickname)
           throw new ForbiddenException('이미 존재하는 닉네임입니다.');
-        targetAdmin.email = email;
+        targetAdmin.nickname = nickname;
       }
       // 비밀번호는 중복 검사 필요없이 항상 업데이트 되도록
       if (password) {
