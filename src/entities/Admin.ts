@@ -41,6 +41,9 @@ export class Admin implements IAdmin {
   @Column('varchar', { name: 'password', length: 100, select: false })
   password: string;
 
+  @ApiProperty({
+    description: '현재 관리자를 생성한 관리자 의 ID번호',
+  })
   @Column({ type: 'int', name: 'from_id' })
   fromId: number;
 

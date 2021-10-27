@@ -26,7 +26,6 @@ import { AdminUpdateDto } from './dto/admin-update.dto';
 import { AdminDto } from './dto/admin.dto';
 import { LocalAdminGuard } from './guards/local-admin.guard';
 import { LoggedInAdminGuard } from './guards/logged-in-admin.guard';
-import { NotLoggedInAdminGuard } from './guards/not-logged-in-admin.guard';
 
 @ApiTags('Admin')
 @Controller('api/admin')
@@ -51,6 +50,7 @@ export class AdminController {
 
   @ApiOperation({ summary: '내 정보 가져오기' })
   @ApiCookieAuth('connect.sid')
+  @UseGuards(LoggedInAdminGuard)
   @Get('me')
   async getAdminProfile(@AuthAdmin() admin: Admin) {
     return admin || false;
@@ -62,7 +62,8 @@ export class AdminController {
       '해당 요청을 통해 관리자를 생성합니다.\n\n' +
       '새로운 관리자 생성 시, 기존 관리자의 ID번호를 전달하여 새로 생성되는 관리자가 어떤 관리자로부터 생성 되었는지 저장합니다.',
   })
-  @UseGuards(NotLoggedInAdminGuard)
+  @ApiCookieAuth('connect.sid')
+  @UseGuards(LoggedInAdminGuard)
   @ApiOkResponse({
     type: AdminDto,
     description: '생성된 관리자의 정보',
@@ -72,12 +73,12 @@ export class AdminController {
   })
   @ApiForbiddenResponse({ description: '이미 존재하는 이메일입니다.' })
   @Post()
-  createAdmin(@Body() body: AdminJoinDto) {
+  createAdmin(@AuthAdmin() admin: Admin, @Body() body: AdminJoinDto) {
     return this.adminService.createAdmin(
       body.email,
       body.nickname,
       body.password,
-      body.fromId,
+      admin.adminId,
     );
   }
 
