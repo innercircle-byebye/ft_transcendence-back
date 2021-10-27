@@ -18,7 +18,7 @@ import { AuthAdmin } from 'src/decorators/auth-admin.decorator';
 import { Admin } from 'src/entities/Admin';
 import { AdminService } from './admin.service';
 import { AnnouncementCreateDto } from './dto/announcement-create.dto';
-import { AnnouncementUpdateDto } from './dto/announcement-update.dto copy';
+import { AnnouncementUpdateDto } from './dto/announcement-update.dto';
 import { AnnouncementDto } from './dto/announcement.dto';
 import { LoggedInAdminGuard } from './guards/logged-in-admin.guard';
 
