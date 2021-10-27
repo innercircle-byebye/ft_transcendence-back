@@ -22,10 +22,6 @@ export class AdminService {
     private connection: Connection,
   ) {}
 
-  getAnnouncement() {
-    return this.announcementRepository.find();
-  }
-
   async getAllAdmin() {
     return this.adminRepository.find();
   }
@@ -102,5 +98,18 @@ export class AdminService {
       return this.adminRepository.save(targetAdmin);
     }
     return null;
+  }
+
+  getAllAnnouncement() {
+    return this.announcementRepository.find();
+  }
+
+  createAnnouncement(adminId: number, title: string, content: string) {
+    const announcement = new Announcement();
+    announcement.adminId = adminId;
+    announcement.title = title;
+    announcement.content = content;
+
+    return this.announcementRepository.save(announcement);
   }
 }

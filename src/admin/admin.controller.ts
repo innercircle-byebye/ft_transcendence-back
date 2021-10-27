@@ -24,10 +24,8 @@ import { AdminService } from './admin.service';
 import { AdminJoinDto } from './dto/admin-join.dto';
 import { AdminUpdateDto } from './dto/admin-update.dto';
 import { AdminDto } from './dto/admin.dto';
-import { AnnoumcementDto } from './dto/announcement.dto';
 import { LocalAdminGuard } from './guards/local-admin.guard';
 import { LoggedInAdminGuard } from './guards/logged-in-admin.guard';
-// import { LoggedInAdminGuard } from './guards/logged-in-admin.guard';
 import { NotLoggedInAdminGuard } from './guards/not-logged-in-admin.guard';
 
 @ApiTags('Admin')
@@ -139,18 +137,6 @@ export class AdminController {
     return res.send('ok');
   }
 
-  @ApiOperation({ summary: '전체 공지사항 조회' })
-  @ApiOkResponse({
-    description: '공지사항 객체 목록',
-    type: AnnoumcementDto,
-    isArray: true,
-  })
-  @Get('/announcement')
-  getAnnouncement() {
-    return this.adminService.getAnnouncement();
-  }
-
-  // 관리자 생성, 수정 삭제
   // 공지사항 생성, 수정, 삭제
   // 신고내용 조회, 처리/수정, 삭제
 }
