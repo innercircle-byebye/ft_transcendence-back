@@ -136,7 +136,4 @@ export class AdminController {
     res.clearCookie('connect.sid', { httpOnly: true });
     return res.send('ok');
   }
-
-  // 공지사항 생성, 수정, 삭제
-  // 신고내용 조회, 처리/수정, 삭제
 }

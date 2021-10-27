@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from 'src/entities/Admin';
 import { Announcement } from 'src/entities/Announcement';
-import { Report } from 'src/entities/Report';
 import { Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -17,8 +16,6 @@ export class AdminService {
     private announcementRepository: Repository<Announcement>,
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
-    @InjectRepository(Report)
-    private reportRepository: Repository<Report>,
     private connection: Connection,
   ) {}
 
@@ -150,9 +147,5 @@ export class AdminService {
     if (content) targetAnnouncement.content = content;
 
     return this.announcementRepository.save(targetAnnouncement);
-  }
-
-  getAllReports() {
-    return this.reportRepository.find();
   }
 }

@@ -3,7 +3,6 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Admin } from 'src/entities/Admin';
 import { Announcement } from 'src/entities/Announcement';
-import { Report } from 'src/entities/Report';
 import { AdminAnnouncementController } from './admin-announcement.controller';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
@@ -13,7 +12,7 @@ import { LocalAdminStrategy } from './startegies/local-admin.strategy';
 @Module({
   imports: [
     PassportModule.register({ session: true }),
-    TypeOrmModule.forFeature([Announcement, Admin, Report]),
+    TypeOrmModule.forFeature([Announcement, Admin]),
   ],
   controllers: [AdminController, AdminAnnouncementController],
   providers: [AdminService, LocalAdminStrategy, LocalAdminSerializer],
