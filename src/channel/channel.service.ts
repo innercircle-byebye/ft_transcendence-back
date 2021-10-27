@@ -232,7 +232,11 @@ export class ChannelService {
     targetUserId: number,
     password: string,
   ) {
-    const channel = await this.channelRepository.findOne({ where: { name } });
+    const channel = await this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.name = :name', { name })
+      .addSelect('channel.password')
+      .getOne();
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
