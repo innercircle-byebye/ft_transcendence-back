@@ -26,8 +26,11 @@ export class Report implements IReport {
   @Column({ type: 'text', name: 'report_content' })
   reportContent: string;
 
-  @Column({ type: 'int', name: 'admin_id' })
-  adminId: number;
+  @Column({ type: 'int', name: 'admin_id', nullable: true })
+  adminId: number | null;
+
+  @Column({ type: 'text', name: 'report_result', nullable: true })
+  reportResult: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   readonly createdAt: Date;

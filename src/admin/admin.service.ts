@@ -151,4 +151,8 @@ export class AdminService {
 
     return this.announcementRepository.save(targetAnnouncement);
   }
+
+  getAllReports() {
+    return this.reportRepository.find();
+  }
 }
