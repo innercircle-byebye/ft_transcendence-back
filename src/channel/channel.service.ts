@@ -236,11 +236,8 @@ export class ChannelService {
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    // targetUserId가 전달 되었을 경우 -> 초대
-    // -> 비밀번호가 지정 되어 있으나 생략 가능하도록 처리
-    if (channel.password !== null && targetUserId === null)
-      if (channel.password !== password)
-        throw new BadRequestException('잘못된 비밀번호입니다.');
+    if (channel.password && channel.password !== password)
+      throw new BadRequestException('잘못된 비밀번호입니다.');
     const user = await this.userRepository.findOne({
       where: { userId: targetUserId || userId },
     });
