@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -13,7 +14,7 @@ import {
 import { IAdmin } from './interfaces/IAdmin';
 
 @Entity('admin')
-export class Admin implements IAdmin {
+export class Admin extends BaseEntity implements IAdmin {
   @ApiProperty({
     description: '관리자 ID',
     example: 1,
