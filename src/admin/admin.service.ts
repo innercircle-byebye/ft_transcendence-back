@@ -104,6 +104,14 @@ export class AdminService {
     return this.announcementRepository.find();
   }
 
+  getAnnouncementByMe(adminId: number) {
+    return this.announcementRepository.find({ where: { adminId } });
+  }
+
+  getAnnouncementById(announcementId: number) {
+    return this.announcementRepository.find({ where: { announcementId } });
+  }
+
   createAnnouncement(adminId: number, title: string, content: string) {
     const announcement = new Announcement();
     announcement.adminId = adminId;
@@ -111,5 +119,36 @@ export class AdminService {
     announcement.content = content;
 
     return this.announcementRepository.save(announcement);
+  }
+
+  async deleteAnnouncemnt(announcementId: number, adminId: number) {
+    const targetAnnouncement = await this.announcementRepository.findOne({
+      where: { announcementId },
+    });
+    if (!targetAnnouncement)
+      throw new BadRequestException('공지사항이 존재 하지 않습니다.');
+    if (targetAnnouncement.adminId !== adminId)
+      throw new BadRequestException('작성자 ID와 일치 하지 않습니다.');
+
+    return this.announcementRepository.softRemove(targetAnnouncement);
+  }
+
+  async modifyAnnouncement(
+    announcementId: number,
+    adminId: number,
+    title: string,
+    content: string,
+  ) {
+    const targetAnnouncement = await this.announcementRepository.findOne({
+      where: { announcementId },
+    });
+    if (!targetAnnouncement)
+      throw new BadRequestException('공지사항이 존재 하지 않습니다.');
+    if (targetAnnouncement.adminId !== adminId)
+      throw new BadRequestException('작성자 ID와 일치 하지 않습니다.');
+    if (title) targetAnnouncement.title = title;
+    if (content) targetAnnouncement.content = content;
+
+    return this.announcementRepository.save(targetAnnouncement);
   }
 }
