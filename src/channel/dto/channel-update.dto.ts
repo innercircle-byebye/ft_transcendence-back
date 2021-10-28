@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { Channel } from 'src/entities/Channel';
 
 export class ChannelUpdateDto extends PickType(Channel, [
@@ -15,7 +15,7 @@ export class ChannelUpdateDto extends PickType(Channel, [
   @ApiProperty({ required: false, nullable: true })
   password: string | null;
 
-  @IsNumber()
+  @IsOptional()
   @ApiProperty({ required: true })
   maxParticipantNum: number;
 }
