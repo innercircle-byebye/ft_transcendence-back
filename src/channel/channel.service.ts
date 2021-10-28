@@ -166,7 +166,8 @@ export class ChannelService {
 
     if (!isOwner) throw new BadRequestException('채널 수정 권한이 없습니다.');
 
-    if (password) targetChatroom.password = password;
+    if (typeof Object(password) !== undefined)
+      targetChatroom.password = password;
     if (targetChatroom.maxParticipantNum !== maxParticipantNum)
       targetChatroom.maxParticipantNum = maxParticipantNum;
     if (name !== updatedName) targetChatroom.name = updatedName;
