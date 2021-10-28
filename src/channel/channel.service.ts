@@ -168,7 +168,10 @@ export class ChannelService {
 
     if (typeof Object(password) !== undefined)
       targetChatroom.password = password;
-    if (targetChatroom.maxParticipantNum !== maxParticipantNum)
+    if (
+      typeof Object(maxParticipantNum) !== undefined &&
+      targetChatroom.maxParticipantNum !== maxParticipantNum
+    )
       targetChatroom.maxParticipantNum = maxParticipantNum;
     if (name !== updatedName) targetChatroom.name = updatedName;
     return this.channelRepository.save(targetChatroom);
