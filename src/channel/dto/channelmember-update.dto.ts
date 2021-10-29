@@ -5,7 +5,6 @@ import { ChannelMember } from 'src/entities/ChannelMember';
 export class ChannelMemberUpdateDto extends PickType(ChannelMember, [
   'banDate',
   'mutedDate',
-  'isAdmin',
 ]) {
   @IsOptional()
   targetUserId: number;
