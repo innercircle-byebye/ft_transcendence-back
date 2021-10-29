@@ -144,6 +144,7 @@ export class User implements IUser {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
+  @Exclude()
   @Column({
     name: 'is_two_factor_auth_enabled',
     type: 'boolean',

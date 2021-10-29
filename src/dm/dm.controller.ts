@@ -1,11 +1,13 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Get,
   Param,
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -23,6 +25,7 @@ import { DmService } from './dm.service';
 import { DMContentDto } from './dto/dm-content.dto';
 
 @ApiTags('DM')
+@UseInterceptors(ClassSerializerInterceptor)
 @UseGuards(JwtTwoFactorGuard)
 @Controller('api/dm')
 export class DmController {
