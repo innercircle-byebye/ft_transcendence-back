@@ -139,7 +139,7 @@ export class ChannelController {
     return this.channelService.updateChannel(
       channelName,
       user.userId,
-      body.name,
+      body.updateName,
       body.password,
       body.maxParticipantNum,
     );

@@ -139,7 +139,7 @@ export class ChannelService {
   async updateChannel(
     name: string,
     ownerId: number,
-    updatedName: string,
+    updateName: string,
     password: string,
     maxParticipantNum: number,
   ) {
@@ -159,9 +159,9 @@ export class ChannelService {
       throw new BadRequestException(
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
-    if (typeof Object(updatedName) !== undefined) {
+    if (typeof Object(updateName) !== undefined) {
       const existChatroom = await this.channelRepository.findOne({
-        where: [{ name: updatedName }],
+        where: [{ name: updateName }],
       });
       if (existChatroom)
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
@@ -174,9 +174,9 @@ export class ChannelService {
       targetChannel.maxParticipantNum !== maxParticipantNum
     )
       targetChannel.maxParticipantNum = maxParticipantNum;
-    if (name !== updatedName) {
-      targetChannel.name = updatedName;
-      this.eventsGateway.server.emit('updateChannelName', updatedName);
+    if (name !== updateName) {
+      targetChannel.name = updateName;
+      this.eventsGateway.server.emit('updateChannelName', updateName);
     }
     this.channelRepository.save(targetChannel);
     delete targetChannel.password;
