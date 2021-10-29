@@ -401,6 +401,10 @@ export class ChannelService {
       throw new BadRequestException('존재 하지 않는 유저입니다.');
     if (typeof Object(isAdmin) !== undefined || isAdmin !== null)
       targetUser.isAdmin = isAdmin;
+    let updatedUserForSocket;
+    updatedUserForSocket.isAdmin = targetUser.isAdmin;
+    updatedUserForSocket.userId = targetUser.userId;
+    this.eventsGateway.server.emit('updateChannelMember', updatedUserForSocket);
     return this.channelMemberRepository.save(targetUser);
   }
 
