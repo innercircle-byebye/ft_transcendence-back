@@ -20,6 +20,7 @@ import { ChannelModule } from './channel/channel.module';
 import { EventsModule } from './events/events.module';
 import { RelationModule } from './relation/relation.module';
 import { Admin } from './entities/Admin';
+import { DmModule } from './dm/dm.module';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -80,6 +81,7 @@ AdminJS.registerAdapter({ Database, Resource });
     EventsModule,
     RelationModule,
     PassportModule,
+    DmModule,
   ],
   controllers: [AppController],
   providers: [AppService],

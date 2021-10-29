@@ -113,7 +113,7 @@ export class UserController {
       user.userId,
       formData.email,
       formData.nickname,
-      `http://localhost:3005/profile_image/${file.filename}`,
+      `http://back-nestjs:3005/profile_image/${file.filename}`,
     );
   }
 }
