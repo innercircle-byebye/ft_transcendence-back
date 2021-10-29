@@ -353,10 +353,12 @@ export class ChannelService {
 
     targetUser.mutedDate = mutedDate;
     targetUser.banDate = banDate;
-    if (targetUser.banDate !== null)
+
+    if (typeof Object(banDate) !== undefined) {
+      if (banDate === null)
+        return this.channelMemberRepository.recover(targetUser);
       return this.channelMemberRepository.softRemove(targetUser);
-    if (banDate === null)
-      return this.channelMemberRepository.recover(targetUser);
+    }
     return this.channelMemberRepository.save(targetUser);
   }
 
