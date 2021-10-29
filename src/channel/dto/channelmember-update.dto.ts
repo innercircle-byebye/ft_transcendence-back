@@ -8,7 +8,7 @@ export class ChannelMemberUpdateDto extends PickType(ChannelMember, [
 ]) {
   @IsOptional()
   @ApiProperty({ required: false })
-  banDate: Date;
+  banDate: Date | null;
 
   @IsOptional()
   @ApiProperty({ required: false })

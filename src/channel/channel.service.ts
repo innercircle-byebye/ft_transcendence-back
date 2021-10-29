@@ -362,15 +362,16 @@ export class ChannelService {
       .andWhere('channelMembers.userId = :target', {
         target: targetUserId,
       })
+      .withDeleted()
       .getOne();
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
+    if (targetUser.banDate && banDate !== null)
+      throw new BadRequestException('ban 당한 사용자입니다.');
 
     targetUser.mutedDate = mutedDate;
-    if (banDate) {
-      targetUser.banDate = banDate;
+    if (targetUser.banDate !== null)
       return this.channelChatRepository.softRemove(targetUser);
-    }
     return this.channelMemberRepository.save(targetUser);
   }
 

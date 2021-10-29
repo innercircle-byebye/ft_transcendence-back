@@ -248,7 +248,8 @@ export class ChannelController {
   })
   @ApiBadRequestResponse({
     description:
-      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n  존재하지 않는 유저입니다.',
+      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n' +
+      '존재 하지 않는 유저입니다. \n\n ban 당한 이용자압니다.',
   })
   @Patch('/:name/member')
   updateChannelMember(
