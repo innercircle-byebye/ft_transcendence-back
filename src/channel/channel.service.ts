@@ -389,8 +389,7 @@ export class ChannelService {
       .getOne();
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
-    if (typeof Object(isAdmin) !== undefined || isAdmin !== null)
-      targetUser.isAdmin = isAdmin;
+    targetUser.isAdmin = isAdmin;
     let updatedUserForSocket;
     updatedUserForSocket.isAdmin = targetUser.isAdmin;
     updatedUserForSocket.userId = targetUser.userId;
