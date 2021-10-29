@@ -191,6 +191,8 @@ export class ChannelService {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     if (targetChatroom.ownerId !== ownerId)
       throw new BadRequestException('채널 삭제 권한이 없습니다.');
+    this.eventsGateway.server.emit('deleteChannel', targetChatroom.name);
+
     return this.channelRepository.softRemove(targetChatroom);
   }
 
