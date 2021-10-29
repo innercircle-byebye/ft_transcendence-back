@@ -24,7 +24,7 @@ export class DmService {
       .innerJoinAndSelect('dm.sender', 'sender')
       .innerJoinAndSelect('dm.receiver', 'receiver')
       .andWhere(
-        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :opponentId AND dm.senderId = :userId))',
+        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :userId AND dm.senderId = :opponentId))',
         { userId, opponentId },
       )
       .orderBy('dm.createdAt', 'DESC')
@@ -42,7 +42,7 @@ export class DmService {
       .innerJoinAndSelect('dm.sender', 'sender')
       .innerJoinAndSelect('dm.receiver', 'receiver')
       .andWhere(
-        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :opponentId AND dm.senderId = :userId))',
+        '((dm.senderId = :userId AND dm.receiverId = :opponentId) OR (dm.receiverId = :userId AND dm.senderId = :opponentId))',
         { userId, opponentId },
       )
       .orderBy('dm.createdAt', 'DESC')
