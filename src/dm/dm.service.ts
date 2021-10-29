@@ -94,7 +94,7 @@ export class DmService {
       .createQueryBuilder('dm')
       .innerJoinAndSelect('dm.sender', 'sender')
       .innerJoinAndSelect('dm.receiver', 'receiver')
-      .andWhere('((dm.senderId = :userId) OR (dm.senderId = :userId))', {
+      .andWhere('((dm.senderId = :userId) OR (dm.receiverId = :userId))', {
         userId,
       })
       .orderBy('dm.createdAt', 'DESC')
