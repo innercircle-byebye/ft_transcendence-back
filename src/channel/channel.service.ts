@@ -138,43 +138,49 @@ export class ChannelService {
 
   async updateChannel(
     name: string,
-    adminId: number,
+    ownerId: number,
     updatedName: string,
     password: string,
     maxParticipantNum: number,
   ) {
-    const targetChatroom = await this.channelRepository.findOne({
-      where: [{ name }],
-    });
-    if (!targetChatroom)
+    const targetChannel = await this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.name = :name', { name })
+      .addSelect('channel.password')
+      .getOne();
+
+    if (targetChannel.ownerId !== ownerId)
+      throw new BadRequestException('채널 수정 권한이 없습니다.');
+
+    if (!targetChannel)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
 
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
       throw new BadRequestException(
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
-    if (name !== updatedName) {
+    if (typeof Object(updatedName) !== undefined) {
       const existChatroom = await this.channelRepository.findOne({
         where: [{ name: updatedName }],
       });
       if (existChatroom)
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
     }
-    const isOwner = await this.channelRepository.findOne({
-      where: { ownerId: adminId },
-    });
-
-    if (!isOwner) throw new BadRequestException('채널 수정 권한이 없습니다.');
 
     if (typeof Object(password) !== undefined)
-      targetChatroom.password = password;
+      targetChannel.password = password;
     if (
       typeof Object(maxParticipantNum) !== undefined &&
-      targetChatroom.maxParticipantNum !== maxParticipantNum
+      targetChannel.maxParticipantNum !== maxParticipantNum
     )
-      targetChatroom.maxParticipantNum = maxParticipantNum;
-    if (name !== updatedName) targetChatroom.name = updatedName;
-    return this.channelRepository.save(targetChatroom);
+      targetChannel.maxParticipantNum = maxParticipantNum;
+    if (name !== updatedName) {
+      targetChannel.name = updatedName;
+      this.eventsGateway.server.emit('updateChannelName', updatedName);
+    }
+    this.channelRepository.save(targetChannel);
+    delete targetChannel.password;
+    return targetChannel;
   }
 
   async deleteChannel(name: string, ownerId: number) {
