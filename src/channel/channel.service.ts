@@ -397,8 +397,8 @@ export class ChannelService {
       .getOne();
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
-
-    targetUser.isAdmin = isAdmin;
+    if (typeof Object(isAdmin) !== undefined || isAdmin !== null)
+      targetUser.isAdmin = isAdmin;
     return this.channelMemberRepository.save(targetUser);
   }
 
