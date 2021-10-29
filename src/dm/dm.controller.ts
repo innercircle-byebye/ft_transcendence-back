@@ -7,7 +7,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
@@ -16,6 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
@@ -23,7 +23,7 @@ import { DmService } from './dm.service';
 import { DMContentDto } from './dto/dm-content.dto';
 
 @ApiTags('DM')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtTwoFactorGuard)
 @Controller('api/dm')
 export class DmController {
   constructor(private dmService: DmService) {}
