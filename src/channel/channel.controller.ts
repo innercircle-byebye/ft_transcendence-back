@@ -26,7 +26,6 @@ import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
 import { ChannelChatDto } from './dto/channelchat.dto';
 import { ChannelMemberAdminDto } from './dto/channelmember-admin.dto';
-import { ChannelMemberDeleteDto } from './dto/channelmember-delete.dto';
 import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
@@ -218,21 +217,11 @@ export class ChannelController {
     description: '파라미터로 전달된 채널의 정보',
   })
   @ApiBadRequestResponse({
-    description:
-      '존재하지 않는 채널입니다.\n\n유저 삭제 권한이 없습니다.\n\n' +
-      '존재하지 않는 유저입니다.',
+    description: '존재하지 않는 채널입니다.\n\n존재하지 않는 유저입니다.',
   })
   @Delete('/:name/member')
-  leaveChannel(
-    @Param('name') channelName: string,
-    @AuthUser() user: User,
-    @Body() body: ChannelMemberDeleteDto,
-  ) {
-    return this.channelService.deleteChannelMember(
-      channelName,
-      user.userId,
-      body.targetUserId,
-    );
+  leaveChannel(@Param('name') channelName: string, @AuthUser() user: User) {
+    return this.channelService.deleteChannelMember(channelName, user.userId);
   }
 
   @ApiOperation({

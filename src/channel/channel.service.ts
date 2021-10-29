@@ -288,40 +288,22 @@ export class ChannelService {
     return this.channelMemberRepository.save(channelMember);
   }
 
-  async deleteChannelMember(
-    name: string,
-    userId: number,
-    targetUserId: number,
-  ) {
+  async deleteChannelMember(name: string, userId: number) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
 
-    let adminUser;
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
         channelId: channelIdByName.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: targetUserId || userId,
+        target: userId,
       })
       .getOne();
-    if (targetUserId) {
-      adminUser = await this.channelMemberRepository
-        .createQueryBuilder('channelMembers')
-        .where('channelMembers.channelId = :channelId', {
-          channelId: channelIdByName.channelId,
-        })
-        .andWhere('channelMembers.userId = :target', {
-          target: userId,
-        })
-        .getOne();
-      if (!adminUser.isAdmin)
-        throw new BadRequestException('유저 삭제 권한이 없습니다.');
-    }
     if (!targetUser)
       throw new BadRequestException('채널에 유저가 존재하지 않습니다.');
 
@@ -370,8 +352,11 @@ export class ChannelService {
       throw new BadRequestException('ban 당한 사용자입니다.');
 
     targetUser.mutedDate = mutedDate;
+    targetUser.banDate = banDate;
     if (targetUser.banDate !== null)
-      return this.channelChatRepository.softRemove(targetUser);
+      return this.channelMemberRepository.softRemove(targetUser);
+    if (banDate === null)
+      return this.channelMemberRepository.recover(targetUser);
     return this.channelMemberRepository.save(targetUser);
   }
 
