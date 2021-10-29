@@ -315,7 +315,7 @@ export class ChannelService {
     userId: number,
     targetUserId: number,
     banDate: Date,
-    mutedDate: Date | null,
+    mutedDate: Date,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
