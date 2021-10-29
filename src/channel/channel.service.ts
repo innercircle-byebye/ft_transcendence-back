@@ -351,9 +351,9 @@ export class ChannelService {
     if (targetUser.banDate && banDate !== null)
       throw new BadRequestException('ban 당한 사용자입니다.');
 
-    if (Object(mutedDate) !== undefined) targetUser.mutedDate = mutedDate;
+    if (mutedDate !== undefined) targetUser.mutedDate = mutedDate;
 
-    if (Object(banDate) !== undefined) {
+    if (banDate !== undefined) {
       targetUser.banDate = banDate;
       if (banDate === null)
         return this.channelMemberRepository.recover(targetUser);
