@@ -88,4 +88,30 @@ export class DmService {
       },
     });
   }
+
+  async getAllDMUsers(userId: number) {
+    const dms = await this.dmRepository
+      .createQueryBuilder('dm')
+      .innerJoinAndSelect('dm.sender', 'sender')
+      .innerJoinAndSelect('dm.receiver', 'receiver')
+      .andWhere('((dm.senderId = :userId) OR (dm.senderId = :userId))', {
+        userId,
+      })
+      .orderBy('dm.createdAt', 'DESC')
+      .select()
+      .getMany();
+
+    const dmUsers = dms.map((dm) => {
+      if (dm.senderId === userId) {
+        return dm.receiver;
+      }
+      return dm.sender;
+    });
+
+    const uniqueDMUsers = [
+      ...new Map(dmUsers.map((item) => [item.userId, item])).values(),
+    ];
+
+    return uniqueDMUsers;
+  }
 }

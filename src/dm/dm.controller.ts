@@ -79,16 +79,6 @@ export class DmController {
     await this.dmService.createDMChats(user.userId, receiverId, content);
   }
 
-  //  - 특정 사용자에게 이미지 보내기
-  // 요청: POST /api/dm/{userId}/images
-  // body: { image: multipart }
-  // 응답: 201, 없음
-  // dm 이벤트가 emit됨(DM객체 보내줌)
-  @Post('/:userId/images')
-  async createDMImages() {
-    return 'hello';
-  }
-
   @ApiOperation({
     summary: '안읽은 DM 개수 구하기',
     description:
@@ -110,5 +100,21 @@ export class DmController {
     @Query('after') after: number,
   ) {
     return this.dmService.getDMUnreadsCount(user.userId, senderId, after);
+  }
+
+  @ApiOperation({
+    summary: 'DM 주고받았던 사용자 목록 조회',
+    description:
+      'DM 주고받았던 사용자 목록 조회한다.\n\n' +
+      '가장 최근에 DM 주고받았던 사용자부터 담겨있다.',
+  })
+  @ApiOkResponse({
+    type: User,
+    isArray: true,
+    description: '사용자 목록',
+  })
+  @Get('/users')
+  async getDMUsers(@AuthUser() user: User) {
+    return this.dmService.getAllDMUsers(user.userId);
   }
 }
