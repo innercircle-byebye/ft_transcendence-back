@@ -277,6 +277,8 @@ export class ChannelService {
       .withDeleted()
       .getOne();
     if (targetUser) {
+      if (targetUser.banDate !== null)
+        throw new BadRequestException('ban 처리된 사용자 입니다');
       return this.channelMemberRepository.recover(targetUser);
     }
     // 나간 유저가 다시 들어오고 싶을 때
@@ -404,7 +406,7 @@ export class ChannelService {
     let updatedUserForSocket;
     updatedUserForSocket.isAdmin = targetUser.isAdmin;
     updatedUserForSocket.userId = targetUser.userId;
-    this.eventsGateway.server.emit('updateChannelMember', updatedUserForSocket);
+    this.eventsGateway.server.emit('updateChannelAdmin', updatedUserForSocket);
     return this.channelMemberRepository.save(targetUser);
   }
 
