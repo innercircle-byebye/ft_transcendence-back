@@ -241,7 +241,7 @@ export class ChannelController {
       '존재 하지 않는 유저입니다. \n\n ban 당한 이용자압니다.',
   })
   @Patch('/:name/member')
-  updateChannelMember(
+  async updateChannelMember(
     @Param('name') channelName: string,
     @AuthUser() user: User,
     @Body() body: ChannelMemberUpdateDto,
