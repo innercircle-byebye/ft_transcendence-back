@@ -95,7 +95,7 @@ export class ChannelService {
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
     const existChatroom = await this.channelRepository.findOne({
-      where: [{ name }],
+      where: [{ name, deletedAt: null }],
     });
     if (existChatroom)
       throw new BadRequestException('이미 존재하는 채널 이름입니다.');
@@ -161,7 +161,7 @@ export class ChannelService {
       );
     if (typeof Object(updateName) !== undefined) {
       const existChatroom = await this.channelRepository.findOne({
-        where: [{ name: updateName }],
+        where: [{ name: updateName, deletedAt: null }],
       });
       if (existChatroom)
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
