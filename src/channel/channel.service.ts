@@ -357,9 +357,11 @@ export class ChannelService {
     if (banDate !== undefined) {
       targetUser.banDate = banDate;
       // TODO: 1 transaction
+      if (banDate === null) {
+        this.channelMemberRepository.recover(targetUser);
+        return this.channelMemberRepository.save(targetUser);
+      }
       this.channelMemberRepository.save(targetUser);
-      if (banDate === null)
-        return this.channelMemberRepository.recover(targetUser);
       return this.channelMemberRepository.softRemove(targetUser);
     }
     return this.channelMemberRepository.save(targetUser);
