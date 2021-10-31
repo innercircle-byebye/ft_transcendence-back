@@ -9,7 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import AdminJS, { CurrentAdmin } from 'adminjs';
 import { AdminModule } from '@adminjs/nestjs';
 import { Database, Resource } from '@adminjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
@@ -43,8 +43,8 @@ AdminJS.registerAdapter({ Database, Resource });
         }),
     }),
     AdminModule.createAdminAsync({
-      imports: [TypeOrmModule.forFeature([Admin, User, Friend])],
-      inject: [getRepositoryToken(Admin), Connection],
+      imports: [TypeOrmModule.forFeature([Admin])],
+      inject: [getRepositoryToken(Admin)],
 
       useFactory: (adminRepository: Repository<Admin>) => ({
         adminJsOptions: {
