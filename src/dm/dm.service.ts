@@ -2,20 +2,16 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DM } from 'src/entities/DM';
 import { User } from 'src/entities/User';
-import { EventsGateway } from 'src/events/events.gateway';
+import { MainEventsGateway } from 'src/events/main-events.gateway';
 import { onlineMap } from 'src/events/onlineMap';
 import { MoreThan, Repository } from 'typeorm';
-
-function getKeyByValue(object, value) {
-  return Object.keys(object).find((key) => object[key] === value);
-}
 
 @Injectable()
 export class DmService {
   constructor(
     @InjectRepository(DM) private dmRepository: Repository<DM>,
     @InjectRepository(User) private userRepository: Repository<User>,
-    private readonly eventGateway: EventsGateway,
+    private readonly mainEventGateway: MainEventsGateway,
   ) {}
 
   async getAllDMChats(userId: number, opponentId: number) {
@@ -67,11 +63,10 @@ export class DmService {
       relations: ['sender', 'receiver'],
     });
 
-    const receiverSocketId = getKeyByValue(
-      onlineMap['/chat'],
-      Number(receiverId),
+    const receiverSocketId = Object.keys(onlineMap).find(
+      (key) => onlineMap[key] === receiverId,
     );
-    this.eventGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
+    this.mainEventGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
   }
 
   async getDMUnreadsCount(userId: number, senderId: number, after: number) {
