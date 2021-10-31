@@ -9,7 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import AdminJS, { CurrentAdmin } from 'adminjs';
 import { AdminModule } from '@adminjs/nestjs';
 import { Database, Resource } from '@adminjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
@@ -21,6 +21,9 @@ import { EventsModule } from './events/events.module';
 import { RelationModule } from './relation/relation.module';
 import { Admin } from './entities/Admin';
 import { DmModule } from './dm/dm.module';
+import { User } from './entities/User';
+import { Friend } from './entities/Friend';
+import { Channel } from './entities/Channel';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -40,20 +43,17 @@ AdminJS.registerAdapter({ Database, Resource });
         }),
     }),
     AdminModule.createAdminAsync({
-      imports: [TypeOrmModule.forFeature([Admin])],
-      inject: [getRepositoryToken(Admin)],
-      adminBroOptions: {
-        rootPath: '/admin',
-        resources: [Admin],
-      },
-      useFactory: (userRepository: Repository<Admin>) => ({
-        adminBroOptions: {
+      imports: [TypeOrmModule.forFeature([Admin, User, Friend])],
+      inject: [getRepositoryToken(Admin), Connection],
+
+      useFactory: (adminRepository: Repository<Admin>) => ({
+        adminJsOptions: {
           rootPath: '/admin',
-          resources: [{ resource: userRepository }],
+          resources: [Admin, Channel, Friend, User],
         },
         auth: {
           authenticate: async (email, password) => {
-            const admin = await userRepository
+            const admin = await adminRepository
               .createQueryBuilder('admin')
               .where('admin.email = :email', { email })
               .addSelect('admin.password')
@@ -64,8 +64,8 @@ AdminJS.registerAdapter({ Database, Resource });
 
             return admin as unknown as CurrentAdmin;
           },
-          cookieName: 'test',
-          cookiePassword: 'testPass',
+          cookieName: process.env.ADMIN_COOKIE_NAME,
+          cookiePassword: process.env.ADMIN_COOKIE_PASSWORD,
         },
       }),
     } as any),
@@ -76,7 +76,6 @@ AdminJS.registerAdapter({ Database, Resource });
       rootPath: join(__dirname, '..', 'profile_image'),
       serveRoot: '/profile_image',
     }),
-    // AdminModule,
     ChannelModule,
     EventsModule,
     RelationModule,

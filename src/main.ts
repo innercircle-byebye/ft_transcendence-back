@@ -4,8 +4,6 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
-import * as passport from 'passport';
-import * as session from 'express-session';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './http-exception.filter';
 
@@ -37,18 +35,18 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // admin 로그인용 module
-  app.use(
-    session({
-      resave: false,
-      saveUninitialized: false,
-      secret: 'abcd',
-      cookie: {
-        httpOnly: true,
-      },
-    }),
-  );
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // app.use(
+  //   session({
+  //     resave: false,
+  //     saveUninitialized: false,
+  //     secret: 'abcd',
+  //     cookie: {
+  //       httpOnly: true,
+  //     },
+  //   }),
+  // );
+  // app.use(passport.initialize());
+  // app.use(passport.session());
 
   await app.listen(process.env.BACK_PORT);
 
