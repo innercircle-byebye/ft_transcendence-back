@@ -1,3 +1,4 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
@@ -44,6 +45,10 @@ const mockGateway = () => ({
   transaction: jest.fn(),
 });
 
+const mockEmitter = () => ({
+  transaction: jest.fn(),
+});
+
 describe('ChannelService', () => {
   let service: ChannelService;
 
@@ -74,6 +79,10 @@ describe('ChannelService', () => {
         {
           provide: EventsGateway,
           useFactory: mockGateway,
+        },
+        {
+          provide: EventEmitter2,
+          useFactory: mockEmitter,
         },
       ],
     }).compile();

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -43,6 +44,7 @@ import { DmModule } from './dm/dm.module';
     EventsModule,
     RelationModule,
     DmModule,
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

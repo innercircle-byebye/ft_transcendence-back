@@ -6,6 +6,8 @@ import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
 import { EventsGateway } from 'src/events/events.gateway';
 import { Connection, Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MuteEvent } from './events/mute-created.event';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
@@ -21,6 +23,7 @@ export class ChannelService {
     private channelChatRepository: Repository<ChannelChat>,
     private connection: Connection,
     private readonly eventsGateway: EventsGateway,
+    private muteEmitter: EventEmitter2,
   ) {}
 
   async getAllChannels() {
@@ -129,12 +132,22 @@ export class ChannelService {
     // for(variinarray){
     //    output += array[i];
     // }
+    // userId 목록, 채널ID, 초대한사람 ID
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 
     this.eventsGateway.server.emit('channelList', channelReturned);
     return channelReturned;
   }
+
+  // inviteUsersToChannel(
+  //   userIds: number[],
+  //   channelId: number,
+  //   inviteUserId: number,
+  //   type: DmType,
+  // ) {
+  //   console.log(userIds, channelId, inviteUserId, type);
+  // }
 
   async updateChannel(
     name: string,
@@ -352,7 +365,12 @@ export class ChannelService {
     if (targetUser.banDate && banDate !== null)
       throw new BadRequestException('ban 당한 사용자입니다.');
 
-    if (mutedDate !== undefined) targetUser.mutedDate = mutedDate;
+    if (mutedDate !== undefined) {
+      this.createMuteEvent(channelIdByName.channelId, targetUserId, mutedDate);
+    } else {
+      this.removeMuteEvent(channelIdByName.channelId, targetUserId);
+    }
+    targetUser.mutedDate = mutedDate;
 
     if (banDate !== undefined) {
       targetUser.banDate = banDate;
@@ -447,5 +465,27 @@ export class ChannelService {
       .emit('message', chatWithUser);
 
     return chatWithUser;
+  }
+
+  async createMuteEvent(
+    channelId: number,
+    targetUserId: number,
+    mutedDate: Date,
+  ) {
+    const muteCreatedEvent = new MuteEvent();
+    muteCreatedEvent.channelId = channelId;
+    muteCreatedEvent.targetUserId = targetUserId;
+    muteCreatedEvent.mutedDate = mutedDate;
+    this.muteEmitter.emit('mute.create', muteCreatedEvent);
+    console.log(this.muteEmitter.eventNames());
+  }
+
+  async removeMuteEvent(channelId: number, targetUserId: number) {
+    const muteCreatedEvent = new MuteEvent();
+    muteCreatedEvent.channelId = channelId;
+    muteCreatedEvent.targetUserId = targetUserId;
+    muteCreatedEvent.mutedDate = null;
+    this.muteEmitter.emit('mute.update', muteCreatedEvent);
+    console.log(this.muteEmitter.eventNames());
   }
 }
