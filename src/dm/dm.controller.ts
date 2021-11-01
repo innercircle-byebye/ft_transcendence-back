@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
-import { DM } from 'src/entities/DM';
+import { DM, DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { DmService } from './dm.service';
 import { DMContentDto } from './dto/dm-content.dto';
@@ -79,7 +79,12 @@ export class DmController {
     @Param('userId') receiverId: number,
     @Body() { content }: DMContentDto,
   ) {
-    await this.dmService.createDMChats(user.userId, receiverId, content);
+    await this.dmService.createDM(
+      user.userId,
+      receiverId,
+      content,
+      DMType.PLAIN,
+    );
   }
 
   @ApiOperation({
