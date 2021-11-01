@@ -4,7 +4,7 @@ import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
-import { EventsGateway } from 'src/events/events.gateway';
+import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection } from 'typeorm';
 import { ChannelService } from './channel.service';
 
@@ -72,7 +72,7 @@ describe('ChannelService', () => {
           useFactory: mockConnection,
         },
         {
-          provide: EventsGateway,
+          provide: ChatEventsGateway,
           useFactory: mockGateway,
         },
       ],
