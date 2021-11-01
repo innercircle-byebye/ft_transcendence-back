@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DM } from 'src/entities/DM';
+import { DM, DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { MainEventsGateway } from 'src/events/main-events.gateway';
 import { onlineMap } from 'src/events/onlineMap';
@@ -56,6 +56,7 @@ export class DmService {
     const savedDM = await this.dmRepository.save({
       senderId,
       receiverId,
+      type: DMType.PLAIN,
       content,
     });
     const dmWithUsers = await this.dmRepository.findOne({
