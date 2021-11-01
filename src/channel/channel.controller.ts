@@ -6,12 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
@@ -284,7 +286,10 @@ export class ChannelController {
 
   @ApiOperation({
     summary: '채널 채팅 조회',
-    description: '주어진 채널의 전체 채팅을 조회합니다.',
+    description:
+      '주어진 채널의 전체 채팅을 조회합니다.\n\n' +
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'perPage, page가 하나라도 없거나 숫자값이 아니면, 전체 DM목록을 조회한다.',
   })
   @ApiOkResponse({
     type: ChannelChatDto,
@@ -294,9 +299,21 @@ export class ChannelController {
   @ApiBadRequestResponse({
     description: '존재하지 않는 채널입니다.',
   })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiQuery({ name: 'page', required: false })
   @Get('/:name/chat')
-  getChannelChatsByChannelName(@Param('name') channelName: string) {
-    return this.channelService.getChannelChatsByChannelName(channelName);
+  getChannelChatsByChannelName(
+    @Param('name') channelName: string,
+    @Query('perPage') perPage: number,
+    @Query('page') page: number,
+  ) {
+    if (!perPage || !page)
+      return this.channelService.getAllChannelChatsByName(channelName);
+    return this.channelService.getChannelChatsWithPaging(
+      channelName,
+      perPage,
+      page,
+    );
   }
 
   @ApiOperation({
@@ -322,6 +339,29 @@ export class ChannelController {
       body.content,
       user.userId,
     );
+  }
+
+  @ApiOperation({
+    summary: '안읽은 채팅 개수 구하기',
+    description:
+      'after시간 이후로 해당 사용자로부터 새로 받은 채팅의 개수 (DM과 동일)\n\n' +
+      'after은 1970년 1월 1일 00:00:00 UTC 이후 경과 시간 (밀리 초)을 나타내는 숫자로 ' +
+      'Date객체에서 getTime()함수로 구한 값입니다.',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: 'after시간 이후로 해당 사용자로부터 새로 받은 DM의 개수',
+  })
+  @ApiBadRequestResponse({
+    description: '존재하지 않는 채널입니다.',
+  })
+  @Get('/:name/unreads')
+  async getChannelChatUnreads(
+    @AuthUser() user: User,
+    @Param('name') channelName: string,
+    @Query('after') after: number,
+  ) {
+    return this.channelService.getChannelChatUnreadsCount(channelName, after);
   }
 
   @ApiOperation({

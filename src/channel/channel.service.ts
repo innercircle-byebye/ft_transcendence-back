@@ -6,7 +6,7 @@ import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
 import { ChatEventsGateway } from 'src/events/chat-events.gateway';
-import { Connection, Repository } from 'typeorm';
+import { Connection, MoreThan, Repository } from 'typeorm';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
@@ -445,7 +445,7 @@ export class ChannelService {
     return this.channelMemberRepository.save(targetUser);
   }
 
-  async getChannelChatsByChannelName(name: string) {
+  async getAllChannelChatsByName(name: string) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
@@ -457,9 +457,46 @@ export class ChannelService {
       .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
       .innerJoinAndSelect('channelChats.user', 'user')
       .select(['channelChats', 'user.nickname', 'user.imagePath'])
+      .orderBy('channelChats.createdAt', 'DESC')
       .getMany();
 
     return channelChats;
+  }
+
+  async getChannelChatsWithPaging(name: string, perPage: number, page: number) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName) {
+      throw new BadRequestException('존재하지 않는 채널입니다.');
+    }
+    const channelChats = this.channelChatRepository
+      .createQueryBuilder('channelChats')
+      .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
+      .innerJoinAndSelect('channelChats.user', 'user')
+      .select(['channelChats', 'user.nickname', 'user.imagePath'])
+      .orderBy('channelChats.createdAt', 'DESC')
+      .take(perPage)
+      .skip(perPage * (page - 1))
+      .getMany();
+
+    return channelChats;
+  }
+
+  async getChannelChatUnreadsCount(name: string, after: number) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName) {
+      throw new BadRequestException('존재하지 않는 채널입니다.');
+    }
+
+    return this.channelRepository.count({
+      where: {
+        channelId: channelIdByName.channelId,
+        createdAt: MoreThan(new Date(after)),
+      },
+    });
   }
 
   // TODO: 예외처리
