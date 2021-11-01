@@ -54,8 +54,11 @@ export class DM {
   type: DMType;
 
   @ApiProperty({
-    description: 'DM 내용',
-    example: '안녕하세요~',
+    description:
+      'DM 내용\n\n' +
+      'CHANNEL_INVITE 타입일때는 초대된 channelId\n\n' +
+      'GAME_INVITE 타입일때는 초대된 gameRoomId',
+    example: '안녕하세요~\n\nCHANNEL_INVITE 또는 GAME_INVITE 일때, 123',
   })
   @Column({ type: 'text', name: 'content' })
   content: string;
