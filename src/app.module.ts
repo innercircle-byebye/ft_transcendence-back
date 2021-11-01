@@ -11,6 +11,8 @@ import { AdminModule } from '@adminjs/nestjs';
 import { Database, Resource } from '@adminjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+// AdminModule을 AdminJS가 사용 하고 있기 때문에 다른 이름으로 가져옴
+import { AdminModule as AdminUserModule } from './admin/admin.module';
 import * as ormconfig from './ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -81,6 +83,8 @@ AdminJS.registerAdapter({ Database, Resource });
     RelationModule,
     PassportModule,
     DmModule,
+    // AdminModule을 AdminJS가 사용 하고 있기 때문에 다른 이름으로 가져옴
+    AdminUserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

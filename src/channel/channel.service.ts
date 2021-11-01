@@ -201,8 +201,7 @@ export class ChannelService {
         },
       )
       .innerJoinAndSelect('channelMembers.user', 'user')
-      .select(['*', 'user.nickname AS nickname', 'user.imagePath AS imagePath'])
-      .addSelect(['nickname'])
+      .select(['channelMembers', 'user.nickname', 'user.imagePath'])
       .getRawMany();
   }
 
