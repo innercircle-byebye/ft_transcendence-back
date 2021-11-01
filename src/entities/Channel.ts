@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -16,7 +17,7 @@ import { IChannelMember } from './interfaces/IChannelMember';
 import { IUser } from './interfaces/IUser';
 
 @Entity('channel')
-export class Channel implements IChannel {
+export class Channel extends BaseEntity implements IChannel {
   @ApiProperty({
     description: '채널 DB테이블 ID 번호',
     example: 1,

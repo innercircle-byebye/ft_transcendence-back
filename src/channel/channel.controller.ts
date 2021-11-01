@@ -323,4 +323,17 @@ export class ChannelController {
       user.userId,
     );
   }
+
+  @ApiOperation({
+    summary: 'mute 해제 task 목록 조회',
+    description: 'mute 해제 task 목록을 조회합니다. (조회 테스트용)',
+  })
+  @ApiOkResponse({
+    isArray: true,
+    description: 'mute 해제 목록',
+  })
+  @Get('/:name/mutetask')
+  getMuteTasks() {
+    return this.channelService.getTimeouts();
+  }
 }

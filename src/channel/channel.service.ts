@@ -1,13 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
-import { EventsGateway } from 'src/events/events.gateway';
+import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection, Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MuteEvent } from './events/mute-created.event';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
@@ -22,9 +21,16 @@ export class ChannelService {
     @InjectRepository(ChannelChat)
     private channelChatRepository: Repository<ChannelChat>,
     private connection: Connection,
-    private readonly eventsGateway: EventsGateway,
-    private muteEmitter: EventEmitter2,
+    private readonly chatEventsGateway: ChatEventsGateway,
+    private schedulerRegistry: SchedulerRegistry,
   ) {}
+
+  private readonly logger = new Logger(ChannelService.name);
+
+  @Cron('45 * * * * *')
+  handleCron() {
+    this.logger.debug('Called when the current second is 45');
+  }
 
   async getAllChannels() {
     const allChannelsWithPassword = await this.channelRepository
@@ -136,7 +142,7 @@ export class ChannelService {
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 
-    this.eventsGateway.server.emit('channelList', channelReturned);
+    this.chatEventsGateway.server.emit('channelList', channelReturned);
     return channelReturned;
   }
 
@@ -189,7 +195,7 @@ export class ChannelService {
       targetChannel.maxParticipantNum = maxParticipantNum;
     if (name !== updateName) {
       targetChannel.name = updateName;
-      this.eventsGateway.server.emit('updateChannelName', updateName);
+      this.chatEventsGateway.server.emit('updateChannelName', updateName);
     }
     this.channelRepository.save(targetChannel);
     delete targetChannel.password;
@@ -204,7 +210,7 @@ export class ChannelService {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     if (targetChatroom.ownerId !== ownerId)
       throw new BadRequestException('채널 삭제 권한이 없습니다.');
-    this.eventsGateway.server.emit('deleteChannel', targetChatroom.name);
+    this.chatEventsGateway.server.emit('deleteChannel', targetChatroom.name);
 
     return this.channelRepository.softRemove(targetChatroom);
   }
@@ -365,10 +371,25 @@ export class ChannelService {
     if (targetUser.banDate && banDate !== null)
       throw new BadRequestException('ban 당한 사용자입니다.');
 
-    if (mutedDate !== undefined) {
-      this.createMuteEvent(channelIdByName.channelId, targetUserId, mutedDate);
+    if (mutedDate !== null) {
+      if (targetUser.mutedDate)
+        this.updateTimeout(
+          `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+          targetUserId,
+          channelIdByName.channelId,
+          mutedDate,
+        );
+      else
+        this.addTimeout(
+          `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+          targetUserId,
+          channelIdByName.channelId,
+          mutedDate,
+        );
     } else {
-      this.removeMuteEvent(channelIdByName.channelId, targetUserId);
+      this.deleteTimeout(
+        `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+      );
     }
     targetUser.mutedDate = mutedDate;
 
@@ -380,7 +401,7 @@ export class ChannelService {
         return this.channelMemberRepository.save(targetUser);
       }
       this.channelMemberRepository.save(targetUser);
-      this.eventsGateway.server.emit('banUserFromChannel', {
+      this.chatEventsGateway.server.emit('banUserFromChannel', {
         channelName: name,
         userId: targetUser.userId,
       });
@@ -417,7 +438,7 @@ export class ChannelService {
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
     targetUser.isAdmin = isAdmin;
-    this.eventsGateway.server.emit('updateChannelAdmin', {
+    this.chatEventsGateway.server.emit('updateChannelAdmin', {
       isAdmin: targetUser.isAdmin,
       userId: targetUser.userId,
     });
@@ -464,32 +485,55 @@ export class ChannelService {
       .select(['channelChats', 'user.nickname', 'user.imagePath'])
       .getOne();
 
-    this.eventsGateway.server
+    this.chatEventsGateway.server
       .to(`channel-${name}`)
       .emit('message', chatWithUser);
 
     return chatWithUser;
   }
 
-  async createMuteEvent(
+  addTimeout(
+    taskName: string,
+    userId: number,
     channelId: number,
-    targetUserId: number,
     mutedDate: Date,
   ) {
-    const muteCreatedEvent = new MuteEvent();
-    muteCreatedEvent.channelId = channelId;
-    muteCreatedEvent.targetUserId = targetUserId;
-    muteCreatedEvent.mutedDate = mutedDate;
-    this.muteEmitter.emit('mute.create', muteCreatedEvent);
-    console.log(this.muteEmitter.eventNames());
+    const callback = async () => {
+      const targetUser = await this.channelMemberRepository.findOne({
+        where: [{ userId, channelId }],
+      });
+      console.log(targetUser.mutedDate);
+      targetUser.mutedDate = null;
+      await this.channelMemberRepository.save(targetUser);
+      this.logger.warn(`User ID ${userId} in ${channelId} unmuted.`);
+      this.schedulerRegistry.deleteTimeout(taskName);
+    };
+
+    const executeTime = Date.parse(`${mutedDate}`) - Date.now();
+    const timeout = setTimeout(callback, executeTime);
+    this.schedulerRegistry.addTimeout(taskName, timeout);
   }
 
-  async removeMuteEvent(channelId: number, targetUserId: number) {
-    const muteCreatedEvent = new MuteEvent();
-    muteCreatedEvent.channelId = channelId;
-    muteCreatedEvent.targetUserId = targetUserId;
-    muteCreatedEvent.mutedDate = null;
-    this.muteEmitter.emit('mute.update', muteCreatedEvent);
-    console.log(this.muteEmitter.eventNames());
+  updateTimeout(
+    taskName: string,
+    userId: number,
+    channelId: number,
+    mutedDate: Date,
+  ) {
+    this.schedulerRegistry.deleteTimeout(taskName);
+    this.addTimeout(taskName, userId, channelId, mutedDate);
+    console.log('updated');
+  }
+
+  deleteTimeout(name: string) {
+    this.schedulerRegistry.deleteTimeout(name);
+    this.logger.warn(`Mute Schedule ${name} deleted.`);
+  }
+
+  getTimeouts() {
+    const timeouts = this.schedulerRegistry.getTimeouts();
+    timeouts.forEach((key) => this.logger.log(`Timeout: ${key}`));
+    console.log(timeouts);
+    return timeouts;
   }
 }

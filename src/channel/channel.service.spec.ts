@@ -1,11 +1,11 @@
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
-import { EventsGateway } from 'src/events/events.gateway';
+import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection } from 'typeorm';
 import { ChannelService } from './channel.service';
 
@@ -45,7 +45,7 @@ const mockGateway = () => ({
   transaction: jest.fn(),
 });
 
-const mockEmitter = () => ({
+const mockScheduleRegistry = () => ({
   transaction: jest.fn(),
 });
 
@@ -77,12 +77,12 @@ describe('ChannelService', () => {
           useFactory: mockConnection,
         },
         {
-          provide: EventsGateway,
+          provide: ChatEventsGateway,
           useFactory: mockGateway,
         },
         {
-          provide: EventEmitter2,
-          useFactory: mockEmitter,
+          provide: SchedulerRegistry,
+          useFactory: mockScheduleRegistry,
         },
       ],
     }).compile();

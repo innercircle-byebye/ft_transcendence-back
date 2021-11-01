@@ -1,10 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Admin } from 'src/entities/Admin';
 import { Announcement } from 'src/entities/Announcement';
 import { Connection } from 'typeorm';
 import { AdminService } from './admin.service';
 
 const mockAnnouncementRepository = () => ({
+  save: jest.fn(),
+  find: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
+
+const mockAdminRepository = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
@@ -25,6 +33,10 @@ describe('AdminService', () => {
         {
           provide: getRepositoryToken(Announcement),
           useValue: mockAnnouncementRepository(),
+        },
+        {
+          provide: getRepositoryToken(Admin),
+          useValue: mockAdminRepository(),
         },
         {
           provide: Connection,
