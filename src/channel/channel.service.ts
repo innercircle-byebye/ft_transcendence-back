@@ -4,7 +4,7 @@ import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { User } from 'src/entities/User';
-import { EventsGateway } from 'src/events/events.gateway';
+import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection, Repository } from 'typeorm';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
@@ -20,7 +20,7 @@ export class ChannelService {
     @InjectRepository(ChannelChat)
     private channelChatRepository: Repository<ChannelChat>,
     private connection: Connection,
-    private readonly eventsGateway: EventsGateway,
+    private readonly chatEventsGateway: ChatEventsGateway,
   ) {}
 
   async getAllChannels() {
@@ -132,7 +132,7 @@ export class ChannelService {
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 
-    this.eventsGateway.server.emit('channelList', channelReturned);
+    this.chatEventsGateway.server.emit('channelList', channelReturned);
     return channelReturned;
   }
 
@@ -418,7 +418,7 @@ export class ChannelService {
       .select(['channelChats', 'user.nickname', 'user.imagePath'])
       .getOne();
 
-    this.eventsGateway.server
+    this.chatEventsGateway.server
       .to(`channel-${name}`)
       .emit('message', chatWithUser);
 

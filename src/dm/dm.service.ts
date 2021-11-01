@@ -11,7 +11,7 @@ export class DmService {
   constructor(
     @InjectRepository(DM) private dmRepository: Repository<DM>,
     @InjectRepository(User) private userRepository: Repository<User>,
-    private readonly mainEventGateway: MainEventsGateway,
+    private readonly mainEventsGateway: MainEventsGateway,
   ) {}
 
   async getAllDMChats(userId: number, opponentId: number) {
@@ -66,7 +66,7 @@ export class DmService {
     const receiverSocketId = Object.keys(onlineMap).find(
       (key) => onlineMap[key] === receiverId,
     );
-    this.mainEventGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
+    this.mainEventsGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
   }
 
   async getDMUnreadsCount(userId: number, senderId: number, after: number) {

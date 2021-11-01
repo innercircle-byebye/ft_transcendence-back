@@ -13,7 +13,7 @@ import { Socket, Server } from 'socket.io';
 
 @WebSocketGateway({ namespace: '/chat' })
 // eslint-disable-next-line prettier/prettier
-export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class ChatEventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
 
   private logger: Logger = new Logger('AppGateway');
