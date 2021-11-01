@@ -201,9 +201,8 @@ export class ChannelService {
         },
       )
       .innerJoinAndSelect('channelMembers.user', 'user')
-      .select(['*', 'user.nickname AS nickname', 'user.imagePath AS imagePath'])
-      .addSelect(['nickname'])
-      .getRawMany();
+      .select(['channelMembers', 'user.nickname', 'user.imagePath'])
+      .getMany();
   }
 
   async getCurrentChannelMemberCount(name: string) {
