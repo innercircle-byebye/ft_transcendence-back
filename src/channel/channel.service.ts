@@ -380,6 +380,10 @@ export class ChannelService {
         return this.channelMemberRepository.save(targetUser);
       }
       this.channelMemberRepository.save(targetUser);
+      this.eventsGateway.server.emit('banUserFromChannel', {
+        channelName: name,
+        userId: targetUser.userId,
+      });
       return this.channelMemberRepository.softRemove(targetUser);
     }
     return this.channelMemberRepository.save(targetUser);
