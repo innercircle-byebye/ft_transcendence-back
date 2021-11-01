@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -17,7 +18,7 @@ export enum FriendStatus {
 }
 
 @Entity('friend')
-export class Friend {
+export class Friend extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int', name: 'friend_id' })
   friendId: number;
 

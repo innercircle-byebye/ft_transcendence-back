@@ -20,6 +20,13 @@ const adminInitData = [
     nickname: '관리자3',
     fromId: 2,
   },
+  {
+    adminId: 4,
+    email: 'admin4@aaa.com',
+    nickname: '관리자4',
+    password: '$2b$12$wZwVMEO4D9a9doVwOco20OiM8jyPO46deKzESYg5J5XtueWpHaoj6',
+    fromId: 1,
+  },
 ];
 
 export { adminInitData };

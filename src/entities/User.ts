@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -21,7 +22,7 @@ export enum UserStatus {
   NOT_REGISTERED = 'not_registered',
 }
 @Entity('user')
-export class User implements IUser {
+export class User extends BaseEntity implements IUser {
   @ApiProperty({
     description: '유저 DB테이블 ID번호',
     example: 1,
@@ -180,6 +181,7 @@ export class User implements IUser {
   ChannelMembers: IChannelMember[];
 
   constructor(partial: Partial<User>) {
+    super();
     Object.assign(this, partial);
   }
 }
