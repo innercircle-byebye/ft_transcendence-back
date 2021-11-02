@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DM } from 'src/entities/DM';
+import { DM, DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { MainEventsGateway } from 'src/events/main-events.gateway';
 import { onlineMap } from 'src/events/onlineMap';
-import { MoreThan, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 
 @Injectable()
 export class DmService {
@@ -47,7 +47,12 @@ export class DmService {
       .getMany();
   }
 
-  async createDMChats(senderId: number, receiverId: number, content: string) {
+  async createDM(
+    senderId: number,
+    receiverId: number,
+    content: string,
+    type: DMType,
+  ) {
     const receiver = await this.userRepository.findOne({ userId: receiverId });
     if (!receiver) {
       throw new BadRequestException('존재하지 않는 사용자입니다.');
@@ -56,6 +61,7 @@ export class DmService {
     const savedDM = await this.dmRepository.save({
       senderId,
       receiverId,
+      type,
       content,
     });
     const dmWithUsers = await this.dmRepository.findOne({
@@ -67,6 +73,24 @@ export class DmService {
       (key) => onlineMap[key] === receiverId,
     );
     this.mainEventsGateway.server.to(receiverSocketId).emit('dm', dmWithUsers);
+  }
+
+  async createDMs(
+    senderId: number,
+    receiverIds: number[],
+    content: string,
+    type: DMType,
+  ) {
+    const receivers = await this.userRepository.find({
+      userId: In(receiverIds),
+    });
+    if (receivers.length !== receiverIds.length) {
+      throw new BadRequestException('존재하지 않는 사용자가 포함되어있습니다.');
+    }
+
+    for (let i = 0; i < receiverIds.length; i += 1) {
+      this.createDM(senderId, receiverIds[i], content, type);
+    }
   }
 
   async getDMUnreadsCount(userId: number, senderId: number, after: number) {
