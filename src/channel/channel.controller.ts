@@ -261,7 +261,7 @@ export class ChannelController {
   @ApiOperation({
     summary: '채널에 사용자 초대',
     description:
-      '채널에 사용자를 초대 합니다. (초대 대상 유저들에게 DM 전송)' +
+      '채널에 사용자를 초대 합니다. (모든 유저 이용 가능, 초대 대상 유저들에게 DM 전송)\n\n' +
       '(한명의 사용자를 초대 하더라도 배열 형식의 데이터가 필요합니다) \n\n',
   })
   @ApiOkResponse({
@@ -271,7 +271,7 @@ export class ChannelController {
     description:
       '존재하지 않는 채널입니다.\n\n 존재하지 않는 사용자가 포함되어있습니다.',
   })
-  @Patch('/:name/invite')
+  @Post('/:name/invite')
   async initeUserToChannel(
     @Param('name') channelName: string,
     @AuthUser() user: User,
