@@ -156,14 +156,26 @@ export class ChannelService {
     return channelReturned;
   }
 
-  // inviteUsersToChannel(
-  //   userIds: number[],
-  //   channelId: number,
-  //   inviteUserId: number,
-  //   type: DmType,
-  // ) {
-  //   console.log(userIds, channelId, inviteUserId, type);
-  // }
+  async inviteUsersToChannel(
+    name: string,
+    userId: number,
+    invitedUsers: number[],
+  ) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName)
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
+
+    this.dmService.createDMs(
+      userId,
+      invitedUsers,
+      channelIdByName.channelId.toString(),
+      DMType.CHANNEL_INVITE,
+    );
+
+    return 'OK';
+  }
 
   async updateChannel(
     name: string,
