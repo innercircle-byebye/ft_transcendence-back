@@ -14,16 +14,16 @@ import { IUser } from './interfaces/IUser';
 
 @Entity('game_observer')
 export class GameObserver extends BaseEntity implements IGameObserver {
+  @ManyToOne('GameRoom', 'gameObservers', { primary: true })
+  @JoinColumn({ name: 'game_room_id' })
+  gameRoom: IGameRoom;
+
   @ApiProperty({
     description: '게임 방 ID 번호',
     example: 1,
   })
   @PrimaryColumn({ name: 'game_room_id' })
   gameRoomId: number;
-
-  @ManyToOne('GameRoom', 'gameObservers', { primary: true })
-  @JoinColumn({ name: 'game_room_id' })
-  gameRoom: IGameRoom;
 
   @ApiProperty({
     description: '관전 유저 ID 번호',
