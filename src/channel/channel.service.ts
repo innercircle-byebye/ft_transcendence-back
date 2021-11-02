@@ -190,11 +190,11 @@ export class ChannelService {
       .addSelect('channel.password')
       .getOne();
 
-    if (targetChannel.ownerId !== ownerId)
-      throw new BadRequestException('채널 수정 권한이 없습니다.');
-
     if (!targetChannel)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
+
+    if (targetChannel.ownerId !== ownerId)
+      throw new BadRequestException('채널 수정 권한이 없습니다.');
 
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
       throw new BadRequestException(
