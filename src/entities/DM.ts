@@ -11,6 +11,12 @@ import {
 } from 'typeorm';
 import { User } from './User';
 
+export enum DMType {
+  PLAIN = 'plain',
+  CHANNEL_INVITE = 'channel_invite',
+  GAME_INVITE = 'game_invite',
+}
+
 @Entity('dm')
 export class DM {
   @ApiProperty({
@@ -35,8 +41,24 @@ export class DM {
   receiverId: number;
 
   @ApiProperty({
-    description: 'DM 내용',
-    example: '안녕하세요~',
+    description: 'DM 타입(일반, 채널초대, 게임초대)',
+    example: DMType.PLAIN,
+    examples: DMType,
+  })
+  @Column({
+    name: 'type',
+    type: 'enum',
+    enum: DMType,
+    default: DMType.PLAIN,
+  })
+  type: DMType;
+
+  @ApiProperty({
+    description:
+      'DM 내용\n\n' +
+      'CHANNEL_INVITE 타입일때는 초대된 channelId\n\n' +
+      'GAME_INVITE 타입일때는 초대된 gameRoomId',
+    example: '안녕하세요~\n\nCHANNEL_INVITE 또는 GAME_INVITE 일때, 123',
   })
   @Column({ type: 'text', name: 'content' })
   content: string;
