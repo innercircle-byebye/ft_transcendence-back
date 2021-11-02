@@ -61,7 +61,6 @@ export class ChannelMember implements IChannelMember {
 
   @ApiProperty({
     description: '채널 내 관리자 유무',
-    nullable: true,
     default: true,
     examples: [true, false],
   })

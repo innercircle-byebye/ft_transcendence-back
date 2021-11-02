@@ -1,11 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DmService } from 'src/dm/dm.service';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
+import { DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { ChatEventsGateway } from 'src/events/chat-events.gateway';
-import { Connection, Repository } from 'typeorm';
+import { Connection, MoreThan, Repository } from 'typeorm';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
@@ -21,7 +24,16 @@ export class ChannelService {
     private channelChatRepository: Repository<ChannelChat>,
     private connection: Connection,
     private readonly chatEventsGateway: ChatEventsGateway,
+    private schedulerRegistry: SchedulerRegistry,
+    private dmService: DmService,
   ) {}
+
+  private readonly logger = new Logger(ChannelService.name);
+
+  @Cron('45 * * * * *')
+  handleCron() {
+    this.logger.debug('Called when the current second is 45');
+  }
 
   async getAllChannels() {
     const allChannelsWithPassword = await this.channelRepository
@@ -95,7 +107,7 @@ export class ChannelService {
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
     const existChatroom = await this.channelRepository.findOne({
-      where: [{ name }],
+      where: [{ name, deletedAt: null }],
     });
     if (existChatroom)
       throw new BadRequestException('이미 존재하는 채널 이름입니다.');
@@ -129,6 +141,14 @@ export class ChannelService {
     // for(variinarray){
     //    output += array[i];
     // }
+    // userId 목록, 채널ID, 초대한사람 ID
+
+    this.dmService.createDMs(
+      ownerId,
+      invitedUsers,
+      channelReturned.channelId.toString(),
+      DMType.CHANNEL_INVITE,
+    );
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 
@@ -136,41 +156,72 @@ export class ChannelService {
     return channelReturned;
   }
 
+  async inviteUsersToChannel(
+    name: string,
+    userId: number,
+    invitedUsers: number[],
+  ) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName)
+      throw new BadRequestException('존재 하지 않는 채널입니다.');
+
+    this.dmService.createDMs(
+      userId,
+      invitedUsers,
+      channelIdByName.channelId.toString(),
+      DMType.CHANNEL_INVITE,
+    );
+
+    return 'OK';
+  }
+
   async updateChannel(
     name: string,
-    adminId: number,
-    updatedName: string,
+    ownerId: number,
+    updateName: string,
     password: string,
     maxParticipantNum: number,
   ) {
-    const targetChatroom = await this.channelRepository.findOne({
-      where: [{ name }],
-    });
-    if (!targetChatroom)
+    const targetChannel = await this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.name = :name', { name })
+      .addSelect('channel.password')
+      .getOne();
+
+    if (!targetChannel)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
+
+    if (targetChannel.ownerId !== ownerId)
+      throw new BadRequestException('채널 수정 권한이 없습니다.');
 
     if (maxParticipantNum < 3 || maxParticipantNum > 100)
       throw new BadRequestException(
         '채널 생성 인원은 최소 3명 이상, 최대 100명 이하입니다.',
       );
-    if (name !== updatedName) {
+    if (typeof Object(updateName) !== undefined) {
       const existChatroom = await this.channelRepository.findOne({
-        where: [{ name: updatedName }],
+        where: [{ name: updateName, deletedAt: null }],
       });
       if (existChatroom)
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
     }
-    const isOwner = await this.channelRepository.findOne({
-      where: { ownerId: adminId },
-    });
 
-    if (!isOwner) throw new BadRequestException('채널 수정 권한이 없습니다.');
-
-    if (password) targetChatroom.password = password;
-    if (targetChatroom.maxParticipantNum !== maxParticipantNum)
-      targetChatroom.maxParticipantNum = maxParticipantNum;
-    if (name !== updatedName) targetChatroom.name = updatedName;
-    return this.channelRepository.save(targetChatroom);
+    if (typeof Object(password) !== undefined)
+      targetChannel.password = password;
+    if (
+      typeof Object(maxParticipantNum) !== undefined &&
+      targetChannel.maxParticipantNum !== maxParticipantNum
+    )
+      targetChannel.maxParticipantNum = maxParticipantNum;
+    if (name !== updateName) {
+      targetChannel.name = updateName;
+      this.chatEventsGateway.server.emit('updateChannelName', updateName);
+    }
+    this.channelRepository.save(targetChannel);
+    delete targetChannel.password;
+    return targetChannel;
   }
 
   async deleteChannel(name: string, ownerId: number) {
@@ -181,6 +232,8 @@ export class ChannelService {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     if (targetChatroom.ownerId !== ownerId)
       throw new BadRequestException('채널 삭제 권한이 없습니다.');
+    this.chatEventsGateway.server.emit('deleteChannel', targetChatroom.name);
+
     return this.channelRepository.softRemove(targetChatroom);
   }
 
@@ -202,6 +255,7 @@ export class ChannelService {
       )
       .innerJoinAndSelect('channelMembers.user', 'user')
       .select(['channelMembers', 'user.nickname', 'user.imagePath'])
+      .withDeleted()
       .getMany();
   }
 
@@ -232,15 +286,16 @@ export class ChannelService {
     targetUserId: number,
     password: string,
   ) {
-    const channel = await this.channelRepository.findOne({ where: { name } });
+    const channel = await this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.name = :name', { name })
+      .addSelect('channel.password')
+      .getOne();
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    // targetUserId가 전달 되었을 경우 -> 초대
-    // -> 비밀번호가 지정 되어 있으나 생략 가능하도록 처리
-    if (channel.password !== null && targetUserId === null)
-      if (channel.password !== password)
-        throw new BadRequestException('잘못된 비밀번호입니다.');
+    if (channel.password && channel.password !== password)
+      throw new BadRequestException('잘못된 비밀번호입니다.');
     const user = await this.userRepository.findOne({
       where: { userId: targetUserId || userId },
     });
@@ -264,6 +319,8 @@ export class ChannelService {
       .withDeleted()
       .getOne();
     if (targetUser) {
+      if (targetUser.banDate !== null)
+        throw new BadRequestException('ban 처리된 사용자 입니다');
       return this.channelMemberRepository.recover(targetUser);
     }
     // 나간 유저가 다시 들어오고 싶을 때
@@ -273,25 +330,20 @@ export class ChannelService {
     return this.channelMemberRepository.save(channelMember);
   }
 
-  async deleteChannelMember(
-    name: string,
-    ownerId: number,
-    targetUserId: number,
-  ) {
+  async deleteChannelMember(name: string, userId: number) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
-    if (channelIdByName.ownerId !== ownerId)
-      throw new BadRequestException('유저 삭제 권한이 없습니다.');
+
     const targetUser = await this.channelMemberRepository
       .createQueryBuilder('channelMembers')
       .where('channelMembers.channelId = :channelId', {
         channelId: channelIdByName.channelId,
       })
       .andWhere('channelMembers.userId = :target', {
-        target: targetUserId,
+        target: userId,
       })
       .getOne();
     if (!targetUser)
@@ -305,7 +357,7 @@ export class ChannelService {
     userId: number,
     targetUserId: number,
     banDate: Date,
-    mutedDate: Date | null,
+    mutedDate: Date,
   ) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
@@ -334,14 +386,48 @@ export class ChannelService {
       .andWhere('channelMembers.userId = :target', {
         target: targetUserId,
       })
+      .withDeleted()
       .getOne();
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
+    if (targetUser.banDate && banDate !== null)
+      throw new BadRequestException('ban 당한 사용자입니다.');
 
+    if (mutedDate !== null) {
+      if (targetUser.mutedDate)
+        this.updateTimeout(
+          `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+          targetUserId,
+          channelIdByName.channelId,
+          mutedDate,
+        );
+      else
+        this.addTimeout(
+          `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+          targetUserId,
+          channelIdByName.channelId,
+          mutedDate,
+        );
+    } else {
+      this.deleteTimeout(
+        `mute-channelid-${channelIdByName.channelId}-userid-${targetUserId}`,
+      );
+    }
     targetUser.mutedDate = mutedDate;
-    if (banDate) {
+
+    if (banDate !== undefined) {
       targetUser.banDate = banDate;
-      return this.channelChatRepository.softRemove(targetUser);
+      // TODO: 1 transaction
+      if (banDate === null) {
+        this.channelMemberRepository.recover(targetUser);
+        return this.channelMemberRepository.save(targetUser);
+      }
+      this.channelMemberRepository.save(targetUser);
+      this.chatEventsGateway.server.emit('banUserFromChannel', {
+        channelName: name,
+        userId: targetUser.userId,
+      });
+      return this.channelMemberRepository.softRemove(targetUser);
     }
     return this.channelMemberRepository.save(targetUser);
   }
@@ -373,12 +459,15 @@ export class ChannelService {
       .getOne();
     if (!targetUser)
       throw new BadRequestException('존재 하지 않는 유저입니다.');
-
     targetUser.isAdmin = isAdmin;
+    this.chatEventsGateway.server.emit('updateChannelAdmin', {
+      isAdmin: targetUser.isAdmin,
+      userId: targetUser.userId,
+    });
     return this.channelMemberRepository.save(targetUser);
   }
 
-  async getChannelChatsByChannelName(name: string) {
+  async getAllChannelChatsByName(name: string) {
     const channelIdByName = await this.channelRepository.findOne({
       where: { name },
     });
@@ -390,9 +479,46 @@ export class ChannelService {
       .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
       .innerJoinAndSelect('channelChats.user', 'user')
       .select(['channelChats', 'user.nickname', 'user.imagePath'])
+      .orderBy('channelChats.createdAt', 'DESC')
       .getMany();
 
     return channelChats;
+  }
+
+  async getChannelChatsWithPaging(name: string, perPage: number, page: number) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName) {
+      throw new BadRequestException('존재하지 않는 채널입니다.');
+    }
+    const channelChats = this.channelChatRepository
+      .createQueryBuilder('channelChats')
+      .where('channelChats.channelId = :id', { id: channelIdByName.channelId })
+      .innerJoinAndSelect('channelChats.user', 'user')
+      .select(['channelChats', 'user.nickname', 'user.imagePath'])
+      .orderBy('channelChats.createdAt', 'DESC')
+      .take(perPage)
+      .skip(perPage * (page - 1))
+      .getMany();
+
+    return channelChats;
+  }
+
+  async getChannelChatUnreadsCount(name: string, after: number) {
+    const channelIdByName = await this.channelRepository.findOne({
+      where: { name },
+    });
+    if (!channelIdByName) {
+      throw new BadRequestException('존재하지 않는 채널입니다.');
+    }
+
+    return this.channelRepository.count({
+      where: {
+        channelId: channelIdByName.channelId,
+        createdAt: MoreThan(new Date(after)),
+      },
+    });
   }
 
   // TODO: 예외처리
@@ -423,5 +549,50 @@ export class ChannelService {
       .emit('message', chatWithUser);
 
     return chatWithUser;
+  }
+
+  addTimeout(
+    taskName: string,
+    userId: number,
+    channelId: number,
+    mutedDate: Date,
+  ) {
+    const callback = async () => {
+      const targetUser = await this.channelMemberRepository.findOne({
+        where: [{ userId, channelId }],
+      });
+      console.log(targetUser.mutedDate);
+      targetUser.mutedDate = null;
+      await this.channelMemberRepository.save(targetUser);
+      this.logger.warn(`User ID ${userId} in ${channelId} unmuted.`);
+      this.schedulerRegistry.deleteTimeout(taskName);
+    };
+
+    const executeTime = Date.parse(`${mutedDate}`) - Date.now();
+    const timeout = setTimeout(callback, executeTime);
+    this.schedulerRegistry.addTimeout(taskName, timeout);
+  }
+
+  updateTimeout(
+    taskName: string,
+    userId: number,
+    channelId: number,
+    mutedDate: Date,
+  ) {
+    this.schedulerRegistry.deleteTimeout(taskName);
+    this.addTimeout(taskName, userId, channelId, mutedDate);
+    console.log('updated');
+  }
+
+  deleteTimeout(name: string) {
+    this.schedulerRegistry.deleteTimeout(name);
+    this.logger.warn(`Mute Schedule ${name} deleted.`);
+  }
+
+  getTimeouts() {
+    const timeouts = this.schedulerRegistry.getTimeouts();
+    timeouts.forEach((key) => this.logger.log(`Timeout: ${key}`));
+    console.log(timeouts);
+    return timeouts;
   }
 }

@@ -6,12 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
@@ -20,13 +22,13 @@ import { User } from 'src/entities/User';
 import { UserDto } from 'src/user/dto/user.dto';
 import { ChannelService } from './channel.service';
 import { ChannelInfoDto } from './dto/channel-create.dto';
+import { ChannelInviteDto } from './dto/channel-invite.dto';
 import { ChannelJoinDto } from './dto/channel-join.dto';
 import { ChannelUpdateDto } from './dto/channel-update.dto';
 import { ChannelDto } from './dto/channel.dto';
 import { ChannelChatCreateDto } from './dto/channelchat-create.dto';
 import { ChannelChatDto } from './dto/channelchat.dto';
 import { ChannelMemberAdminDto } from './dto/channelmember-admin.dto';
-import { ChannelMemberDeleteDto } from './dto/channelmember-delete.dto';
 import { ChannelMemberUpdateDto } from './dto/channelmember-update.dto';
 import { ChannelMemberDto } from './dto/channelmember.dto';
 
@@ -139,7 +141,7 @@ export class ChannelController {
     return this.channelService.updateChannel(
       channelName,
       user.userId,
-      body.name,
+      body.updateName,
       body.password,
       body.maxParticipantNum,
     );
@@ -218,21 +220,11 @@ export class ChannelController {
     description: '파라미터로 전달된 채널의 정보',
   })
   @ApiBadRequestResponse({
-    description:
-      '존재하지 않는 채널입니다.\n\n유저 삭제 권한이 없습니다.\n\n' +
-      '존재하지 않는 유저입니다.',
+    description: '존재하지 않는 채널입니다.\n\n존재하지 않는 유저입니다.',
   })
   @Delete('/:name/member')
-  leaveChannel(
-    @Param('name') channelName: string,
-    @AuthUser() user: User,
-    @Body() body: ChannelMemberDeleteDto,
-  ) {
-    return this.channelService.deleteChannelMember(
-      channelName,
-      user.userId,
-      body.targetUserId,
-    );
+  leaveChannel(@Param('name') channelName: string, @AuthUser() user: User) {
+    return this.channelService.deleteChannelMember(channelName, user.userId);
   }
 
   @ApiOperation({
@@ -248,10 +240,11 @@ export class ChannelController {
   })
   @ApiBadRequestResponse({
     description:
-      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n  존재하지 않는 유저입니다.',
+      '존재하지 않는 채널입니다.\n\n 유저 수정 권한이 없습니다.\n\n' +
+      '존재 하지 않는 유저입니다. \n\n ban 당한 이용자압니다.',
   })
   @Patch('/:name/member')
-  updateChannelMember(
+  async updateChannelMember(
     @Param('name') channelName: string,
     @AuthUser() user: User,
     @Body() body: ChannelMemberUpdateDto,
@@ -262,6 +255,32 @@ export class ChannelController {
       body.targetUserId,
       body.banDate,
       body.mutedDate,
+    );
+  }
+
+  @ApiOperation({
+    summary: '채널에 사용자 초대',
+    description:
+      '채널에 사용자를 초대 합니다. (모든 유저 이용 가능, 초대 대상 유저들에게 DM 전송)\n\n' +
+      '(한명의 사용자를 초대 하더라도 배열 형식의 데이터가 필요합니다) \n\n',
+  })
+  @ApiOkResponse({
+    description: 'OK',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '존재하지 않는 채널입니다.\n\n 존재하지 않는 사용자가 포함되어있습니다.',
+  })
+  @Post('/:name/invite')
+  async initeUserToChannel(
+    @Param('name') channelName: string,
+    @AuthUser() user: User,
+    @Body() body: ChannelInviteDto,
+  ) {
+    return this.channelService.inviteUsersToChannel(
+      channelName,
+      user.userId,
+      body.invitedUsers,
     );
   }
 
@@ -294,7 +313,10 @@ export class ChannelController {
 
   @ApiOperation({
     summary: '채널 채팅 조회',
-    description: '주어진 채널의 전체 채팅을 조회합니다.',
+    description:
+      '주어진 채널의 전체 채팅을 조회합니다.\n\n' +
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'perPage, page가 하나라도 없거나 숫자값이 아니면, 전체 DM목록을 조회한다.',
   })
   @ApiOkResponse({
     type: ChannelChatDto,
@@ -304,9 +326,21 @@ export class ChannelController {
   @ApiBadRequestResponse({
     description: '존재하지 않는 채널입니다.',
   })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiQuery({ name: 'page', required: false })
   @Get('/:name/chat')
-  getChannelChatsByChannelName(@Param('name') channelName: string) {
-    return this.channelService.getChannelChatsByChannelName(channelName);
+  getChannelChatsByChannelName(
+    @Param('name') channelName: string,
+    @Query('perPage') perPage: number,
+    @Query('page') page: number,
+  ) {
+    if (!perPage || !page)
+      return this.channelService.getAllChannelChatsByName(channelName);
+    return this.channelService.getChannelChatsWithPaging(
+      channelName,
+      perPage,
+      page,
+    );
   }
 
   @ApiOperation({
@@ -332,5 +366,41 @@ export class ChannelController {
       body.content,
       user.userId,
     );
+  }
+
+  @ApiOperation({
+    summary: '안읽은 채팅 개수 구하기',
+    description:
+      'after시간 이후로 해당 사용자로부터 새로 받은 채팅의 개수 (DM과 동일)\n\n' +
+      'after은 1970년 1월 1일 00:00:00 UTC 이후 경과 시간 (밀리 초)을 나타내는 숫자로 ' +
+      'Date객체에서 getTime()함수로 구한 값입니다.',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: 'after시간 이후로 해당 사용자로부터 새로 받은 DM의 개수',
+  })
+  @ApiBadRequestResponse({
+    description: '존재하지 않는 채널입니다.',
+  })
+  @Get('/:name/unreads')
+  async getChannelChatUnreads(
+    @AuthUser() user: User,
+    @Param('name') channelName: string,
+    @Query('after') after: number,
+  ) {
+    return this.channelService.getChannelChatUnreadsCount(channelName, after);
+  }
+
+  @ApiOperation({
+    summary: 'mute 해제 task 목록 조회',
+    description: 'mute 해제 task 목록을 조회합니다. (조회 테스트용)',
+  })
+  @ApiOkResponse({
+    isArray: true,
+    description: 'mute 해제 목록',
+  })
+  @Get('/:name/mutetask')
+  getMuteTasks() {
+    return this.channelService.getTimeouts();
   }
 }

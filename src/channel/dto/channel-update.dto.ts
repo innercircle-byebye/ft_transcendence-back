@@ -1,21 +1,18 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { Channel } from 'src/entities/Channel';
 
 export class ChannelUpdateDto extends PickType(Channel, [
-  'name',
   'password',
   'maxParticipantNum',
 ]) {
   @IsOptional()
-  @ApiProperty({ required: false })
-  name: string;
+  @ApiProperty({ description: '업데이트 될 채널의 이름', required: false })
+  updateName: string;
 
   @IsOptional()
-  @ApiProperty({ required: false, nullable: true })
   password: string | null;
 
-  @IsNumber()
-  @ApiProperty({ required: true })
+  @IsOptional()
   maxParticipantNum: number;
 }
