@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DmService } from 'src/dm/dm.service';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
+import { DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection, MoreThan, Repository } from 'typeorm';
@@ -23,6 +25,7 @@ export class ChannelService {
     private connection: Connection,
     private readonly chatEventsGateway: ChatEventsGateway,
     private schedulerRegistry: SchedulerRegistry,
+    private dmService: DmService,
   ) {}
 
   private readonly logger = new Logger(ChannelService.name);
@@ -139,6 +142,13 @@ export class ChannelService {
     //    output += array[i];
     // }
     // userId 목록, 채널ID, 초대한사람 ID
+
+    this.dmService.createDMs(
+      ownerId,
+      invitedUsers,
+      channelReturned.channelId.toString(),
+      DMType.CHANNEL_INVITE,
+    );
 
     if (invitedUsers && invitedUsers.length > 0) console.log(invitedUsers);
 

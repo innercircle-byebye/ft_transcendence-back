@@ -1,6 +1,7 @@
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DmService } from 'src/dm/dm.service';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
@@ -49,6 +50,10 @@ const mockScheduleRegistry = () => ({
   transaction: jest.fn(),
 });
 
+const mockDmService = () => ({
+  transaction: jest.fn(),
+});
+
 describe('ChannelService', () => {
   let service: ChannelService;
 
@@ -83,6 +88,10 @@ describe('ChannelService', () => {
         {
           provide: SchedulerRegistry,
           useFactory: mockScheduleRegistry,
+        },
+        {
+          provide: DmService,
+          useFactory: mockDmService,
         },
       ],
     }).compile();
