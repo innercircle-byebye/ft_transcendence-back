@@ -102,8 +102,12 @@ const GameResultInitData = [
     playerTwoScore: 8,
     winPoint: 10,
     ballSpeed: BallSpeed.MEDIUM,
-    startAt: new Date('2021-11-04 00:40:00.000'),
-    endAt: new Date('2021-11-04 00:45:00.000'),
+    startAt: new Date('2021-11-04T00:00:00.000+09:00').toLocaleString('en-US', {
+      timeZone: 'Asia/Seoul',
+    }),
+    endAt: new Date('2021-11-04T00:10:00.000+09:00').toLocaleString('en-US', {
+      timeZone: 'Asia/Seoul',
+    }),
   },
   {
     gameRoomId: 2,

@@ -56,7 +56,7 @@ export class GameResult extends BaseEntity implements IGameResult {
     example: 15,
     nullable: true,
   })
-  @Column({ type: 'int', name: 'player1_score' })
+  @Column({ type: 'int', name: 'player1_score', nullable: true })
   playerOneScore: number | null;
 
   @ApiProperty({
@@ -64,7 +64,7 @@ export class GameResult extends BaseEntity implements IGameResult {
     example: 10,
     nullable: true,
   })
-  @Column({ type: 'int', name: 'player2_score' })
+  @Column({ type: 'int', name: 'player2_score', nullable: true })
   playerTwoScore: number | null;
 
   @ApiProperty({
