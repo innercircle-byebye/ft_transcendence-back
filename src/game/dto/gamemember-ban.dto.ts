@@ -1,39 +1,15 @@
 // import { ApiProperty, OmitType } from '@nestjs/swagger';
-import {
-  ApiProperty,
-  IntersectionType,
-  OmitType,
-  PickType,
-} from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
-import { BallSpeed, GameResult } from 'src/entities/GameResult';
-import { GameRoom } from 'src/entities/GameRoom';
+import { PickType } from '@nestjs/swagger';
+import { IsDate, IsNumber } from 'class-validator';
+import { GameMember } from 'src/entities/GameMember';
 
-export class GameMemberBanDto extends IntersectionType(
-  OmitType(GameRoom, ['gameRoomId']),
-  PickType(GameResult, ['ballSpeed']),
-) {
-  @IsOptional()
-  @ApiProperty({
-    required: false,
-  })
-  title: string;
+export class GameMemberBanDto extends PickType(GameMember, [
+  'userId',
+  'banDate',
+]) {
+  @IsNumber()
+  userId: number;
 
-  @IsOptional()
-  @ApiProperty({
-    required: false,
-  })
-  password: string;
-
-  @IsOptional()
-  @ApiProperty({
-    required: false,
-  })
-  maxParticipantNum: number;
-
-  @IsOptional()
-  @ApiProperty({
-    required: false,
-  })
-  ballSpeed: BallSpeed;
+  @IsDate()
+  banDate: Date;
 }

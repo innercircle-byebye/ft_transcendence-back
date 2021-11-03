@@ -17,9 +17,12 @@ import { GameRoomJoinDto } from './dto/gameroom-join.dto';
 import { GameRoomListDto } from './dto/gameroom-list.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
 import { GameMemberBanDto } from './dto/gamemember-ban.dto';
-import { GameRoomDto } from './dto/gameroom.dto';
 import { GameService } from './game.service';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
+import { GameRoomDto } from './dto/gameroom.dto';
+import { GameResultUserDto } from './dto/gameresult-user.dto';
+import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
+import { GameMemberDto } from './dto/gamemember.dto';
 
 @UseGuards(JwtTwoFactorGuard)
 @ApiTags('Game')
@@ -51,7 +54,7 @@ export class GameController {
     description: '조회한 게임 방 ID의 정보',
   })
   @Get('/room/:game_room_id')
-  getGameRoomInfoById(@Param('game_room_id') gameRoomId) {
+  getGameRoomInfoById(@Param('game_room_id') gameRoomId: number) {
     console.log(gameRoomId);
     return 'OK';
   }
@@ -132,17 +135,15 @@ export class GameController {
 
   @ApiOperation({
     summary: '게임방 나가기',
-    description:
-      '게임방에서 나갑니다. \n\n body에 플레이어/관전자 정보를 전달 받게됩니다.',
+    description: '게임방에서 나갑니다',
   })
   @ApiOkResponse({ description: 'OK' })
   @Delete('/room/:game_room_id/leave')
   leaveGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
-    @Body() body: GameRoomJoinDto,
   ) {
-    console.log(gameRoomId, user.userId, body);
+    console.log(gameRoomId, user.userId);
     return 'OK';
   }
 
@@ -152,7 +153,7 @@ export class GameController {
       '게임방에서 해당 사용자를 차단합니다. \n\n 멤버 차단은 플레이어1 만 가능합니다.\n\n' +
       'body에 플레이어/관전자 정보를 전달 받게됩니다.',
   })
-  @ApiOkResponse({ description: 'OK' })
+  @ApiOkResponse({ type: GameMemberDto })
   @Delete('/room/:game_room_id/ban')
   banPlayerFromGameRoom(
     @Param('game_room_id') gameRoomId: number,
@@ -169,8 +170,8 @@ export class GameController {
       '게임방에서 해당 사용자의 상태를 변경합니다.\n\n' +
       'body에 플레이어/관전자 정보를 전달 받게됩니다.',
   })
-  @ApiOkResponse({ description: 'OK' })
-  @Delete('/room/:game_room_id/move')
+  @ApiOkResponse({ type: GameMemberDto })
+  @Patch('/room/:game_room_id/move')
   moveGameMemberInGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
@@ -182,7 +183,13 @@ export class GameController {
 
   @ApiOperation({
     summary: '유저의 게임결과 조회하기',
-    description: '파라미터로 전달되는 유저의 게임 결과 전체를 조회합니다.',
+    description:
+      '파라미터로 전달되는 유저의 게임 결과 전체를 조회합니다.\n\n' +
+      '현재 진행중인 게임의 결과는 제외합니다.',
+  })
+  @ApiOkResponse({
+    type: GameResultUserDto,
+    isArray: true,
   })
   @Get('/:user_id/results')
   getGameResultsByUserId(@Param('user_id') userId: number) {
@@ -192,7 +199,13 @@ export class GameController {
 
   @ApiOperation({
     summary: '유저의 승률 조회하기',
-    description: '파라미터로 전달되는 유저의 승률을 조회합니다.',
+    description:
+      '파라미터로 전달되는 유저의 승률을 조회합니다.\n\n' +
+      '현재 진행중인 게임의 결과는 제외합니다.',
+  })
+  @ApiOkResponse({
+    type: GameResultWinRateDto,
+    isArray: true,
   })
   @Get('/:user_id/win_rate')
   getWinRateByUserId(@Param('user_id') userId: number) {

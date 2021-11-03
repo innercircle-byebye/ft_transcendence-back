@@ -40,13 +40,20 @@ export class GameResult extends BaseEntity implements IGameResult {
   @ApiProperty({
     description: '플레이어 1 ID',
   })
+  @Column({ type: 'int', name: 'player1_id' })
+  playerOneId: number;
+
   @ManyToOne(() => User)
   @JoinColumn([{ name: 'player1_id', referencedColumnName: 'userId' }])
   playerOne: User;
 
   @ApiProperty({
-    description: '플레이어 2 ID',
+    description: '플레이어 2 ID (null 가능)',
+    nullable: true,
   })
+  @Column({ type: 'int', name: 'player2_id', nullable: true })
+  playerTwoId: number;
+
   @ManyToOne(() => User)
   @JoinColumn([{ name: 'player2_id', referencedColumnName: 'userId' }])
   playerTwo: User;
