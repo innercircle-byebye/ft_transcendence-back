@@ -38,7 +38,7 @@ export class GameController {
   })
   @Get('/room/list')
   getGameRooms() {
-    return 'OK';
+    return this.gameService.getAllGameRooms();
   }
 
   @ApiOperation({
