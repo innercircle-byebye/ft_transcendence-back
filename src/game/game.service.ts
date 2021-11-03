@@ -9,7 +9,7 @@ import { Connection, Repository } from 'typeorm';
 
 export enum GameRoomStatus {
   OBSERVABLE = 'observable',
-  JOINABLE = 'joinable',
+  PLAYABLE = 'playable',
   FULL = 'full',
 }
 @Injectable()
@@ -38,16 +38,18 @@ export class GameService {
     const selectedGameRoom = await this.gameRoomRepository.findOne({
       where: { gameRoomId: id },
     });
-    const latestGameResult = await this.gameResultRepository
-      .createQueryBuilder('gameresult')
-      .where('gameresult.gameRoomId = :id', { id })
-      .orderBy('gameresult.lastModifiedAt', 'DESC')
+    const checkPlayableFromGameMember = await this.gameMemberRepository
+      .createQueryBuilder('gamemember')
+      .where('gamemember.gameRoomId = :id', { id })
+      .andWhere('gamemember.status = :playerTwo', { playerTwo: 'player2' })
       .getOne();
-    const gameRoomMembers = await this.getCurrentGameRoomMemberCount(id);
+    const gameRoomMembersCount = await this.getCurrentGameRoomMemberCount(id);
 
-    if (selectedGameRoom.maxParticipantNum === gameRoomMembers)
+    if (selectedGameRoom.maxParticipantNum === gameRoomMembersCount)
       return GameRoomStatus.FULL;
-    if (latestGameResult.playerTwo === null) return GameRoomStatus.JOINABLE;
+    console.log(checkPlayableFromGameMember);
+    if (checkPlayableFromGameMember === undefined)
+      return GameRoomStatus.PLAYABLE;
     return GameRoomStatus.OBSERVABLE;
   }
 

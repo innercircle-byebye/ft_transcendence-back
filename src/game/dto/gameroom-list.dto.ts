@@ -35,7 +35,7 @@ export class GameRoomListDto extends OmitType(GameRoom, [
 
   @ApiProperty({
     examples: GameRoomStatus,
-    example: GameRoomStatus.JOINABLE,
+    example: GameRoomStatus.PLAYABLE,
     description: '현재 게임룸 상태',
   })
   gameRoomStatus: GameRoomStatus;
