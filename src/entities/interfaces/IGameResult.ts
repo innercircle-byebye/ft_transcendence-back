@@ -1,5 +1,4 @@
 import { User } from '../User';
-import { BallSpeed } from './IGameRoom';
 
 export interface IGameResult {
   gameResultId: number;
@@ -16,7 +15,7 @@ export interface IGameResult {
 
   winPoint: number;
 
-  ballSpeed: BallSpeed;
+  ballSpeed: any;
 
   startAt: Date | null;
 

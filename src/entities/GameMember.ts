@@ -3,18 +3,26 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { IGameObserver } from './interfaces/IGameObserver';
+import { IGameMember } from './interfaces/IGameMember';
 import { IGameRoom } from './interfaces/IGameRoom';
 import { IUser } from './interfaces/IUser';
 
-@Entity('game_observer')
-export class GameObserver extends BaseEntity implements IGameObserver {
-  @ManyToOne('GameRoom', 'gameObservers', { primary: true })
+export enum GameMemberStatus {
+  PLAYER_ONE = 'player1',
+  PLAYER_TWO = 'player2',
+  OBSERVER = 'observer',
+}
+
+@Entity('game_member')
+export class GameMember extends BaseEntity implements IGameMember {
+  @ManyToOne('GameRoom', 'gameMembers', { primary: true })
   @JoinColumn({ name: 'game_room_id' })
   gameRoom: IGameRoom;
 
@@ -32,9 +40,23 @@ export class GameObserver extends BaseEntity implements IGameObserver {
   @PrimaryColumn({ name: 'user_id' })
   userId: number;
 
-  @ManyToOne('User', 'gameObservers', { primary: true })
+  @ManyToOne('User', 'gameMembers', { primary: true })
   @JoinColumn({ name: 'user_id' })
   user: IUser;
+
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: GameMemberStatus,
+    default: GameMemberStatus.PLAYER_ONE,
+  })
+  @ApiProperty({
+    description: '게임 방 참여 유저 상태',
+    required: true,
+    example: GameMemberStatus.PLAYER_ONE,
+    examples: GameMemberStatus,
+  })
+  status: GameMemberStatus;
 
   @ApiProperty({
     description: '게임 방 출입금지 기한',
@@ -58,6 +80,7 @@ export class GameObserver extends BaseEntity implements IGameObserver {
     description: '게임 방 내 유저 정보 수정 일시',
     readOnly: true,
   })
+  @UpdateDateColumn({ name: 'last_modified_at' })
   lastModifiedAt: Date;
 
   @ApiProperty({
@@ -66,5 +89,6 @@ export class GameObserver extends BaseEntity implements IGameObserver {
     readOnly: true,
     default: null,
   })
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date | null;
 }

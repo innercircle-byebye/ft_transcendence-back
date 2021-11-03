@@ -1,7 +1,9 @@
-export interface IGameObserver {
+export interface IGameMember {
   gameRoomId: number;
 
   userId: number;
+
+  status: any;
 
   banDate: Date | null;
 

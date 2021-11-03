@@ -9,9 +9,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { IGameResult } from './interfaces/IGameResult';
-import { BallSpeed, IGameRoom } from './interfaces/IGameRoom';
+import { IGameRoom } from './interfaces/IGameRoom';
 import { User } from './User';
 
+export enum BallSpeed {
+  FAST = 'fast',
+  MEDIUM = 'medium',
+  SLOW = 'slow',
+}
 @Entity('game_result')
 export class GameResult extends BaseEntity implements IGameResult {
   @ApiProperty({
@@ -69,17 +74,17 @@ export class GameResult extends BaseEntity implements IGameResult {
   @Column({ type: 'int', name: 'win_point' })
   winPoint: number;
 
-  @ApiProperty({
-    description: '유저 상태',
-    required: true,
-    example: BallSpeed.MEDIUM,
-    examples: BallSpeed,
-  })
   @Column({
     name: 'ball_speed',
     type: 'enum',
     enum: BallSpeed,
     default: BallSpeed.MEDIUM,
+  })
+  @ApiProperty({
+    required: true,
+    description: '공 속도',
+    example: BallSpeed.MEDIUM,
+    examples: BallSpeed,
   })
   ballSpeed: BallSpeed;
 

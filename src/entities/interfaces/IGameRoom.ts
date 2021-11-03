@@ -1,9 +1,3 @@
-export enum BallSpeed {
-  FAST = 'fast',
-  MEDIUM = 'medium',
-  SLOW = 'slow',
-}
-
 export interface IGameRoom {
   gameRoomId: number;
 

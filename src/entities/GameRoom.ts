@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IGameObserver } from './interfaces/IGameObserver';
+import { IGameMember } from './interfaces/IGameMember';
 import { IGameResult } from './interfaces/IGameResult';
 import { IGameRoom } from './interfaces/IGameRoom';
 
@@ -31,6 +31,8 @@ export class GameRoom extends BaseEntity implements IGameRoom {
 
   @ApiProperty({
     description: '게임 방 입장 비밀번호',
+    required: false,
+    nullable: true,
   })
   @Column('varchar', {
     name: 'password',
@@ -69,8 +71,8 @@ export class GameRoom extends BaseEntity implements IGameRoom {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date | null;
 
-  @OneToMany('GameObserver', 'gameRoom')
-  gameObservers: IGameObserver[];
+  @OneToMany('GameMember', 'gameRoom')
+  gameMembers: IGameMember[];
 
   @OneToMany('GameResult', 'gameRoom')
   gameResults: IGameResult[];

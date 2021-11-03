@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
-import { GameObserver } from 'src/entities/GameObserver';
+import { GameMember } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { User } from 'src/entities/User';
 import { UserController } from './user.controller';
@@ -15,7 +15,7 @@ import { UserService } from './user.service';
       Channel,
       ChannelChat,
       GameResult,
-      GameObserver,
+      GameMember,
     ]),
   ],
   controllers: [UserController],
