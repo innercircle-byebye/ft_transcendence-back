@@ -108,6 +108,12 @@ export class GameController {
     type: GameRoomDto,
     description: '업데이트 된 게임 방의 정보',
   })
+  @ApiBadRequestResponse({
+    description:
+      '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.\n\n' +
+      '이미 존재하는 게임방 이름입니다.\n\n' +
+      '게임방 업데이트 권한이 없습니다.',
+  })
   @Patch('/room/:game_room_id')
   async updateGameRoomInfo(
     @Param('game_room_id') gameRoomId: number,

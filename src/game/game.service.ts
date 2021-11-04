@@ -245,6 +245,18 @@ export class GameService {
     if (checkExistGameRoom)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
 
+    const checkGameRoomUpdateAuth = this.gameMemberRepository.findOne({
+      where: [
+        {
+          gameRoomId,
+          userId: playerOneId,
+          status: 'player1',
+        },
+      ],
+    });
+    if (!checkGameRoomUpdateAuth)
+      throw new BadRequestException('게임방 업데이트 권한이 없습니다.');
+
     let updatedGameRoom;
     try {
       const targetGameRoom = await queryRunner.manager
