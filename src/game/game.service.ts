@@ -50,6 +50,14 @@ export class GameService {
     return GameRoomStatus.OBSERVABLE;
   }
 
+  async checkUserAlreadyInGameRoom(id: number): Promise<boolean> {
+    const gameMemberRepositoryCheck = this.gameMemberRepository.findOne({
+      where: { userId: id },
+    });
+    if (gameMemberRepositoryCheck) return true;
+    return false;
+  }
+
   async getGameRoomTotalInfo(gameRoomId: number): Promise<GameRoomDto> {
     const gameRoomForReturn: any = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
@@ -294,5 +302,105 @@ export class GameService {
       await queryRunner.release();
     }
     return this.getGameRoomTotalInfo(updatedGameRoom.gameRoomId);
+  }
+
+  async joinGameRoomAsPlayer(
+    userId: number,
+    gameRoomId: number,
+    password: string,
+  ) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId, deletedAt: null },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    if (
+      typeof Object(password) !== undefined &&
+      checkGameRoom.password !== password
+    )
+      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+    const checkGameMemberInRoom = await this.gameMemberRepository.findOne({
+      where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
+    });
+    if (this.checkUserAlreadyInGameRoom(userId))
+      throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
+
+    if (checkGameMemberInRoom)
+      throw new BadRequestException(
+        '게임방에 참여할 수 없습니다. (플레이어 만석)',
+      );
+
+    try {
+      const gameRoomPlayerTwo = new GameMember();
+      gameRoomPlayerTwo.gameRoomId = gameRoomId;
+      gameRoomPlayerTwo.userId = userId;
+      gameRoomPlayerTwo.status = GameMemberStatus.PLAYER_TWO;
+
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .save(gameRoomPlayerTwo);
+
+      // TODO: 잘 가져오는지 검증 필요
+      const latestGameReseult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+      latestGameReseult.playerTwoId = userId;
+      await queryRunner.manager
+        .getRepository(GameResult)
+        .save(latestGameReseult);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.getGameRoomTotalInfo(gameRoomId);
+  }
+
+  async joinGameRoomAsObserver(
+    userId: number,
+    gameRoomId: number,
+    password: string,
+  ) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId, deletedAt: null },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    if (
+      typeof Object(password) !== undefined &&
+      checkGameRoom.password !== password
+    )
+      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+    if (this.checkUserAlreadyInGameRoom(userId))
+      throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
+
+    let currentObserverCount;
+    currentObserverCount = await this.getCurrentGameRoomMemberCount(gameRoomId);
+    if (
+      this.gameMemberRepository.findOne({
+        where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
+      }) === undefined
+    )
+      currentObserverCount -= 2;
+    else currentObserverCount -= 1;
+
+    if (checkGameRoom.maxParticipantNum - 2 <= currentObserverCount)
+      throw new BadRequestException(
+        '게임방에 참여할 수 없습니다. (관전 정원 초과)',
+      );
+
+    const gameRoomObserver = new GameMember();
+    gameRoomObserver.gameRoomId = gameRoomId;
+    gameRoomObserver.userId = userId;
+    gameRoomObserver.status = GameMemberStatus.OBSERVER;
+    await this.gameMemberRepository.save(gameRoomObserver);
+
+    return this.getGameRoomTotalInfo(gameRoomId);
   }
 }

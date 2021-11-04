@@ -19,6 +19,7 @@ import {
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
+import { GameMemberStatus } from 'src/entities/GameMember';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomJoinDto } from './dto/gameroom-join.dto';
 import { GameRoomListDto } from './dto/gameroom-list.dto';
@@ -147,14 +148,29 @@ export class GameController {
     type: GameRoomDto,
     description: '선택된 게임 방의 정보',
   })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n 비밀번호가 일치하지 않습니다.\n\n' +
+      '이미 다른 게임방에 참여중입니다. \n\n' +
+      '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n 게임방에 참여할 수 없습니다. (관전 정원초과)',
+  })
   @Post('/room/:game_room_id/join')
-  joinGameRoom(
+  async joinGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
     @Body() body: GameRoomJoinDto,
   ) {
-    console.log(gameRoomId, user.userId, body);
-    return 'OK';
+    if (body.role === GameMemberStatus.PLAYER_TWO)
+      return this.gameService.joinGameRoomAsPlayer(
+        user.userId,
+        gameRoomId,
+        body.password,
+      );
+    return this.gameService.joinGameRoomAsObserver(
+      user.userId,
+      gameRoomId,
+      body.password,
+    );
   }
 
   @ApiOperation({
