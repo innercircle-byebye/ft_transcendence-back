@@ -8,7 +8,7 @@ import {
 import { GameMember } from 'src/entities/GameMember';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
-import { GameRoomStatus } from '../game.service';
+import { GameRoomStatus } from './gameroom.dto';
 
 export class GameRoomListDto extends OmitType(GameRoom, [
   'password',

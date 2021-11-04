@@ -9,8 +9,12 @@ import { GameMember } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
-import { GameRoomStatus } from '../game.service';
 
+export enum GameRoomStatus {
+  OBSERVABLE = 'observable',
+  PLAYABLE = 'playable',
+  FULL = 'full',
+}
 export class GameRoomDto extends OmitType(GameRoom, [
   'password',
   'gameMembers',

@@ -7,12 +7,8 @@ import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Connection, Repository } from 'typeorm';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
+import { GameRoomDto, GameRoomStatus } from './dto/gameroom.dto';
 
-export enum GameRoomStatus {
-  OBSERVABLE = 'observable',
-  PLAYABLE = 'playable',
-  FULL = 'full',
-}
 @Injectable()
 export class GameService {
   constructor(
@@ -48,10 +44,53 @@ export class GameService {
 
     if (selectedGameRoom.maxParticipantNum === gameRoomMembersCount)
       return GameRoomStatus.FULL;
-    console.log(checkPlayableFromGameMember);
     if (checkPlayableFromGameMember === undefined)
       return GameRoomStatus.PLAYABLE;
     return GameRoomStatus.OBSERVABLE;
+  }
+
+  async getGameRoomTotalInfo(gameRoomId: number): Promise<GameRoomDto> {
+    const gameRoomForReturn: any = await this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .where('gameroom.gameRoomId = :gameRoomId', {
+        gameRoomId,
+      })
+      .innerJoinAndSelect('gameroom.gameResults', 'gameresult')
+      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
+      .innerJoinAndSelect('gamemember.user', 'user')
+      .select([
+        'gameroom',
+        'user.userId',
+        'user.nickname',
+        'gamemember.status',
+        'gameresult',
+      ])
+      .addSelect('gameroom.password')
+      .getOne();
+
+    gameRoomForReturn.gameMembers.map((x) => {
+      x.userId = x.user.userId;
+      x.nickname = x.user.nickname;
+      delete x.user;
+      return x;
+    });
+    gameRoomForReturn.gameResults.map((x) => {
+      delete x.gameResultId;
+      delete x.gameRoomId;
+      return x;
+    });
+
+    gameRoomForReturn.currentMemberCount =
+      await this.getCurrentGameRoomMemberCount(gameRoomForReturn.gameRoomId);
+
+    gameRoomForReturn.gameRoomStatus = await this.getCurrentGameRoomStatus(
+      gameRoomForReturn.gameRoomId,
+    );
+    if (gameRoomForReturn.password === null)
+      gameRoomForReturn.isPrivate = false;
+    else gameRoomForReturn.isPrivate = true;
+    delete gameRoomForReturn.password;
+    return gameRoomForReturn;
   }
 
   async getAllGameRooms() {
@@ -142,49 +181,6 @@ export class GameService {
     } finally {
       await queryRunner.release();
     }
-
-    const gameRoomForReturn: any = await this.gameRoomRepository
-      .createQueryBuilder('gameroom')
-      .where('gameroom.gameRoomId = :gameRoomId', {
-        gameRoomId: gameRoomReturned.gameRoomId,
-      })
-      .innerJoinAndSelect('gameroom.gameResults', 'gameresult')
-      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
-      .innerJoinAndSelect('gamemember.user', 'user')
-      .select([
-        'gameroom',
-        'user.userId',
-        'user.nickname',
-        'gamemember.status',
-        'gameresult',
-      ])
-      .addSelect('gameroom.password')
-      .getOne();
-
-    gameRoomForReturn.gameMembers.map((x) => {
-      x.userId = x.user.userId;
-      x.nickname = x.user.nickname;
-      delete x.user;
-      return x;
-    });
-    gameRoomForReturn.gameResults.map((x) => {
-      delete x.gameResultId;
-      delete x.gameRoomId;
-      return x;
-    });
-
-    gameRoomForReturn.currentMemberCount =
-      await this.getCurrentGameRoomMemberCount(gameRoomForReturn.gameRoomId);
-
-    gameRoomForReturn.gameRoomStatus = await this.getCurrentGameRoomStatus(
-      gameRoomForReturn.gameRoomId,
-    );
-    if (gameRoomForReturn.password === null)
-      gameRoomForReturn.isPrivate = false;
-    else gameRoomForReturn.isPrivate = true;
-    delete gameRoomForReturn.password;
-    console.log(gameRoomForReturn);
-
-    return gameRoomForReturn;
+    return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
   }
 }
