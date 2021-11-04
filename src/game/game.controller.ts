@@ -60,8 +60,7 @@ export class GameController {
   })
   @Get('/room/:game_room_id')
   getGameRoomInfoById(@Param('game_room_id') gameRoomId: number) {
-    console.log(gameRoomId);
-    return 'OK';
+    return this.gameService.getGameRoomTotalInfo(gameRoomId);
   }
 
   @ApiOperation({
