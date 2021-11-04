@@ -8,7 +8,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { User } from 'src/entities/User';
@@ -69,6 +74,11 @@ export class GameController {
   @ApiOkResponse({
     type: GameRoomDto,
     description: '생성 된 게임방의 정보',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.\n\n' +
+      '이미 존재하는 게임방 이름입니다.',
   })
   @Post('/room')
   async createGameRoom(
