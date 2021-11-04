@@ -7,6 +7,7 @@ import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Connection, Repository } from 'typeorm';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
+import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
 import { GameRoomDto, GameRoomStatus } from './dto/gameroom.dto';
 
 @Injectable()
@@ -67,6 +68,9 @@ export class GameService {
       ])
       .addSelect('gameroom.password')
       .getOne();
+
+    if (!gameRoomForReturn)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
 
     gameRoomForReturn.gameMembers.map((x) => {
       x.userId = x.user.userId;
@@ -167,8 +171,6 @@ export class GameService {
     playerOneId: number,
     gameRoomCreateDto: GameRoomCreateDto,
   ) {
-    console.log(playerOneId, gameRoomCreateDto);
-
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -219,5 +221,66 @@ export class GameService {
       await queryRunner.release();
     }
     return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
+  }
+
+  async updateGameRoom(
+    gameRoomId: number,
+    playerOneId: number,
+    gameRoomUpdateDto: GameRoomUpdateDto,
+  ) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    if (
+      gameRoomUpdateDto.maxParticipantNum < 2 ||
+      gameRoomUpdateDto.maxParticipantNum > 8
+    )
+      throw new BadRequestException(
+        '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.',
+      );
+    const checkExistGameRoom = await this.gameRoomRepository.findOne({
+      where: [{ title: gameRoomUpdateDto.title, deletedAt: null }],
+    });
+    if (checkExistGameRoom)
+      throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
+
+    let updatedGameRoom;
+    try {
+      const targetGameRoom = await queryRunner.manager
+        .getRepository(GameRoom)
+        .findOne({ where: { gameRoomId } });
+      if (gameRoomUpdateDto.title)
+        targetGameRoom.title = gameRoomUpdateDto.title;
+      if (typeof Object(gameRoomUpdateDto.password) !== undefined)
+        targetGameRoom.password = gameRoomUpdateDto.password;
+      if (
+        typeof Object(gameRoomUpdateDto.maxParticipantNum) !== undefined &&
+        targetGameRoom.maxParticipantNum !== gameRoomUpdateDto.maxParticipantNum
+      )
+        targetGameRoom.maxParticipantNum = gameRoomUpdateDto.maxParticipantNum;
+      updatedGameRoom = await queryRunner.manager
+        .getRepository(GameRoom)
+        .save(targetGameRoom);
+      const latestGameReseult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({
+          where: [{ gameRoomId }, { startAt: null }, { endAt: null }],
+        });
+      if (gameRoomUpdateDto.ballSpeed)
+        latestGameReseult.ballSpeed = gameRoomUpdateDto.ballSpeed;
+      if (gameRoomUpdateDto.winPoint)
+        latestGameReseult.winPoint = gameRoomUpdateDto.winPoint;
+      await queryRunner.manager
+        .getRepository(GameResult)
+        .save(latestGameReseult);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.getGameRoomTotalInfo(updatedGameRoom.gameRoomId);
   }
 }

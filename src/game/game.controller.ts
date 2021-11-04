@@ -65,6 +65,9 @@ export class GameController {
     type: GameRoomDto,
     description: '조회한 게임 방 ID의 정보',
   })
+  @ApiBadRequestResponse({
+    description: '게임방이 존재하지 않습니다.',
+  })
   @Get('/room/:game_room_id')
   getGameRoomInfoById(@Param('game_room_id') gameRoomId: number) {
     return this.gameService.getGameRoomTotalInfo(gameRoomId);
@@ -99,22 +102,19 @@ export class GameController {
     description:
       '생성 되어 있는 게임 방의 정보를 업데이트 합니다.\n\n' +
       '정보 업데이트는 플레이어1 만 가능합니다.\n\n' +
-      '(게임 방 이름, 비밀번호, 전체 관전자 수, 공속도 변경 가능)',
+      '(게임 방 이름, 비밀번호, 전체 관전자 수, 공속도, 승리 점수 변경 가능)',
   })
   @ApiOkResponse({
     type: GameRoomDto,
     description: '업데이트 된 게임 방의 정보',
   })
   @Patch('/room/:game_room_id')
-  updateGameRoomInfo(
-    @Param('game_room_id') gameRoomId,
+  async updateGameRoomInfo(
+    @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
     @Body() body: GameRoomUpdateDto,
   ) {
-    console.log(gameRoomId);
-    console.log(user.userId);
-    console.log(body);
-    return 'OK';
+    return this.gameService.updateGameRoom(gameRoomId, user.userId, body);
   }
 
   @ApiOperation({

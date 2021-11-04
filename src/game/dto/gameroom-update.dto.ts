@@ -11,7 +11,7 @@ import { GameRoom } from 'src/entities/GameRoom';
 
 export class GameRoomUpdateDto extends IntersectionType(
   OmitType(GameRoom, ['gameRoomId']),
-  PickType(GameResult, ['ballSpeed']),
+  PickType(GameResult, ['ballSpeed', 'winPoint']),
 ) {
   @IsOptional()
   @ApiProperty({
@@ -36,4 +36,10 @@ export class GameRoomUpdateDto extends IntersectionType(
     required: false,
   })
   ballSpeed: BallSpeed;
+
+  @IsOptional()
+  @ApiProperty({
+    required: false,
+  })
+  winPoint: number;
 }
