@@ -6,12 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
@@ -37,16 +39,21 @@ export class GameController {
 
   @ApiOperation({
     summary: '전체 게임 방 조회',
-    description: '생성 되어 있는 전체 게임 방을 조회합니다.\n\n',
+    description:
+      '생성 되어 있는 전체 게임 방을 조회합니다.\n\n' +
+      'page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'page가 전달 되지 않으면, 전체 DM목록을 조회합니다.',
   })
   @ApiOkResponse({
     type: GameRoomListDto,
     isArray: true,
     description: '전체 게임 방 목록',
   })
+  @ApiQuery({ name: 'page', required: false })
   @Get('/room/list')
-  getGameRooms() {
-    return this.gameService.getAllGameRooms();
+  getGameRooms(@Query('page') page: number) {
+    if (!page) return this.gameService.getAllGameRooms();
+    return this.gameService.getAllChannelsWithPaging(page);
   }
 
   @ApiOperation({

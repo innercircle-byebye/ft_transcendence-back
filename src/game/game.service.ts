@@ -126,6 +126,43 @@ export class GameService {
     return allGameRoomsConverted;
   }
 
+  async getAllChannelsWithPaging(page: number) {
+    // 한 화면에 8번
+    const GAMEROOM_PER_PER_PAGE = 8;
+    const allGameRoomsWithPassword = await this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
+      .innerJoinAndSelect('gamemember.user', 'user')
+      .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
+      .addSelect('gameroom.password')
+      .orderBy('gameroom.createdAt', 'DESC')
+      .take(GAMEROOM_PER_PER_PAGE)
+      .skip(GAMEROOM_PER_PER_PAGE * (page - 1))
+      .getMany();
+
+    const allGameRoomsConverted = await Promise.all(
+      allGameRoomsWithPassword.map(async (gameRoomList: any) => {
+        gameRoomList.gameMembers.map((x) => {
+          x.userId = x.user.userId;
+          x.nickname = x.user.nickname;
+          delete x.user;
+          return x;
+        });
+        gameRoomList.currentMemberCount =
+          await this.getCurrentGameRoomMemberCount(gameRoomList.gameRoomId);
+
+        gameRoomList.gameRoomStatus = await this.getCurrentGameRoomStatus(
+          gameRoomList.gameRoomId,
+        );
+        if (gameRoomList.password === null) gameRoomList.isPrivate = false;
+        else gameRoomList.isPrivate = true;
+        delete gameRoomList.password;
+        return gameRoomList;
+      }),
+    );
+    return allGameRoomsConverted;
+  }
+
   async createGameRoom(
     playerOneId: number,
     gameRoomCreateDto: GameRoomCreateDto,
