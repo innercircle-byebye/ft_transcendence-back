@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DmService } from 'src/dm/dm.service';
-import { GameMember } from 'src/entities/GameMember';
+import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Connection, Repository } from 'typeorm';
+import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 
 export enum GameRoomStatus {
   OBSERVABLE = 'observable',
@@ -84,5 +85,106 @@ export class GameService {
       }),
     );
     return allGameRoomsConverted;
+  }
+
+  async createGameRoom(
+    playerOneId: number,
+    gameRoomCreateDto: GameRoomCreateDto,
+  ) {
+    console.log(playerOneId, gameRoomCreateDto);
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    if (
+      gameRoomCreateDto.maxParticipantNum < 2 ||
+      gameRoomCreateDto.maxParticipantNum > 8
+    )
+      throw new BadRequestException(
+        '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.',
+      );
+    const checkExistGameRoom = await this.gameRoomRepository.findOne({
+      where: [{ title: gameRoomCreateDto.title, deletedAt: null }],
+    });
+    if (checkExistGameRoom)
+      throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
+
+    let gameRoomReturned;
+    try {
+      const newGameRoom = new GameRoom();
+      newGameRoom.title = gameRoomCreateDto.title;
+      if (gameRoomCreateDto.password)
+        newGameRoom.password = gameRoomCreateDto.password;
+      newGameRoom.maxParticipantNum = gameRoomCreateDto.maxParticipantNum;
+      gameRoomReturned = await queryRunner.manager
+        .getRepository(GameRoom)
+        .save(newGameRoom);
+
+      const gameRoomPlayerOne = new GameMember();
+      gameRoomPlayerOne.gameRoomId = gameRoomReturned.gameRoomId;
+      gameRoomPlayerOne.userId = playerOneId;
+      gameRoomPlayerOne.status = GameMemberStatus.PLAYER_ONE;
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .save(gameRoomPlayerOne);
+
+      const newGameResult = new GameResult();
+      newGameResult.gameRoomId = newGameRoom.gameRoomId;
+      newGameResult.ballSpeed = gameRoomCreateDto.ballSpeed;
+      newGameResult.playerOneId = playerOneId;
+      newGameResult.winPoint = gameRoomCreateDto.winPoint;
+      await queryRunner.manager.getRepository(GameResult).save(newGameResult);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+
+    const gameRoomForReturn: any = await this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .where('gameroom.gameRoomId = :gameRoomId', {
+        gameRoomId: gameRoomReturned.gameRoomId,
+      })
+      .innerJoinAndSelect('gameroom.gameResults', 'gameresult')
+      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
+      .innerJoinAndSelect('gamemember.user', 'user')
+      .select([
+        'gameroom',
+        'user.userId',
+        'user.nickname',
+        'gamemember.status',
+        'gameresult',
+      ])
+      .addSelect('gameroom.password')
+      .getOne();
+
+    gameRoomForReturn.gameMembers.map((x) => {
+      x.userId = x.user.userId;
+      x.nickname = x.user.nickname;
+      delete x.user;
+      return x;
+    });
+    gameRoomForReturn.gameResults.map((x) => {
+      delete x.gameResultId;
+      delete x.gameRoomId;
+      return x;
+    });
+
+    gameRoomForReturn.currentMemberCount =
+      await this.getCurrentGameRoomMemberCount(gameRoomForReturn.gameRoomId);
+
+    gameRoomForReturn.gameRoomStatus = await this.getCurrentGameRoomStatus(
+      gameRoomForReturn.gameRoomId,
+    );
+    if (gameRoomForReturn.password === null)
+      gameRoomForReturn.isPrivate = false;
+    else gameRoomForReturn.isPrivate = true;
+    delete gameRoomForReturn.password;
+    console.log(gameRoomForReturn);
+
+    return gameRoomForReturn;
   }
 }

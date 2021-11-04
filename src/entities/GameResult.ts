@@ -28,7 +28,7 @@ export class GameResult extends BaseEntity implements IGameResult {
 
   @ManyToOne('GameRoom', 'gameResults')
   @JoinColumn({ name: 'game_room_id' })
-  gameroom: IGameRoom;
+  gameRoom: IGameRoom;
 
   @ApiProperty({
     description: '게임 방 ID',

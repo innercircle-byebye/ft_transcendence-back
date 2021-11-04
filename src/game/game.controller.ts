@@ -71,9 +71,11 @@ export class GameController {
     description: '생성 된 게임방의 정보',
   })
   @Post('/room')
-  createGameRoom(@AuthUser() user: User, @Body() body: GameRoomCreateDto) {
-    console.log(body);
-    return 'OK';
+  async createGameRoom(
+    @AuthUser() user: User,
+    @Body() body: GameRoomCreateDto,
+  ) {
+    return this.gameService.createGameRoom(user.userId, body);
   }
 
   @ApiOperation({
