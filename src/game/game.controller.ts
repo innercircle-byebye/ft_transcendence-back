@@ -88,6 +88,7 @@ export class GameController {
   @ApiBadRequestResponse({
     description:
       '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.\n\n' +
+      '게임 승리 점수는 최소 2점, 최대 10점 입니다.\n\n' +
       '이미 존재하는 게임방 이름입니다.',
   })
   @Post('/room')
@@ -112,6 +113,7 @@ export class GameController {
   @ApiBadRequestResponse({
     description:
       '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.\n\n' +
+      '게임 승리 점수는 최소 2점, 최대 10점 입니다.\n\n' +
       '이미 존재하는 게임방 이름입니다.\n\n' +
       '게임방 업데이트 권한이 없습니다.',
   })

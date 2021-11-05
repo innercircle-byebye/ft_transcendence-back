@@ -206,6 +206,10 @@ export class GameService {
       throw new BadRequestException(
         '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.',
       );
+    if (gameRoomCreateDto.winPoint < 2 || gameRoomCreateDto.winPoint > 10)
+      throw new BadRequestException(
+        '게임 승리 점수는 최소 2점, 최대 10점 입니다.',
+      );
     const checkExistGameRoom = await this.gameRoomRepository.findOne({
       where: [{ title: gameRoomCreateDto.title, deletedAt: null }],
     });
@@ -262,6 +266,10 @@ export class GameService {
     )
       throw new BadRequestException(
         '게임 참여 인원은 최소 2명 이상, 최대 8명 이하입니다.',
+      );
+    if (gameRoomUpdateDto.winPoint < 2 || gameRoomUpdateDto.winPoint > 10)
+      throw new BadRequestException(
+        '게임 승리 점수는 최소 2점, 최대 10점 입니다.',
       );
     const checkExistGameRoom = await this.gameRoomRepository.findOne({
       where: [{ title: gameRoomUpdateDto.title, deletedAt: null }],
