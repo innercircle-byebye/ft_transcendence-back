@@ -444,12 +444,13 @@ export class GameService {
           await queryRunner.manager
             .getRepository(GameResult)
             .save(latestGameReseult);
-        } else {
+        } else if (checkGameMember.status === GameMemberStatus.PLAYER_ONE) {
           const checkGameMemberInPlayerTwo = await queryRunner.manager
             .getRepository(GameMember)
             .findOne({
               where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
             });
+          // Player 2 becomes Player 1
           if (checkGameMemberInPlayerTwo) {
             const latestGameReseult = await queryRunner.manager
               .getRepository(GameResult)
@@ -464,6 +465,7 @@ export class GameService {
               .getRepository(GameMember)
               .save(checkGameMemberInPlayerTwo);
           } else {
+            // remove gameroom
             const latestGameReseult = await queryRunner.manager
               .getRepository(GameResult)
               .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
