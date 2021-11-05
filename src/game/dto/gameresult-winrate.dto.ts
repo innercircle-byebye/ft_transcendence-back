@@ -21,8 +21,9 @@ export class GameResultWinRateDto {
   loseCount: number;
 
   @ApiProperty({
-    type: 'number',
-    description: '승률 (소수점도 숫자로 표현 한다고 합니다)',
+    type: 'string',
+    description:
+      '승률 (소수점도 숫자로 표현 한다고 합니다 --> 가 typescript 에서는 안된다고 합니다)',
   })
-  winRate: number;
+  winRate: string;
 }

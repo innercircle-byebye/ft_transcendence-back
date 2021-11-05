@@ -9,6 +9,7 @@ import { Brackets, Connection, Repository } from 'typeorm';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
+import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
 import { GameRoomDto, GameRoomStatus } from './dto/gameroom.dto';
@@ -390,7 +391,6 @@ export class GameService {
           .getRepository(GameMember)
           .save(gameRoomPlayerTwo);
 
-      // TODO: 잘 가져오는지 검증 필요
       const latestGameReseult = await queryRunner.manager
         .getRepository(GameResult)
         .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
@@ -755,7 +755,34 @@ export class GameService {
         }),
       )
       .getMany();
-    console.log(result);
     return result;
+  }
+
+  getUserWinCount(userId: number, gameResults: GameResultUserDto[]): number {
+    let winCount: number;
+    winCount = 0;
+    gameResults.forEach((item) => {
+      if (item.playerOneId === userId) {
+        if (item.playerOneScore === item.winPoint) winCount += 1;
+      } else if (item.playerTwoId === userId) {
+        if (item.playerTwoScore === item.winPoint) winCount += 1;
+      }
+    });
+    return winCount;
+  }
+
+  async getUserWinRate(userId: number): Promise<GameResultWinRateDto> {
+    const result = await this.getGameResults(userId);
+    const totalPlayCount = result.length;
+    const winCount = this.getUserWinCount(userId, result);
+    const loseCount = totalPlayCount - winCount;
+    const winRate = (winCount / totalPlayCount) * 100;
+    const resultTwo: GameResultWinRateDto = {
+      totalPlayCount,
+      winCount,
+      loseCount,
+      winRate: winRate.toFixed(5),
+    };
+    return resultTwo;
   }
 }
