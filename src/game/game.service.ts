@@ -148,7 +148,7 @@ export class GameService {
     return allGameRoomsConverted;
   }
 
-  async getAllChannelsWithPaging(page: number) {
+  async getAllGameRoomsWithPaging(page: number) {
     // 한 화면에 8번
     const GAMEROOM_PER_PER_PAGE = 8;
     const allGameRoomsWithPassword = await this.gameRoomRepository
@@ -425,6 +425,7 @@ export class GameService {
     });
     if (!checkGameMember)
       throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+
     if (checkGameMember.status === GameMemberStatus.OBSERVER) {
       await this.gameMemberRepository.softRemove(checkGameMember);
     } else {
@@ -496,5 +497,113 @@ export class GameService {
       }
     }
     return 'OK';
+  }
+
+  async banGameMember(
+    gameRoomId: number,
+    playerOneId: number,
+    targetUserId: number,
+    banDate: Date,
+  ) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    const checkPlayerOne = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId: playerOneId },
+    });
+    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
+      throw new BadRequestException('차단 권한이 없습니다');
+    const targetUser = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId: targetUserId },
+    });
+    if (!targetUser)
+      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let returnTargetUser;
+    try {
+      targetUser.banDate = banDate;
+      await queryRunner.manager.getRepository(GameMember).save(targetUser);
+      returnTargetUser = await queryRunner.manager
+        .getRepository(GameMember)
+        .softRemove(targetUser);
+      if (targetUser.status === GameMemberStatus.PLAYER_TWO) {
+        const latestGameReseult = await queryRunner.manager
+          .getRepository(GameResult)
+          .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+        latestGameReseult.playerTwoId = null;
+        await queryRunner.manager
+          .getRepository(GameResult)
+          .save(latestGameReseult);
+      }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return returnTargetUser;
+  }
+
+  async restoreGameMemberFromBan(
+    gameRoomId: number,
+    playerOneId: number,
+    userId: number,
+  ) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    const checkPlayerOne = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId: playerOneId },
+    });
+    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
+      throw new BadRequestException('차단 권한이 없습니다');
+    const targetUser = await this.gameMemberRepository
+      .createQueryBuilder('gameMembers')
+      .where('gameMembers.gameRoomId = :gameRoomId', {
+        gameRoomId,
+      })
+      .andWhere('gameMembers.userId = :target', {
+        target: userId,
+      })
+      .withDeleted()
+      .getOne();
+    if (!targetUser)
+      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+    if (!targetUser.banDate)
+      throw new BadRequestException('해당 유저의 차단 기록이 없습니다.');
+    targetUser.banDate = null;
+    return this.gameMemberRepository.save(targetUser);
+    // const queryRunner = this.connection.createQueryRunner();
+    // await queryRunner.connect();
+    // await queryRunner.startTransaction();
+    // try {
+    //   await queryRunner.manager.getRepository(GameMember).save(targetUser);
+    //   await queryRunner.manager
+    //     .getRepository(GameMember)
+    //     .softRemove(targetUser);
+    //   if (targetUser.status === GameMemberStatus.PLAYER_TWO) {
+    //     const latestGameReseult = await queryRunner.manager
+    //       .getRepository(GameResult)
+    //       .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+    //     latestGameReseult.playerTwoId = null;
+    //     await queryRunner.manager
+    //       .getRepository(GameResult)
+    //       .save(latestGameReseult);
+    //   }
+    //   await queryRunner.commitTransaction();
+    // } catch (error) {
+    //   await queryRunner.rollbackTransaction();
+    //   throw error;
+    // } finally {
+    //   await queryRunner.release();
+    // }
   }
 }

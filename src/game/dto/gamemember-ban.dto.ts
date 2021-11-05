@@ -1,6 +1,6 @@
 // import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { PickType } from '@nestjs/swagger';
-import { IsDate, IsNumber } from 'class-validator';
+import { IsNumber, IsOptional } from 'class-validator';
 import { GameMember } from 'src/entities/GameMember';
 
 export class GameMemberBanDto extends PickType(GameMember, [
@@ -10,6 +10,6 @@ export class GameMemberBanDto extends PickType(GameMember, [
   @IsNumber()
   userId: number;
 
-  @IsDate()
+  @IsOptional()
   banDate: Date;
 }

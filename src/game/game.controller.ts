@@ -54,7 +54,7 @@ export class GameController {
   @Get('/room/list')
   getGameRooms(@Query('page') page: number) {
     if (!page) return this.gameService.getAllGameRooms();
-    return this.gameService.getAllChannelsWithPaging(page);
+    return this.gameService.getAllGameRoomsWithPaging(page);
   }
 
   @ApiOperation({
@@ -193,20 +193,35 @@ export class GameController {
   }
 
   @ApiOperation({
-    summary: '게임방 멤버 차단하기',
+    summary: '게임방 멤버 차단/차단해제 하기',
     description:
-      '게임방에서 해당 사용자를 차단합니다. \n\n 멤버 차단은 플레이어1 만 가능합니다.\n\n' +
+      '게임방에서 해당 사용자를 차단 /차단 해제 합니다. \n\n 멤버 차단/차단해제는 플레이어1만 가능합니다.\n\n' +
       'body에 플레이어/관전자 정보를 전달 받게됩니다.',
   })
   @ApiOkResponse({ type: GameMemberDto })
-  @Delete('/room/:game_room_id/ban')
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n 차단 권한이 없습니다.\n\n' +
+      '유저가 존재 하지 않습니다.',
+  })
+  @Patch('/room/:game_room_id/ban')
   banPlayerFromGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
     @Body() body: GameMemberBanDto,
   ) {
-    console.log(gameRoomId, user.userId, body);
-    return 'OK';
+    if (body.banDate)
+      return this.gameService.banGameMember(
+        gameRoomId,
+        user.userId,
+        body.userId,
+        body.banDate,
+      );
+    return this.gameService.restoreGameMemberFromBan(
+      gameRoomId,
+      user.userId,
+      body.userId,
+    );
   }
 
   @ApiOperation({
