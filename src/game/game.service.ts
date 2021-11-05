@@ -68,6 +68,12 @@ export class GameService {
     return result;
   }
 
+  async countAllGameRoomObservers(gameRoomId: number): Promise<number> {
+    return this.gameMemberRepository.count({
+      where: { gameRoomId, status: GameMemberStatus.OBSERVER },
+    });
+  }
+
   async getGameRoomTotalInfo(gameRoomId: number): Promise<GameRoomDto> {
     const gameRoomForReturn: any = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
@@ -499,6 +505,22 @@ export class GameService {
             await queryRunner.manager
               .getRepository(GameMember)
               .save(checkGameMemberInPlayerTwo);
+          } else if ((await this.countAllGameRoomObservers(gameRoomId)) > 0) {
+            // observer becomes player 1
+            const observerToPlayerOne = await queryRunner.manager
+              .getRepository(GameMember)
+              .findOne({ gameRoomId, status: GameMemberStatus.OBSERVER });
+            observerToPlayerOne.status = GameMemberStatus.PLAYER_ONE;
+            await queryRunner.manager
+              .getRepository(GameMember)
+              .save(observerToPlayerOne);
+            const latestGameReseult = await queryRunner.manager
+              .getRepository(GameResult)
+              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+            latestGameReseult.playerOneId = observerToPlayerOne.userId;
+            await queryRunner.manager
+              .getRepository(GameResult)
+              .save(latestGameReseult);
           } else {
             // remove gameroom
             const latestGameReseult = await queryRunner.manager
@@ -507,19 +529,26 @@ export class GameService {
             await queryRunner.manager
               .getRepository(GameResult)
               .remove(latestGameReseult);
-            await Promise.all(
-              (
-                await this.getAllGameRoomObserversId(gameRoomId)
-              ).map(async (observerUserID) => {
-                const observerInGameRoom = await queryRunner.manager
-                  .getRepository(GameMember)
-                  .findOne({ where: { gameRoomId, userId: observerUserID } });
-                console.log(observerInGameRoom);
-                await queryRunner.manager
-                  .getRepository(GameMember)
-                  .softRemove(observerInGameRoom);
-              }),
-            );
+            // save for later
+            // await Promise.all(
+            //   (
+            //     await this.getAllGameRoomObserversId(gameRoomId)
+            //   ).map(async (observerUserID) => {
+            //     const observerInGameRoom = await queryRunner.manager
+            //       .getRepository(GameMember)
+            //       .findOne({ where: { gameRoomId, userId: observerUserID } });
+            //     console.log(observerInGameRoom);
+            //     await queryRunner.manager
+            //       .getRepository(GameMember)
+            //       .softRemove(observerInGameRoom);
+            //   }),
+            // );
+            const removeTargetGameRoom = await queryRunner.manager
+              .getRepository(GameRoom)
+              .find({ where: { gameRoomId } });
+            await queryRunner.manager
+              .getRepository(GameRoom)
+              .remove(removeTargetGameRoom);
           }
         }
         await queryRunner.commitTransaction();
