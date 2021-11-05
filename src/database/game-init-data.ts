@@ -124,7 +124,7 @@ const GameResultInitData = [
     gameRoomId: 2,
     playerOneId: 2,
     playerTwoId: 3,
-    playerOneScore: 15,
+    playerOneScore: 14,
     playerTwoScore: 10,
     winPoint: 15,
     ballSpeed: BallSpeed.MEDIUM,

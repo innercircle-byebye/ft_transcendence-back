@@ -142,6 +142,21 @@ export class GameController {
   }
 
   @ApiOperation({
+    summary: '유저가 바로 관전할 수 있는 게임방 조회',
+    description:
+      '현재 관전할 수 있는 게임방 중 하나를 선택하여 전달합니다. \n\n' +
+      '백엔드 내부에서 랜덤 선택하게 됩니다.',
+  })
+  @ApiOkResponse({
+    type: GameRoomDto,
+    description: '선택된 게임 방의 정보',
+  })
+  @Get('/room/observable')
+  getObsrvableGameRoom() {
+    return 'OK';
+  }
+
+  @ApiOperation({
     summary: '게임방 참여',
     description:
       '게임방에 참여합니다. \n\n body에 플레이어/관전자 정보와 첨여 방의 비밀번호를 전달하게 됩니다.',
@@ -255,8 +270,7 @@ export class GameController {
   })
   @Get('/:user_id/results')
   getGameResultsByUserId(@Param('user_id') userId: number) {
-    console.log(userId);
-    return 'OK';
+    return this.gameService.getGameResults(userId);
   }
 
   @ApiOperation({

@@ -5,9 +5,10 @@ import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
-import { Connection, Repository } from 'typeorm';
+import { Brackets, Connection, Repository } from 'typeorm';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
+import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
 import { GameRoomDto, GameRoomStatus } from './dto/gameroom.dto';
@@ -733,5 +734,28 @@ export class GameService {
       await queryRunner.release();
     }
     return returnTargetUser;
+  }
+
+  async getGameResults(userId: number): Promise<GameResultUserDto[]> {
+    const result = await this.gameResultRepository
+      .createQueryBuilder('gameresults')
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.startAt IS NOT NULL').andWhere(
+            'gameresults.endAt is not null',
+          );
+        }),
+      )
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.playerOneId = :userId', { userId }).orWhere(
+            'gameresults.playerTwoId = :userId',
+            { userId },
+          );
+        }),
+      )
+      .getMany();
+    console.log(result);
+    return result;
   }
 }
