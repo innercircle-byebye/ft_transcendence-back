@@ -58,6 +58,16 @@ export class GameService {
     return false;
   }
 
+  async getAllGameRoomObserversId(gameRoomId: number): Promise<any[]> {
+    const gameMemberRepositoryCheck = await this.gameMemberRepository.find({
+      where: { gameRoomId, status: GameMemberStatus.OBSERVER },
+    });
+
+    const result = gameMemberRepositoryCheck.map((x) => x.userId);
+
+    return result;
+  }
+
   async getGameRoomTotalInfo(gameRoomId: number): Promise<GameRoomDto> {
     const gameRoomForReturn: any = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
@@ -402,5 +412,87 @@ export class GameService {
     await this.gameMemberRepository.save(gameRoomObserver);
 
     return this.getGameRoomTotalInfo(gameRoomId);
+  }
+
+  async leaveGameRoom(userId: number, gameRoomId: number) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
+    });
+    if (!checkGameMember)
+      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+    if (checkGameMember.status === GameMemberStatus.OBSERVER) {
+      await this.gameMemberRepository.softRemove(checkGameMember);
+    } else {
+      const queryRunner = this.connection.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+      try {
+        await queryRunner.manager
+          .getRepository(GameMember)
+          .softRemove(checkGameMember);
+
+        if (checkGameMember.status === GameMemberStatus.PLAYER_TWO) {
+          const latestGameReseult = await queryRunner.manager
+            .getRepository(GameResult)
+            .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+          latestGameReseult.playerTwoId = null;
+          await queryRunner.manager
+            .getRepository(GameResult)
+            .save(latestGameReseult);
+        } else {
+          const checkGameMemberInPlayerTwo = await queryRunner.manager
+            .getRepository(GameMember)
+            .findOne({
+              where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
+            });
+          if (checkGameMemberInPlayerTwo) {
+            const latestGameReseult = await queryRunner.manager
+              .getRepository(GameResult)
+              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+            latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
+            latestGameReseult.playerTwoId = null;
+            await queryRunner.manager
+              .getRepository(GameResult)
+              .save(latestGameReseult);
+            checkGameMemberInPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
+            await queryRunner.manager
+              .getRepository(GameMember)
+              .save(checkGameMemberInPlayerTwo);
+          } else {
+            const latestGameReseult = await queryRunner.manager
+              .getRepository(GameResult)
+              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+            await queryRunner.manager
+              .getRepository(GameResult)
+              .remove(latestGameReseult);
+            await Promise.all(
+              (
+                await this.getAllGameRoomObserversId(gameRoomId)
+              ).map(async (observerUserID) => {
+                const observerInGameRoom = await queryRunner.manager
+                  .getRepository(GameMember)
+                  .findOne({ where: { gameRoomId, userId: observerUserID } });
+                console.log(observerInGameRoom);
+                await queryRunner.manager
+                  .getRepository(GameMember)
+                  .softRemove(observerInGameRoom);
+              }),
+            );
+          }
+        }
+        await queryRunner.commitTransaction();
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw error;
+      } finally {
+        await queryRunner.release();
+      }
+    }
+    return 'OK';
   }
 }

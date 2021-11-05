@@ -178,13 +178,18 @@ export class GameController {
     description: '게임방에서 나갑니다',
   })
   @ApiOkResponse({ description: 'OK' })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n 게임방에 유저가 존재 하지 않습니다.\n\n',
+    // '이미 다른 게임방에 참여중입니다. \n\n' +
+    // '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n 게임방에 참여할 수 없습니다. (관전 정원초과)',
+  })
   @Delete('/room/:game_room_id/leave')
   leaveGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
   ) {
-    console.log(gameRoomId, user.userId);
-    return 'OK';
+    return this.gameService.leaveGameRoom(user.userId, gameRoomId);
   }
 
   @ApiOperation({
