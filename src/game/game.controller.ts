@@ -126,20 +126,20 @@ export class GameController {
     return this.gameService.updateGameRoom(gameRoomId, user.userId, body);
   }
 
-  @ApiOperation({
-    summary: '유저가 바로 참여할 수 있는 게임방 조회',
-    description:
-      '현재 게임에 참여할 수 있는 게임방 중 하나를 선택하여 전달합니다. \n\n' +
-      '백엔드 내부에서 랜덤 선택하게 됩니다. \n\n' +
-      '(비밀번호 방은 조회 되지 않습니댜)',
-  })
+  // @ApiOperation({
+  //   summary: '유저가 바로 참여할 수 있는 게임방 조회',
+  //   description:
+  //     '현재 게임에 참여할 수 있는 게임방 중 하나를 선택하여 전달합니다. \n\n' +
+  //     '백엔드 내부에서 랜덤 선택하게 됩니다. \n\n' +
+  //     '(비밀번호 방은 조회 되지 않습니댜)',
+  // })
   // @ApiOkResponse({
   //   // type: GameRoomDto,
   //   description: '선택된 게임 방의 정보',
   // })
-  @Get('/room/playable')
-  getPlayableGameRoom() {
-    return this.gameService.getAllGameRooms();
+  @Get('/playable')
+  async getPlayableGameRoom() {
+    return this.gameService.getPlayableRooms();
   }
 
   @ApiOperation({
@@ -153,9 +153,9 @@ export class GameController {
     // type: GameRoomDto,
     description: '선택된 게임 방의 정보',
   })
-  @Get('/room/observable')
-  getObsrvableGameRoom() {
-    return 'OK';
+  @Get('/observable')
+  async getObsrvableGameRoom() {
+    return this.gameService.getObservableRooms();
   }
 
   @ApiOperation({

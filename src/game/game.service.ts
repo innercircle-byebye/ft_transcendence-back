@@ -125,7 +125,7 @@ export class GameService {
     return gameRoomForReturn;
   }
 
-  async getAllGameRooms() {
+  async getAllGameRooms(): Promise<GameRoomDto[]> {
     const allGameRoomsWithPassword = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
       .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
@@ -193,6 +193,20 @@ export class GameService {
       }),
     );
     return allGameRoomsConverted;
+  }
+
+  async getPlayableRooms() {
+    const allGameRooms = (await this.getAllGameRooms()).filter(
+      (list) => list.gameRoomStatus === 'playable',
+    );
+    return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
+  }
+
+  async getObservableRooms() {
+    const allGameRooms = (await this.getAllGameRooms()).filter(
+      (list) => list.gameRoomStatus === 'observable',
+    );
+    return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
   }
 
   async createGameRoom(

@@ -111,6 +111,36 @@ const userInitData = [
     experience: 0,
     rankId: 1,
   },
+  {
+    email: 'temp12@temp.com',
+    nickname: 'temp12',
+    intraUsername: 'temp_intra_12',
+    imagePath: 'https://picsum.photos/id/1024/500/500',
+    status: UserStatus.ONLINE,
+    banDate: null,
+    experience: 0,
+    rankId: 1,
+  },
+  {
+    email: 'temp13@temp.com',
+    nickname: 'temp13',
+    intraUsername: 'temp_intra_13',
+    imagePath: 'https://picsum.photos/id/1025/500/500',
+    status: UserStatus.ONLINE,
+    banDate: null,
+    experience: 0,
+    rankId: 1,
+  },
+  {
+    email: 'temp14@temp.com',
+    nickname: 'temp14',
+    intraUsername: 'temp_intra_14',
+    imagePath: 'https://picsum.photos/id/1026/500/500',
+    status: UserStatus.ONLINE,
+    banDate: null,
+    experience: 0,
+    rankId: 1,
+  },
 ];
 
 export { userInitData };
