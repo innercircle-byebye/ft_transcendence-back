@@ -6,6 +6,8 @@ import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Connection, Repository } from 'typeorm';
+import { GameMemberMoveDto } from './dto/gamemember-move.dto';
+import { GameMemberDto } from './dto/gamemember.dto';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
 import { GameRoomDto, GameRoomStatus } from './dto/gameroom.dto';
@@ -676,5 +678,60 @@ export class GameService {
     // } finally {
     //   await queryRunner.release();
     // }
+  }
+
+  async movePlayerOrObserver(
+    gameRoomId: number,
+    playerOneId: number,
+    gameMemberMoveDto: GameMemberMoveDto,
+  ): Promise<GameMemberDto> {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    const checkPlayerOne = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId: playerOneId },
+    });
+    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
+      throw new BadRequestException('이동 권한이 없습니다');
+    const targetUser = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId: gameMemberMoveDto.userId },
+    });
+    if (!targetUser)
+      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+    if (targetUser.status === gameMemberMoveDto.status)
+      throw new BadRequestException(
+        '잘못된 요청입니다 (동일한 상태로의 변경은 불가능합니다)',
+      );
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let returnTargetUser;
+    try {
+      const fixLatestGameResult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+      if (gameMemberMoveDto.status === GameMemberStatus.OBSERVER) {
+        targetUser.status = GameMemberStatus.OBSERVER;
+        fixLatestGameResult.playerTwoId = null;
+      } else {
+        targetUser.status = GameMemberStatus.PLAYER_TWO;
+        fixLatestGameResult.playerTwoId = targetUser.userId;
+      }
+      returnTargetUser = await queryRunner.manager
+        .getRepository(GameMember)
+        .save(targetUser);
+      await queryRunner.manager
+        .getRepository(GameResult)
+        .save(fixLatestGameResult);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return returnTargetUser;
   }
 }

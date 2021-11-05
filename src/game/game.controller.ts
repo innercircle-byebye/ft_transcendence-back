@@ -239,7 +239,7 @@ export class GameController {
     @AuthUser() user: User,
     @Body() body: GameMemberMoveDto,
   ) {
-    console.log(gameRoomId, user.userId, body);
+    return this.gameService.movePlayerOrObserver(gameRoomId, user.userId, body);
     return 'OK';
   }
 
