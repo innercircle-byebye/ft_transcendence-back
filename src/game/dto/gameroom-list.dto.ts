@@ -31,7 +31,7 @@ export class GameRoomListDto extends OmitType(GameRoom, [
     description: '현재 게임룸에 참여한 인원',
     example: 4,
   })
-  currentNumberCount: number;
+  currentMemberCount: number;
 
   @ApiProperty({
     examples: GameRoomStatus,
