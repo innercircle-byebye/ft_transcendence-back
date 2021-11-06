@@ -43,7 +43,7 @@ export class GameController {
     description:
       '생성 되어 있는 전체 게임 방을 조회합니다.\n\n' +
       'page(원하는 페이지)값을 query로 받으며,\n\n' +
-      'page가 전달 되지 않으면, 전체 DM목록을 조회합니다.',
+      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.',
   })
   @ApiOkResponse({
     type: GameRoomListDto,
@@ -126,17 +126,17 @@ export class GameController {
     return this.gameService.updateGameRoom(gameRoomId, user.userId, body);
   }
 
-  // @ApiOperation({
-  //   summary: '유저가 바로 참여할 수 있는 게임방 조회',
-  //   description:
-  //     '현재 게임에 참여할 수 있는 게임방 중 하나를 선택하여 전달합니다. \n\n' +
-  //     '백엔드 내부에서 랜덤 선택하게 됩니다. \n\n' +
-  //     '(비밀번호 방은 조회 되지 않습니댜)',
-  // })
-  // @ApiOkResponse({
-  //   // type: GameRoomDto,
-  //   description: '선택된 게임 방의 정보',
-  // })
+  @ApiOperation({
+    summary: '유저가 바로 참여할 수 있는 게임방 조회',
+    description:
+      '현재 게임에 참여할 수 있는 게임방 중 하나를 선택하여 전달합니다. \n\n' +
+      '백엔드 내부에서 랜덤 선택하게 됩니다. \n\n' +
+      '(비밀번호 방은 조회 되지 않습니댜)',
+  })
+  @ApiOkResponse({
+    type: GameRoomDto,
+    description: '선택된 게임 방의 정보',
+  })
   @Get('/playable')
   async getPlayableGameRoom() {
     return this.gameService.getPlayableRooms();
@@ -150,7 +150,7 @@ export class GameController {
       '(비밀번호 방은 조회 되지 않습니댜)',
   })
   @ApiOkResponse({
-    // type: GameRoomDto,
+    type: GameRoomDto,
     description: '선택된 게임 방의 정보',
   })
   @Get('/observable')
