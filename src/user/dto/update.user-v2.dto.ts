@@ -1,21 +1,32 @@
-import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
-import { IsEmail, IsOptional } from 'class-validator';
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import { User } from 'src/entities/User';
 
 // 따로 선언 하는게 아니라 생략가능
 // ref: https://docs.nestjs.com/graphql/mapped-types#mapped-types
 
 export class UpdateUserVersionTwoDto extends PartialType(
-  OmitType(User, [
-    'userId',
-    'intraUsername',
-    'createdAt',
-    'lastModifiedAt',
-    'deletedAt',
+  PickType(User, [
+    'email',
+    'nickname',
+    'imagePath',
+    'isStatusPublic',
+    'isHistoryPublic',
   ]),
 ) {
+  @IsOptional()
   @IsEmail()
   email: string;
+
+  @IsOptional()
+  @IsString()
+  nickname: string;
+
+  @IsOptional()
+  isStatusPublic: boolean;
+
+  @IsOptional()
+  isHistoryPublic: boolean;
 
   @IsOptional()
   @ApiProperty({

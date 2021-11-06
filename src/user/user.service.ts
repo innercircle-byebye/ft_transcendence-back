@@ -252,16 +252,21 @@ export class UserService {
   async updateUserProfileV2(userId: number, formData: UpdateUserVersionTwoDto) {
     const { nickname, email, isHistoryPublic, isStatusPublic } = formData;
 
-    const checkDuplicateEmail = await this.userRepository.findOne({
-      where: { email },
-    });
-    if (checkDuplicateEmail && checkDuplicateEmail.userId !== userId)
-      throw new BadRequestException('동일한 이메일이 존재합니다.');
-    const checkDuplicateNickname = await this.userRepository.findOne({
-      where: { nickname },
-    });
-    if (checkDuplicateNickname && checkDuplicateNickname.userId !== userId)
-      throw new BadRequestException('동일한 닉네임이 존재합니다.');
+    if (email) {
+      const checkDuplicateEmail = await this.userRepository.findOne({
+        where: { email },
+      });
+      if (checkDuplicateEmail && checkDuplicateEmail.userId !== userId)
+        throw new BadRequestException('동일한 이메일이 존재합니다.');
+    }
+
+    if (nickname) {
+      const checkDuplicateNickname = await this.userRepository.findOne({
+        where: { nickname },
+      });
+      if (checkDuplicateNickname && checkDuplicateNickname.userId !== userId)
+        throw new BadRequestException('동일한 닉네임이 존재합니다.');
+    }
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
