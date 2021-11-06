@@ -512,15 +512,13 @@ export class ChannelService {
     if (!channelIdByName) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-
-    return this.channelRepository
-      .count({
-        where: {
-          channelId: channelIdByName.channelId,
-          createdAt: MoreThan(new Date(after)),
-        },
-      })
-      .toString();
+    const unreadsCount = await this.channelRepository.count({
+      where: {
+        channelId: channelIdByName.channelId,
+        createdAt: MoreThan(new Date(after)),
+      },
+    });
+    return unreadsCount.toString();
   }
 
   // TODO: 예외처리
