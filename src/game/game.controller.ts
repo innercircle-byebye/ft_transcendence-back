@@ -42,9 +42,10 @@ export class GameController {
   @ApiOperation({
     summary: '전체 유저 랭킹조회',
     description:
-      '전체 유저의 랭킹을 조회합니다.' +
+      '전체 유저의 랭킹을 조회합니다.\n\n개발단계라 승리 횟수(winCount) 기준으로 정렬하였습니다.' +
       'page(원하는 페이지)값을 query로 받으며,\n\n' +
-      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.',
+      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.\n\n' +
+      '(한 페이지에는 10개의 user가 전달됩니다)',
   })
   @ApiOkResponse({
     type: GameResultRankingDto,
