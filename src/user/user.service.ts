@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
 import { User, UserStatus } from 'src/entities/User';
+import * as fs from 'fs';
 import { UpdateUserDto } from './dto/update.user.dto';
 
 @Injectable()
@@ -223,5 +224,26 @@ export class UserService {
     return this.userRepository.update(userId, {
       isTwoFactorAuthEnabled: isTurnOn,
     });
+  }
+
+  async updateProfileImagePath(userId: number, filePath: string) {
+    this.userRepository.update(userId, {
+      imagePath: filePath,
+    });
+    return this.userRepository.find({ where: { userId } });
+  }
+
+  async removeExistingImagePath(userId: number): Promise<void> {
+    const userInfo = await this.userRepository.findOne({ where: { userId } });
+    const serverPath = userInfo.imagePath.substring(
+      userInfo.imagePath.indexOf('/profile_image'),
+      userInfo.imagePath.length,
+    );
+
+    if (fs.existsSync(`.${serverPath}`)) {
+      fs.unlink(`.${serverPath}`, () => {
+        // console.log('file deleted');
+      });
+    }
   }
 }

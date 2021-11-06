@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -27,6 +28,7 @@ import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
 import { User } from '../entities/User';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
+import { UserUpdateImageDto } from './dto/user-updateimage.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
@@ -66,6 +68,35 @@ export class UserController {
       throw new BadRequestException('요청값 비어있음');
     }
     return this.userService.updateUser(userId, updateData);
+  }
+
+  // @ApiOkResponse({ type: UpdateUserDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '유저 정보 업데이트' })
+  @Put('/profile_image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './profile_image',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+      // 파일 용량 제한
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  @ApiOkResponse({ type: UserDto })
+  async uploadProfileImage(
+    @AuthUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() formData: UserUpdateImageDto,
+  ) {
+    this.userService.removeExistingImagePath(user.userId);
+    return this.userService.updateProfileImagePath(
+      user.userId,
+      `http://back-nestjs:3005/profile_image/${file.filename}`,
+    );
   }
 
   @ApiOkResponse({ type: UserDto })
