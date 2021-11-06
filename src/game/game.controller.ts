@@ -240,7 +240,7 @@ export class GameController {
   @ApiBadRequestResponse({
     description:
       '게임방이 존재하지 않습니다.\n\n 차단 권한이 없습니다.\n\n' +
-      '유저가 존재 하지 않습니다.',
+      '유저가 존재 하지 않습니다.\n\n게임 중에는 나갈 수 없습니다.\n\n',
   })
   @Patch('/room/:game_room_id/ban')
   banPlayerFromGameRoom(
