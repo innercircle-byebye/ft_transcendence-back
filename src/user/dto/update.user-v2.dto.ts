@@ -12,6 +12,7 @@ export class UpdateUserVersionTwoDto extends PartialType(
     'imagePath',
     'isStatusPublic',
     'isHistoryPublic',
+    'isTwoFactorAuthEnabled',
   ]),
 ) {
   @IsOptional()
@@ -27,6 +28,9 @@ export class UpdateUserVersionTwoDto extends PartialType(
 
   @IsOptional()
   isHistoryPublic: boolean;
+
+  @IsOptional()
+  isTwoFactorAuthEnabled: boolean;
 
   @IsOptional()
   @ApiProperty({

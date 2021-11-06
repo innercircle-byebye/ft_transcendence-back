@@ -250,7 +250,13 @@ export class UserService {
   }
 
   async updateUserProfileV2(userId: number, formData: UpdateUserVersionTwoDto) {
-    const { nickname, email, isHistoryPublic, isStatusPublic } = formData;
+    const {
+      nickname,
+      email,
+      isHistoryPublic,
+      isStatusPublic,
+      isTwoFactorAuthEnabled,
+    } = formData;
 
     if (email) {
       const checkDuplicateEmail = await this.userRepository.findOne({
@@ -287,6 +293,11 @@ export class UserService {
         if (isStatusPublic.toString() === 'true')
           foundUser.isStatusPublic = true;
         else foundUser.isStatusPublic = false;
+      }
+      if (isTwoFactorAuthEnabled) {
+        if (isTwoFactorAuthEnabled.toString() === 'true')
+          foundUser.isTwoFactorAuthEnabled = true;
+        else foundUser.isTwoFactorAuthEnabled = false;
       }
       createdUser = await queryRunner.manager
         .getRepository(User)
