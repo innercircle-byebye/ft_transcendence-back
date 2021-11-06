@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -8,7 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
 import { User, UserStatus } from 'src/entities/User';
+import * as fs from 'fs';
 import { UpdateUserDto } from './dto/update.user.dto';
+import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 
 @Injectable()
 export class UserService {
@@ -223,5 +226,90 @@ export class UserService {
     return this.userRepository.update(userId, {
       isTwoFactorAuthEnabled: isTurnOn,
     });
+  }
+
+  async updateProfileImagePath(userId: number, filePath: string) {
+    this.userRepository.update(userId, {
+      imagePath: filePath,
+    });
+    return this.userRepository.find({ where: { userId } });
+  }
+
+  async removeExistingImagePath(userId: number): Promise<void> {
+    const userInfo = await this.userRepository.findOne({ where: { userId } });
+    const serverPath = userInfo.imagePath.substring(
+      userInfo.imagePath.indexOf('/profile_image'),
+      userInfo.imagePath.length,
+    );
+
+    if (fs.existsSync(`.${serverPath}`)) {
+      fs.unlink(`.${serverPath}`, () => {
+        // console.log('file deleted');
+      });
+    }
+  }
+
+  async updateUserProfileV2(userId: number, formData: UpdateUserVersionTwoDto) {
+    const {
+      nickname,
+      email,
+      isHistoryPublic,
+      isStatusPublic,
+      isTwoFactorAuthEnabled,
+    } = formData;
+
+    if (email) {
+      const checkDuplicateEmail = await this.userRepository.findOne({
+        where: { email },
+      });
+      if (checkDuplicateEmail && checkDuplicateEmail.userId !== userId)
+        throw new BadRequestException('동일한 이메일이 존재합니다.');
+    }
+
+    if (nickname) {
+      const checkDuplicateNickname = await this.userRepository.findOne({
+        where: { nickname },
+      });
+      if (checkDuplicateNickname && checkDuplicateNickname.userId !== userId)
+        throw new BadRequestException('동일한 닉네임이 존재합니다.');
+    }
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let createdUser;
+    try {
+      const foundUser = await queryRunner.manager
+        .getRepository(User)
+        .findOne({ where: [{ userId }] });
+      if (foundUser.nickname !== nickname) foundUser.nickname = nickname;
+      if (foundUser.email !== email) foundUser.email = email;
+      if (isHistoryPublic) {
+        if (isHistoryPublic.toString() === 'true')
+          foundUser.isHistoryPublic = true;
+        else foundUser.isHistoryPublic = false;
+      }
+      if (isStatusPublic) {
+        if (isStatusPublic.toString() === 'true')
+          foundUser.isStatusPublic = true;
+        else foundUser.isStatusPublic = false;
+      }
+      if (isTwoFactorAuthEnabled) {
+        if (isTwoFactorAuthEnabled.toString() === 'true')
+          foundUser.isTwoFactorAuthEnabled = true;
+        else foundUser.isTwoFactorAuthEnabled = false;
+      }
+      createdUser = await queryRunner.manager
+        .getRepository(User)
+        .save(foundUser);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return createdUser;
   }
 }
