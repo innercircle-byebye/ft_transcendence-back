@@ -8,12 +8,14 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBadRequestResponse,
   ApiConsumes,
   ApiOkResponse,
   ApiOperation,
@@ -26,7 +28,9 @@ import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
 import { User } from '../entities/User';
 import { RegisterUserDto } from './dto/register.user.dto';
+import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
+import { UserUpdateImageDto } from './dto/user-updateimage.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
@@ -51,6 +55,40 @@ export class UserController {
     return this.userService.getUser(user.userId);
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '유저 정보 업데이트 v2' })
+  @Patch('/edit')
+  @UseInterceptors(
+    FileInterceptor('imagePath', {
+      storage: diskStorage({
+        destination: './profile_image',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+      // 파일 용량 제한
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  @ApiOkResponse({ type: UserDto })
+  @ApiBadRequestResponse({
+    description: '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.',
+  })
+  async editProfileVersionTwo(
+    @AuthUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() formData: UpdateUserVersionTwoDto,
+  ) {
+    if (file) {
+      this.userService.removeExistingImagePath(user.userId);
+      this.userService.updateProfileImagePath(
+        user.userId,
+        `http://back-nestjs:3005/profile_image/${file.filename}`,
+      );
+    }
+    return this.userService.updateUserProfileV2(user.userId, formData);
+  }
+
   @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '파라미터를 통한 유저 조회' })
   @Get('/:id')
@@ -66,6 +104,35 @@ export class UserController {
       throw new BadRequestException('요청값 비어있음');
     }
     return this.userService.updateUser(userId, updateData);
+  }
+
+  // @ApiOkResponse({ type: UpdateUserDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '유저 사진 업로드' })
+  @Put('/profile_image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './profile_image',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+      // 파일 용량 제한
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  @ApiOkResponse({ type: UserDto })
+  async uploadProfileImage(
+    @AuthUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() formData: UserUpdateImageDto,
+  ) {
+    this.userService.removeExistingImagePath(user.userId);
+    return this.userService.updateProfileImagePath(
+      user.userId,
+      `http://back-nestjs:3005/profile_image/${file.filename}`,
+    );
   }
 
   @ApiOkResponse({ type: UserDto })
