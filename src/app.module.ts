@@ -27,6 +27,7 @@ import { DmModule } from './dm/dm.module';
 import { User } from './entities/User';
 import { Friend } from './entities/Friend';
 import { Channel } from './entities/Channel';
+import { GameModule } from './game/game.module';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -87,6 +88,7 @@ AdminJS.registerAdapter({ Database, Resource });
     ScheduleModule.forRoot(),
     // AdminModule을 AdminJS가 사용 하고 있기 때문에 다른 이름으로 가져옴
     AdminUserModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -13,6 +13,7 @@ import {
 import { IChannel } from './interfaces/IChannel';
 import { IChannelChat } from './interfaces/IChannelChat';
 import { IChannelMember } from './interfaces/IChannelMember';
+import { IGameMember } from './interfaces/IGameMember';
 import { IUser } from './interfaces/IUser';
 
 export enum UserStatus {
@@ -179,6 +180,9 @@ export class User extends BaseEntity implements IUser {
 
   @OneToMany('ChannelMember', 'user')
   ChannelMembers: IChannelMember[];
+
+  @OneToMany('GameMember', 'user')
+  gameMembers: IGameMember[];
 
   constructor(partial: Partial<User>) {
     super();
