@@ -376,7 +376,7 @@ export class ChannelController {
       'Date객체에서 getTime()함수로 구한 값입니다.',
   })
   @ApiOkResponse({
-    type: Number,
+    type: String,
     description: 'after시간 이후로 해당 사용자로부터 새로 받은 DM의 개수',
   })
   @ApiBadRequestResponse({

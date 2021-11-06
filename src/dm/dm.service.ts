@@ -98,14 +98,15 @@ export class DmService {
     if (!sender) {
       throw new BadRequestException('존재하지 않는 사용자입니다.');
     }
-
-    return this.dmRepository.count({
+    const unreadsCount = await this.dmRepository.count({
       where: {
         senderId,
         receiverId: userId,
         createdAt: MoreThan(new Date(after)),
       },
     });
+
+    return unreadsCount.toString();
   }
 
   async getAllDMUsers(userId: number) {
