@@ -55,6 +55,40 @@ export class UserController {
     return this.userService.getUser(user.userId);
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '유저 정보 업데이트 v2' })
+  @Patch('/edit')
+  @UseInterceptors(
+    FileInterceptor('imagePath', {
+      storage: diskStorage({
+        destination: './profile_image',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+      // 파일 용량 제한
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  @ApiOkResponse({ type: UserDto })
+  @ApiBadRequestResponse({
+    description: '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.',
+  })
+  async editProfileVersionTwo(
+    @AuthUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() formData: UpdateUserVersionTwoDto,
+  ) {
+    if (file) {
+      this.userService.removeExistingImagePath(user.userId);
+      this.userService.updateProfileImagePath(
+        user.userId,
+        `http://back-nestjs:3005/profile_image/${file.filename}`,
+      );
+    }
+    return this.userService.updateUserProfileV2(user.userId, formData);
+  }
+
   @ApiOkResponse({ type: UserDto })
   @ApiOperation({ summary: '파라미터를 통한 유저 조회' })
   @Get('/:id')
@@ -99,42 +133,6 @@ export class UserController {
       user.userId,
       `http://back-nestjs:3005/profile_image/${file.filename}`,
     );
-  }
-
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: '유저 정보 업데이트 v2' })
-  @Patch('/:id/edit')
-  @UseInterceptors(
-    FileInterceptor('imagePath', {
-      storage: diskStorage({
-        destination: './profile_image',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-      // 파일 용량 제한
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    }),
-  )
-  @ApiOkResponse({ type: UserDto })
-  @ApiBadRequestResponse({
-    description: '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.',
-  })
-  async editProfileVersionTwo(
-    @Param('id') userId: number,
-    @AuthUser() user: User,
-    @UploadedFile() file: Express.Multer.File,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Body() formData: UpdateUserVersionTwoDto,
-  ) {
-    console.log(userId);
-    if (file) {
-      this.userService.removeExistingImagePath(user.userId);
-      this.userService.updateProfileImagePath(
-        user.userId,
-        `http://back-nestjs:3005/profile_image/${file.filename}`,
-      );
-    }
-    return this.userService.updateUserProfileV2(user.userId, formData);
   }
 
   @ApiOkResponse({ type: UserDto })
