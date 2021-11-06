@@ -512,7 +512,7 @@ export class ChannelService {
     if (!channelIdByName) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    const unreadsCount = await this.channelRepository.count({
+    const unreadsCount = await this.channelChatRepository.count({
       where: {
         channelId: channelIdByName.channelId,
         createdAt: MoreThan(new Date(after)),
