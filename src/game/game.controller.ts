@@ -31,12 +31,30 @@ import { GameRoomDto } from './dto/gameroom.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
+import { GameResultRankingDto } from './dto/gameresult-ranking.dto';
 
 @UseGuards(JwtTwoFactorGuard)
 @ApiTags('Game')
 @Controller('api/game')
 export class GameController {
   constructor(private gameService: GameService) {}
+
+  @ApiOperation({
+    summary: '전체 유저 랭킹조회',
+    description:
+      '전체 유저의 랭킹을 조회합니다.' +
+      'page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.',
+  })
+  @ApiOkResponse({
+    type: GameResultRankingDto,
+    isArray: true,
+  })
+  @Get('/ranking')
+  async getUserRanking(@Query('page') page: number) {
+    if (page) return this.gameService.getUserRaningWithPaging(page);
+    return this.gameService.getAllUserRanking();
+  }
 
   @ApiOperation({
     summary: '전체 게임 방 조회',

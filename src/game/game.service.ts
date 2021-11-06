@@ -803,4 +803,46 @@ export class GameService {
     };
     return resultTwo;
   }
+
+  async getAllUserRanking() {
+    const result = await Promise.all(
+      (
+        await this.userRepository.find()
+      )
+        .map((x) => x.userId)
+        .map(async (userId) => {
+          const { totalPlayCount, winCount, loseCount, winRate } =
+            await this.getUserWinRate(userId);
+          const { nickname, imagePath, experience } =
+            await this.userRepository.findOne({
+              where: { userId },
+            });
+          return {
+            totalPlayCount,
+            winCount,
+            loseCount,
+            winRate: winRate === 'NaN' ? '0.00000' : winRate,
+            experience,
+            user: {
+              userId,
+              nickname,
+              imagePath,
+            },
+          };
+        }),
+    );
+    result.sort((a, b) => {
+      if (a.winCount > b.winCount) return -1;
+      if (b.winCount > a.winCount) return 1;
+      return 0;
+    });
+    return result;
+  }
+
+  async getUserRaningWithPaging(pageNumber: number) {
+    const result = await this.getAllUserRanking();
+    const PAGE_SIZE = 10;
+
+    return result.slice((pageNumber - 1) * PAGE_SIZE, pageNumber * PAGE_SIZE);
+  }
 }
