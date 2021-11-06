@@ -165,11 +165,11 @@ export class GameService {
       .createQueryBuilder('gameroom')
       .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
       .innerJoinAndSelect('gamemember.user', 'user')
+      .orderBy('gameroom.createdAt', 'DESC')
       .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
       .addSelect('gameroom.password')
-      .orderBy('gameroom.createdAt', 'DESC')
-      .take(GAMEROOM_PER_PER_PAGE)
-      .skip(GAMEROOM_PER_PER_PAGE * (page - 1))
+      .limit(GAMEROOM_PER_PER_PAGE)
+      .offset(GAMEROOM_PER_PER_PAGE * (page - 1))
       .getMany();
 
     const allGameRoomsConverted = await Promise.all(
