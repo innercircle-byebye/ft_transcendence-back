@@ -506,6 +506,8 @@ export class GameService {
           const latestGameReseult = await queryRunner.manager
             .getRepository(GameResult)
             .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+          if (!latestGameReseult)
+            throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
           latestGameReseult.playerTwoId = null;
           await queryRunner.manager
             .getRepository(GameResult)
@@ -521,6 +523,8 @@ export class GameService {
             const latestGameReseult = await queryRunner.manager
               .getRepository(GameResult)
               .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+            if (!latestGameReseult)
+              throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
             latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
             latestGameReseult.playerTwoId = null;
             await queryRunner.manager
