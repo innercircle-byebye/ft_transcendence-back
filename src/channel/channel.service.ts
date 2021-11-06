@@ -513,12 +513,14 @@ export class ChannelService {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
 
-    return this.channelRepository.count({
-      where: {
-        channelId: channelIdByName.channelId,
-        createdAt: MoreThan(new Date(after)),
-      },
-    });
+    return this.channelRepository
+      .count({
+        where: {
+          channelId: channelIdByName.channelId,
+          createdAt: MoreThan(new Date(after)),
+        },
+      })
+      .toString();
   }
 
   // TODO: 예외처리
