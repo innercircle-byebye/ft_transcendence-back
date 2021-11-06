@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -10,6 +11,7 @@ import { hash, compare } from 'bcryptjs';
 import { User, UserStatus } from 'src/entities/User';
 import * as fs from 'fs';
 import { UpdateUserDto } from './dto/update.user.dto';
+import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 
 @Injectable()
 export class UserService {
@@ -245,5 +247,53 @@ export class UserService {
         // console.log('file deleted');
       });
     }
+  }
+
+  async updateUserProfileV2(userId: number, formData: UpdateUserVersionTwoDto) {
+    const { nickname, email, isHistoryPublic, isStatusPublic } = formData;
+    const queryRunner = this.connection.createQueryRunner();
+
+    const checkDuplicateEmail = this.userRepository.findOne({
+      where: { email },
+    });
+    if (checkDuplicateEmail)
+      throw new BadRequestException('동일한 이메일이 존재합니다.');
+    const checkDuplicateNickname = this.userRepository.findOne({
+      where: { nickname },
+    });
+    if (checkDuplicateNickname)
+      throw new BadRequestException('동일한 닉네임이 존재합니다.');
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let createdUser;
+    try {
+      const foundUser = await queryRunner.manager
+        .getRepository(User)
+        .findOne({ where: [{ userId }] });
+      if (foundUser.nickname !== nickname) foundUser.nickname = nickname;
+      if (foundUser.email !== email) foundUser.email = email;
+      if (isHistoryPublic) {
+        if (isHistoryPublic.toString() === 'true')
+          foundUser.isHistoryPublic = true;
+        else foundUser.isHistoryPublic = false;
+      }
+      if (isStatusPublic) {
+        if (isStatusPublic.toString() === 'true')
+          foundUser.isStatusPublic = true;
+        else foundUser.isStatusPublic = false;
+      }
+      createdUser = await queryRunner.manager
+        .getRepository(User)
+        .save(foundUser);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+    return createdUser;
   }
 }
