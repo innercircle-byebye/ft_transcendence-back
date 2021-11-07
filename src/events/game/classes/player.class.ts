@@ -71,6 +71,10 @@ export class Player {
     }
   }
 
+  getRole() {
+    return this.role;
+  }
+
   setKeyPress(keyCode: number, isDown: boolean) {
     if (keyCode === KeyCode.UP || keyCode === KeyCode.DOWN) {
       this.keypress[keyCode] = isDown;
