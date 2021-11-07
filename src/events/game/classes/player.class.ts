@@ -66,6 +66,12 @@ export class Player {
     }
   }
 
+  setKeyPress(keyCode: number, isDown: boolean) {
+    if (keyCode === KeyCode.UP || keyCode === KeyCode.DOWN) {
+      this.keypress[keyCode] = isDown;
+    }
+  }
+
   private moveup(): void {
     if (this.y - this.height / 2 - UNIT >= 0) {
       this.y -= UNIT;

@@ -49,4 +49,16 @@ export class RoomManagerService {
   getRoomsByGameRoomId() {
     return this.roomsByGameRoomId;
   }
+
+  getGameRoomIdBySocketId(socketId: string): number {
+    return this.gameRoomIdsBySocketId.get(socketId);
+  }
+
+  checkRoomExist(gameRoomId): boolean {
+    const room = this.roomsByGameRoomId.get(gameRoomId);
+    if (room) {
+      return true;
+    }
+    return false;
+  }
 }

@@ -10,6 +10,8 @@ export class Room {
 
   private participants: Socket[];
 
+  private players: Map<string, Player>;
+
   // private player1Score: Score;
   // private player2Score: Score;
   // private observers: Socket[];
@@ -20,6 +22,7 @@ export class Room {
     this.id = id;
     this.player1 = new Player(player1Socket.id, 'player1');
     this.participants.push(player1Socket);
+    this.players.set(player1Socket.id, this.player1);
   }
 
   getPlayers() {
@@ -29,9 +32,14 @@ export class Room {
     };
   }
 
+  getPlayerBySocketId(socketId: string) {
+    return this.players.get(socketId);
+  }
+
   setPlayer2(player2Socket: Socket) {
     this.player2 = new Player(player2Socket.id, 'player2');
     this.participants.push(player2Socket);
+    this.players.set(player2Socket.id, this.player2);
   }
 
   getParticipants(): Socket[] {
