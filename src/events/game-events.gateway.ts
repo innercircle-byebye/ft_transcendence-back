@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { RoomManagerService } from './game/services/room-manager.service';
+import { CLIENT_SETTINGS } from './game/SETTINGS';
 
 @WebSocketGateway({ namespace: '/game' })
 // eslint-disable-next-line prettier/prettier
@@ -35,6 +36,9 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     } else {
       this.roomManagerService.joinRoom(this.server, gameRoomId, socket);
     }
+    this.server
+      .to(`game-${gameRoomId.toString()}`)
+      .emit('initSetting', CLIENT_SETTINGS);
   }
 
   @SubscribeMessage('ready')
