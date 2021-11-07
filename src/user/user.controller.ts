@@ -163,7 +163,6 @@ export class UserController {
   async registerUserWithUploadProfileImage(
     @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
-    // TODO: form-data DTO도 생성할 수 있는지 확인하기
     @Body() formData: RegisterUserDto,
   ) {
     if (user.status !== UserStatus.NOT_REGISTERED)
@@ -178,7 +177,6 @@ export class UserController {
         user.imagePath,
       );
     }
-    // TODO: production 환경 일 경우
     return this.userService.registerUser(
       user.userId,
       formData.email,
