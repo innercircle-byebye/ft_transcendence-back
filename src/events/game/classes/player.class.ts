@@ -44,6 +44,11 @@ export class Player {
     this.width = SETTINGS.PLAYER.WIDTH;
     this.height = SETTINGS.PLAYER.HEIGHT;
     // this.score = 0;
+
+    this.keypress = {
+      [KeyCode.UP]: false,
+      [KeyCode.DOWN]: false,
+    };
   }
 
   getStatus() {

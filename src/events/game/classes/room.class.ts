@@ -8,9 +8,9 @@ export class Room {
 
   private player2: Player;
 
-  private participants: Socket[];
+  private participants: Socket[] = [];
 
-  private players: Map<string, Player>;
+  private players: Map<string, Player> = new Map<string, Player>();
 
   // private player1Score: Score;
   // private player2Score: Score;
