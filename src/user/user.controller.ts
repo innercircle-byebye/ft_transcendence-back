@@ -86,7 +86,7 @@ export class UserController {
       this.userService.removeExistingImagePath(user.userId);
       this.userService.updateProfileImagePath(
         user.userId,
-        `http://back-nestjs:3005/profile_image/${file.filename}`,
+        `/profile_image/${file.filename}`,
       );
     }
     return this.userService.updateUserProfileV2(user.userId, formData);
@@ -134,7 +134,7 @@ export class UserController {
     this.userService.removeExistingImagePath(user.userId);
     return this.userService.updateProfileImagePath(
       user.userId,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 
@@ -183,7 +183,7 @@ export class UserController {
       user.userId,
       formData.email,
       formData.nickname,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 }
