@@ -9,6 +9,7 @@ import { DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { ChatEventsGateway } from 'src/events/chat-events.gateway';
 import { Connection, MoreThan, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
 @Injectable()
@@ -117,7 +118,12 @@ export class ChannelService {
       const channel = new Channel();
       channel.name = name;
       channel.ownerId = ownerId;
-      if (password) channel.password = password;
+      if (password) {
+        channel.password = await bcrypt.hash(
+          password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
+      }
       channel.maxParticipantNum = maxParticipantNum;
       channelReturned = await queryRunner.manager
         .getRepository(Channel)
@@ -209,7 +215,10 @@ export class ChannelService {
     }
 
     if (typeof Object(password) !== undefined)
-      targetChannel.password = password;
+      targetChannel.password = await bcrypt.hash(
+        password,
+        parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+      );
     if (
       typeof Object(maxParticipantNum) !== undefined &&
       targetChannel.maxParticipantNum !== maxParticipantNum
@@ -294,7 +303,7 @@ export class ChannelService {
     if (!channel) {
       throw new BadRequestException('존재하지 않는 채널입니다.');
     }
-    if (channel.password && channel.password !== password)
+    if (channel.password && !(await bcrypt.compare(password, channel.password)))
       throw new BadRequestException('잘못된 비밀번호입니다.');
     const user = await this.userRepository.findOne({
       where: { userId: targetUserId || userId },
