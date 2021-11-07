@@ -29,7 +29,7 @@ export class Player {
     [KeyCode.DOWN]: boolean;
   };
 
-  constructur(id: string, role: string) {
+  constructor(id: string, role: string) {
     this.id = id;
     this.role = role;
     // this.ready = false;
