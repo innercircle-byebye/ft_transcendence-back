@@ -190,6 +190,7 @@ export class AuthController {
   @UseGuards(JwtGuard)
   async turnOnTwoFactorAuth(
     @AuthUser() user: User,
+    @Res({ passthrough: true }) res,
     @Body() { twoFactorAuthCode }: TwoFactorAuthCodeDto,
   ) {
     if (user.isTwoFactorAuthEnabled) {
@@ -209,6 +210,16 @@ export class AuthController {
       throw new UnauthorizedException('2FA 코드가 유효하지 않습니다.');
     }
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, true);
+
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.userId, true);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.userId, true);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
   }
 
   @ApiOperation({
@@ -229,11 +240,24 @@ export class AuthController {
   @Post('2fa/turn_off')
   @HttpCode(204)
   @UseGuards(JwtTwoFactorGuard)
-  async turnOffTwoFactorAuth(@AuthUser() user: User) {
+  async turnOffTwoFactorAuth(
+    @AuthUser() user: User,
+    @Res({ passthrough: true }) res,
+  ) {
     if (!user.isTwoFactorAuthEnabled) {
       throw new BadRequestException('2FA가 활성화되어있지 않습니다.');
     }
     await this.userService.onAndOffTwoFactorAuthentication(user.userId, false);
+
+    const { accessToken, ...accessOption } =
+      this.authService.getCookieWithJwtAccessToken(user.userId, false);
+    const { refreshToken, ...refreshOption } =
+      this.authService.getCookieWithJwtRefreshToken(user.userId, false);
+
+    await this.userService.setCurrentRefreshToken(refreshToken, user);
+
+    res.cookie('Authentication', accessToken, accessOption);
+    res.cookie('Refresh', refreshToken, refreshOption);
   }
 
   @ApiOperation({
