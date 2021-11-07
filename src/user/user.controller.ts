@@ -27,6 +27,7 @@ import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
 import { User } from '../entities/User';
+import { MeDto } from './dto/me.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
@@ -48,11 +49,13 @@ export class UserController {
   }
 
   // TODO: connect.sid 를 통해 현재 자기자신 조회할 수 있도록 업데이트 필요
-  @ApiOkResponse({ type: UserDto })
-  @ApiOperation({ summary: '유저 확인' })
+  @ApiOkResponse({ type: MeDto })
+  @ApiOperation({ summary: '내 정보 확인' })
   @Get('/me')
   async getUser(@AuthUser() user: User) {
-    return this.userService.getUser(user.userId);
+    const { twoFactorAuthSecret, currentHashedRefreshToken, ...me } =
+      await this.userService.getUser(user.userId);
+    return me;
   }
 
   @ApiConsumes('multipart/form-data')
