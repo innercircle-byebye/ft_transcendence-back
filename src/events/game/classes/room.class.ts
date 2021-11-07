@@ -22,6 +22,13 @@ export class Room {
     this.participants.push(player1Socket);
   }
 
+  getPlayers() {
+    return {
+      player1: this.player1,
+      player2: this.player2,
+    };
+  }
+
   setPlayer2(player2Socket: Socket) {
     this.player2 = new Player(player2Socket.id, 'player2');
     this.participants.push(player2Socket);

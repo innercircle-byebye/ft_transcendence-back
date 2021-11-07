@@ -46,6 +46,17 @@ export class Player {
     // this.score = 0;
   }
 
+  getStatus() {
+    return {
+      type: 'player',
+      role: this.role,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
+
   update(): void {
     if (this.keypress[KeyCode.UP]) {
       this.moveup();
