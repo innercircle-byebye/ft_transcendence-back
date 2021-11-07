@@ -31,9 +31,9 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     @MessageBody() gameRoomId: number,
   ) {
     if (!this.roomManagerService.checkRoomExist(gameRoomId)) {
-      this.roomManagerService.createRoom(gameRoomId, socket);
+      this.roomManagerService.createRoom(this.server, gameRoomId, socket);
     } else {
-      this.roomManagerService.joinRoom(gameRoomId, socket);
+      this.roomManagerService.joinRoom(this.server, gameRoomId, socket);
     }
   }
 
