@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -14,7 +13,7 @@ import { IGameResult } from './interfaces/IGameResult';
 import { IGameRoom } from './interfaces/IGameRoom';
 
 @Entity('game_room')
-export class GameRoom extends BaseEntity implements IGameRoom {
+export class GameRoom implements IGameRoom {
   @ApiProperty({
     description: '게임 방 ID번호',
     example: 1,

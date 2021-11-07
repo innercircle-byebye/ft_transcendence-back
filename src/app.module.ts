@@ -25,9 +25,11 @@ import { RelationModule } from './relation/relation.module';
 import { Admin } from './entities/Admin';
 import { DmModule } from './dm/dm.module';
 import { User } from './entities/User';
-import { Friend } from './entities/Friend';
 import { Channel } from './entities/Channel';
 import { GameModule } from './game/game.module';
+import { ChannelChat } from './entities/ChannelChat';
+import { ChannelMember } from './entities/ChannelMember';
+import { Announcement } from './entities/Announcement';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -53,7 +55,45 @@ AdminJS.registerAdapter({ Database, Resource });
       useFactory: (adminRepository: Repository<Admin>) => ({
         adminJsOptions: {
           rootPath: '/admin',
-          resources: [Admin, Channel, Friend, User],
+          resources: [
+            {
+              resource: Admin,
+              options: {
+                properties: { encryptedPassword: { isVisible: false } },
+                password: {
+                  type: 'string',
+                  isVisible: {
+                    list: false,
+                    edit: true,
+                    filter: false,
+                    show: false,
+                  },
+                },
+              },
+              actions: {
+                new: {
+                  before: async (request) => {
+                    if (request.payload.password) {
+                      request.payload = {
+                        ...request.payload,
+                        encryptedPassword: await bcrypt.hash(
+                          request.payload.password,
+                          process.env.BCRYPT_HASH_ROUNDS,
+                        ),
+                        password: undefined,
+                      };
+                    }
+                    return request;
+                  },
+                },
+              },
+            },
+            Announcement,
+            User,
+            Channel,
+            ChannelMember,
+            ChannelChat,
+          ],
         },
         auth: {
           authenticate: async (email, password) => {

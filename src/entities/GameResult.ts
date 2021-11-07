@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  BaseEntity,
   Column,
   Entity,
   JoinColumn,
@@ -18,7 +17,7 @@ export enum BallSpeed {
   SLOW = 'slow',
 }
 @Entity('game_result')
-export class GameResult extends BaseEntity implements IGameResult {
+export class GameResult implements IGameResult {
   @ApiProperty({
     description: '게임 결과 ID 번호',
     example: 1,
