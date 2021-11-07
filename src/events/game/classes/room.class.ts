@@ -8,6 +8,8 @@ export class Room {
 
   private player2: Player;
 
+  private participants: Socket[];
+
   // private player1Score: Score;
   // private player2Score: Score;
   // private observers: Socket[];
@@ -17,9 +19,15 @@ export class Room {
   constructor(id: number, player1Socket: Socket) {
     this.id = id;
     this.player1 = new Player(player1Socket.id, 'player1');
+    this.participants.push(player1Socket);
   }
 
-  setPlayer2(player1Socket: Socket) {
-    this.player2 = new Player(player1Socket.id, 'player2');
+  setPlayer2(player2Socket: Socket) {
+    this.player2 = new Player(player2Socket.id, 'player2');
+    this.participants.push(player2Socket);
+  }
+
+  getParticipants(): Socket[] {
+    return this.participants;
   }
 }
