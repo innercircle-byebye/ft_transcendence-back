@@ -12,8 +12,6 @@ export class RoomManagerService {
     const room = new Room(gameRoomId, player1Socket);
     player1Socket.join(`game-${gameRoomId.toString()}`);
 
-    server.to(`game-${gameRoomId.toString()}`).emit('in');
-
     this.roomsByGameRoomId.set(gameRoomId, room);
     this.gameRoomIdsBySocketId.set(player1Socket.id, gameRoomId);
     console.log('Room Created : ', gameRoomId);
@@ -23,8 +21,6 @@ export class RoomManagerService {
     const room = this.roomsByGameRoomId.get(gameRoomId);
     room.setPlayer2(player2Socket);
     player2Socket.join(`game-${gameRoomId.toString()}`);
-
-    server.to(`game-${gameRoomId.toString()}`).emit('in');
 
     this.gameRoomIdsBySocketId.set(player2Socket.id, gameRoomId);
   }
