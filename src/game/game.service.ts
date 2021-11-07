@@ -6,6 +6,7 @@ import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
@@ -238,8 +239,12 @@ export class GameService {
     try {
       const newGameRoom = new GameRoom();
       newGameRoom.title = gameRoomCreateDto.title;
-      if (gameRoomCreateDto.password)
-        newGameRoom.password = gameRoomCreateDto.password;
+      if (gameRoomCreateDto.password) {
+        newGameRoom.password = await bcrypt.hash(
+          gameRoomCreateDto.password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
+      }
       newGameRoom.maxParticipantNum = gameRoomCreateDto.maxParticipantNum;
       gameRoomReturned = await queryRunner.manager
         .getRepository(GameRoom)
@@ -314,8 +319,12 @@ export class GameService {
         .findOne({ where: { gameRoomId } });
       if (gameRoomUpdateDto.title)
         targetGameRoom.title = gameRoomUpdateDto.title;
-      if (typeof Object(gameRoomUpdateDto.password) !== undefined)
-        targetGameRoom.password = gameRoomUpdateDto.password;
+      if (typeof Object(gameRoomUpdateDto.password) !== undefined) {
+        targetGameRoom.password = await bcrypt.hash(
+          gameRoomUpdateDto.password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
+      }
       if (
         typeof Object(gameRoomUpdateDto.maxParticipantNum) !== undefined &&
         targetGameRoom.maxParticipantNum !== gameRoomUpdateDto.maxParticipantNum
@@ -362,7 +371,7 @@ export class GameService {
       throw new BadRequestException('게임방이 존재하지 않습니다.');
     if (
       typeof Object(password) !== undefined &&
-      checkGameRoom.password !== password
+      !(await bcrypt.compare(password, checkGameRoom.password))
     )
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     const checkGameMemberInRoom = await this.gameMemberRepository.findOne({
@@ -434,7 +443,7 @@ export class GameService {
       throw new BadRequestException('게임방이 존재하지 않습니다.');
     if (
       typeof Object(password) !== undefined &&
-      checkGameRoom.password !== password
+      !(await bcrypt.compare(password, checkGameRoom.password))
     )
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     if (this.checkUserAlreadyInGameRoom(userId))

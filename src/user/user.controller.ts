@@ -27,6 +27,7 @@ import { AuthUser } from 'src/decorators/auth-user.decorator';
 import { UserStatus } from 'src/entities/User';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.util';
 import { User } from '../entities/User';
+import { MeDto } from './dto/me.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
@@ -48,11 +49,13 @@ export class UserController {
   }
 
   // TODO: connect.sid 를 통해 현재 자기자신 조회할 수 있도록 업데이트 필요
-  @ApiOkResponse({ type: UserDto })
-  @ApiOperation({ summary: '유저 확인' })
+  @ApiOkResponse({ type: MeDto })
+  @ApiOperation({ summary: '내 정보 확인' })
   @Get('/me')
   async getUser(@AuthUser() user: User) {
-    return this.userService.getUser(user.userId);
+    const { twoFactorAuthSecret, currentHashedRefreshToken, ...me } =
+      await this.userService.getUser(user.userId);
+    return me;
   }
 
   @ApiConsumes('multipart/form-data')
@@ -83,7 +86,7 @@ export class UserController {
       this.userService.removeExistingImagePath(user.userId);
       this.userService.updateProfileImagePath(
         user.userId,
-        `http://back-nestjs:3005/profile_image/${file.filename}`,
+        `/profile_image/${file.filename}`,
       );
     }
     return this.userService.updateUserProfileV2(user.userId, formData);
@@ -131,7 +134,7 @@ export class UserController {
     this.userService.removeExistingImagePath(user.userId);
     return this.userService.updateProfileImagePath(
       user.userId,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 
@@ -160,7 +163,6 @@ export class UserController {
   async registerUserWithUploadProfileImage(
     @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
-    // TODO: form-data DTO도 생성할 수 있는지 확인하기
     @Body() formData: RegisterUserDto,
   ) {
     if (user.status !== UserStatus.NOT_REGISTERED)
@@ -175,12 +177,11 @@ export class UserController {
         user.imagePath,
       );
     }
-    // TODO: production 환경 일 경우
     return this.userService.registerUser(
       user.userId,
       formData.email,
       formData.nickname,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 }

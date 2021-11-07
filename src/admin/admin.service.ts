@@ -55,7 +55,10 @@ export class AdminService {
     if (checkNickname) {
       throw new ForbiddenException('이미 존재하는 닉네임입니다.');
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+    );
 
     const newAdmin = new Admin();
     newAdmin.email = email;
@@ -93,7 +96,10 @@ export class AdminService {
       }
       // 비밀번호는 중복 검사 필요없이 항상 업데이트 되도록
       if (password) {
-        const newPassword = await bcrypt.hash(password, 12);
+        const newPassword = await bcrypt.hash(
+          password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
         targetAdmin.password = newPassword;
       }
       return this.adminRepository.save(targetAdmin);
