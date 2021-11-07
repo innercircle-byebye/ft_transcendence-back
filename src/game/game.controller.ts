@@ -78,6 +78,7 @@ export class GameController {
   @Get('/room/list')
   getGameRooms(@Query('perPage') perPage: number, @Query('page') page: number) {
     if (!perPage || !page) return this.gameService.getAllGameRooms();
+    console.log(typeof perPage);
     return this.gameService.getAllGameRoomsWithPaging(perPage, page);
   }
 

@@ -44,6 +44,36 @@ const GameRoomInitData = [
     password: null,
     maxParticipantNum: 10,
   },
+  {
+    gameRoomId: 8,
+    title: '게임방 8--playable 테스트 ',
+    password: null,
+    maxParticipantNum: 10,
+  },
+  {
+    gameRoomId: 9,
+    title: '게임방 9--playable 테스트 ',
+    password: null,
+    maxParticipantNum: 10,
+  },
+  {
+    gameRoomId: 10,
+    title: '게임방 10--playable 테스트 ',
+    password: null,
+    maxParticipantNum: 10,
+  },
+  {
+    gameRoomId: 11,
+    title: '게임방 11--playable 테스트 ',
+    password: null,
+    maxParticipantNum: 10,
+  },
+  {
+    gameRoomId: 12,
+    title: '게임방 12--playable 테스트 ',
+    password: null,
+    maxParticipantNum: 10,
+  },
 ];
 
 const GameMemberInitData = [

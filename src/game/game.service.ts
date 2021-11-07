@@ -161,19 +161,25 @@ export class GameService {
 
   async getAllGameRoomsWithPaging(perPage: number, page: number) {
     // 한 화면에 8번
-    const allGameRoomsWithPassword = await this.gameRoomRepository
+    console.log(perPage);
+    console.log(page);
+    const queryBuilder = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
-      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
-      .innerJoinAndSelect('gamemember.user', 'user')
       .orderBy('gameroom.createdAt', 'DESC')
-      .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
       .addSelect('gameroom.password')
       .limit(perPage)
-      .offset(perPage * (page - 1))
+      .offset(8 * (page - 1));
+
+    const allGameRoomsWithJoin = queryBuilder
+      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
+      .innerJoinAndSelect('gamemember.user', 'user')
+      .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
       .getMany();
 
     const allGameRoomsConverted = await Promise.all(
-      allGameRoomsWithPassword.map(async (gameRoomList: any) => {
+      (
+        await allGameRoomsWithJoin
+      ).map(async (gameRoomList: any) => {
         gameRoomList.gameMembers.map((x) => {
           x.userId = x.user.userId;
           x.nickname = x.user.nickname;
