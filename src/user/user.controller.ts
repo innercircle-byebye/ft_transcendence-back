@@ -86,7 +86,7 @@ export class UserController {
       this.userService.removeExistingImagePath(user.userId);
       this.userService.updateProfileImagePath(
         user.userId,
-        `http://back-nestjs:3005/profile_image/${file.filename}`,
+        `/profile_image/${file.filename}`,
       );
     }
     return this.userService.updateUserProfileV2(user.userId, formData);
@@ -134,7 +134,7 @@ export class UserController {
     this.userService.removeExistingImagePath(user.userId);
     return this.userService.updateProfileImagePath(
       user.userId,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 
@@ -163,7 +163,6 @@ export class UserController {
   async registerUserWithUploadProfileImage(
     @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
-    // TODO: form-data DTO도 생성할 수 있는지 확인하기
     @Body() formData: RegisterUserDto,
   ) {
     if (user.status !== UserStatus.NOT_REGISTERED)
@@ -178,12 +177,11 @@ export class UserController {
         user.imagePath,
       );
     }
-    // TODO: production 환경 일 경우
     return this.userService.registerUser(
       user.userId,
       formData.email,
       formData.nickname,
-      `http://back-nestjs:3005/profile_image/${file.filename}`,
+      `/profile_image/${file.filename}`,
     );
   }
 }
