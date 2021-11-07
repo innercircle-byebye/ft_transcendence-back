@@ -43,37 +43,42 @@ export class GameController {
     summary: '전체 유저 랭킹조회',
     description:
       '전체 유저의 랭킹을 조회합니다.\n\n개발단계라 승리 횟수(winCount) 기준으로 정렬하였습니다.' +
-      'page(원하는 페이지)값을 query로 받으며,\n\n' +
-      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.\n\n' +
-      '(한 페이지에는 10개의 user가 전달됩니다)',
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'perPage, page가 하나라도 없거나 숫자값이 아니면,전체 게임방을 조회합니다.',
   })
   @ApiOkResponse({
     type: GameResultRankingDto,
     isArray: true,
   })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiQuery({ name: 'page', required: false })
   @Get('/ranking')
-  async getUserRanking(@Query('page') page: number) {
-    if (page) return this.gameService.getUserRaningWithPaging(page);
-    return this.gameService.getAllUserRanking();
+  async getUserRanking(
+    @Query('perPage') perPage: number,
+    @Query('page') page: number,
+  ) {
+    if (!perPage || !page) return this.gameService.getAllUserRanking();
+    return this.gameService.getUserRaningWithPaging(perPage, page);
   }
 
   @ApiOperation({
     summary: '전체 게임 방 조회',
     description:
       '생성 되어 있는 전체 게임 방을 조회합니다.\n\n' +
-      'page(원하는 페이지)값을 query로 받으며,\n\n' +
-      'page가 전달 되지 않으면, 전체 게임방을 조회합니다.',
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'perPage, page가 하나라도 없거나 숫자값이 아니면, 전체 게임방을 조회합니다.',
   })
   @ApiOkResponse({
     type: GameRoomListDto,
     isArray: true,
     description: '전체 게임 방 목록',
   })
+  @ApiQuery({ name: 'perPage', required: false })
   @ApiQuery({ name: 'page', required: false })
   @Get('/room/list')
-  getGameRooms(@Query('page') page: number) {
-    if (!page) return this.gameService.getAllGameRooms();
-    return this.gameService.getAllGameRoomsWithPaging(page);
+  getGameRooms(@Query('perPage') perPage: number, @Query('page') page: number) {
+    if (!perPage || !page) return this.gameService.getAllGameRooms();
+    return this.gameService.getAllGameRoomsWithPaging(perPage, page);
   }
 
   @ApiOperation({
