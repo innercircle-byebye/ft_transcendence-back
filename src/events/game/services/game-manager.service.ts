@@ -24,6 +24,12 @@ export class GameManagerService {
           statuses.push(player2.getStatus());
         }
 
+        const ball = room.getBall();
+        if (ball) {
+          ball.update();
+          statuses.push(ball.getStatus());
+        }
+
         this.gameEventsGateway.server
           .to(`game-${gameRoomId.toString()}`)
           .emit('update', statuses);
