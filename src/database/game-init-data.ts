@@ -42,37 +42,37 @@ const GameRoomInitData = [
     gameRoomId: 7,
     title: '게임방 7--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 2,
   },
   {
     gameRoomId: 8,
     title: '게임방 8--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 3,
   },
   {
     gameRoomId: 9,
     title: '게임방 9--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 4,
   },
   {
     gameRoomId: 10,
     title: '게임방 10--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 5,
   },
   {
     gameRoomId: 11,
     title: '게임방 11--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 6,
   },
   {
     gameRoomId: 12,
     title: '게임방 12--playable 테스트 ',
     password: null,
-    maxParticipantNum: 10,
+    maxParticipantNum: 7,
   },
 ];
 
@@ -130,6 +130,31 @@ const GameMemberInitData = [
   {
     gameRoomId: 7,
     userId: 13,
+    status: GameMemberStatus.PLAYER_ONE,
+  },
+  {
+    gameRoomId: 8,
+    userId: 14,
+    status: GameMemberStatus.PLAYER_ONE,
+  },
+  {
+    gameRoomId: 9,
+    userId: 15,
+    status: GameMemberStatus.PLAYER_ONE,
+  },
+  {
+    gameRoomId: 10,
+    userId: 16,
+    status: GameMemberStatus.PLAYER_ONE,
+  },
+  {
+    gameRoomId: 11,
+    userId: 17,
+    status: GameMemberStatus.PLAYER_ONE,
+  },
+  {
+    gameRoomId: 12,
+    userId: 18,
     status: GameMemberStatus.PLAYER_ONE,
   },
 ];

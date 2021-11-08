@@ -163,25 +163,25 @@ export class GameService {
     // 한 화면에 8번
     console.log(perPage);
     console.log(page);
-    const queryBuilder = await this.gameRoomRepository
+    const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
       .orderBy('gameroom.createdAt', 'DESC')
       .addSelect('gameroom.password')
       .limit(perPage)
-      .offset(8 * (page - 1));
-
-    const allGameRoomsWithJoin = queryBuilder
-      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
-      .innerJoinAndSelect('gamemember.user', 'user')
-      .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
+      .offset(8 * (page - 1))
       .getMany();
 
     const allGameRoomsConverted = await Promise.all(
-      (
-        await allGameRoomsWithJoin
-      ).map(async (gameRoomList: any) => {
+      allGameRoomsList.map(async (gameRoomList: any) => {
+        gameRoomList.gameMembers = await this.gameMemberRepository
+          .createQueryBuilder('gamemember')
+          .innerJoinAndSelect('gamemember.user', 'user')
+          .where('gamemember.gameRoomId = :gameRoomId', {
+            gameRoomId: gameRoomList.gameRoomId,
+          })
+          .select(['gamemember.status', 'gamemember.userId', 'user.nickname'])
+          .getMany();
         gameRoomList.gameMembers.map((x) => {
-          x.userId = x.user.userId;
           x.nickname = x.user.nickname;
           delete x.user;
           return x;
