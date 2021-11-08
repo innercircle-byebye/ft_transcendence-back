@@ -118,11 +118,14 @@ export class GameController {
       '이미 존재하는 게임방 이름입니다.',
   })
   @Post('/room')
+  @ApiQuery({ name: 'invitedUserId', required: false })
   async createGameRoom(
-    @AuthUser() user: User,
+    @Query('invitedUserId') invitedUserId: number | null,
+    @AuthUser()
+    user: User,
     @Body() body: GameRoomCreateDto,
   ) {
-    return this.gameService.createGameRoom(user.userId, body);
+    return this.gameService.createGameRoom(user.userId, body, invitedUserId);
   }
 
   @ApiOperation({

@@ -219,6 +219,7 @@ export class GameService {
   async createGameRoom(
     playerOneId: number,
     gameRoomCreateDto: GameRoomCreateDto,
+    invitedUserId: number | null,
   ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -277,6 +278,12 @@ export class GameService {
     } finally {
       await queryRunner.release();
     }
+    if (invitedUserId)
+      this.inviteUserToGame(
+        gameRoomReturned.gameRoomId,
+        playerOneId,
+        invitedUserId,
+      );
     return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
   }
 
