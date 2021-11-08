@@ -83,6 +83,20 @@ export class GameController {
   }
 
   @ApiOperation({
+    summary: '전체 게임 방 (개수)',
+    description: '전체 게임 방의 개수를 조회합니다.\n\n',
+  })
+  @ApiOkResponse({
+    type: Number,
+    isArray: true,
+    description: '전체 게임 방 갯수',
+  })
+  @Get('/room/list/count')
+  countGameRooms() {
+    return this.gameService.countGameRooms();
+  }
+
+  @ApiOperation({
     summary: '게임 방 정보 조회',
     description:
       '파라미터로 전달 된 게임 방 ID를 통한 게임 방의 정보를 조회합니다.\n\n',

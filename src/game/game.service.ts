@@ -126,6 +126,13 @@ export class GameService {
     return gameRoomForReturn;
   }
 
+  countGameRooms() {
+    return this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .addSelect('gameroom.password')
+      .getCount();
+  }
+
   async getAllGameRooms(): Promise<GameRoomDto[]> {
     const allGameRoomsWithPassword = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
