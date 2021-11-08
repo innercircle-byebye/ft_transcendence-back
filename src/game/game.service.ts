@@ -278,12 +278,14 @@ export class GameService {
     } finally {
       await queryRunner.release();
     }
-    if (invitedUserId)
+    if (invitedUserId) {
+      console.log('1:', invitedUserId);
       this.inviteUserToGame(
         gameRoomReturned.gameRoomId,
         playerOneId,
         invitedUserId,
       );
+    }
     return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
   }
 
@@ -872,6 +874,7 @@ export class GameService {
     userId: number,
     invitedUserId: number,
   ) {
+    console.log('2:', invitedUserId, userId);
     const targetChannel = await this.gameRoomRepository.findOne({
       where: { gameRoomId },
     });
