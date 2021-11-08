@@ -50,13 +50,13 @@ export class Ball {
     this.y += this.dy * this.speed;
 
     if (this.x <= -this.width * 2) {
-      // TODO : 점수 올리기
+      this.players[1].increaseScore();
       this.dx = Math.abs(this.dx);
       this.initialize();
     }
 
     if (this.x >= SETTINGS.WIDTH + this.width) {
-      // TODO : 점수 올리기
+      this.players[0].increaseScore();
       this.dx = -Math.abs(this.dx);
       this.initialize();
     }

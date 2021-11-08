@@ -22,7 +22,7 @@ export class Player {
 
   private height: number;
 
-  // private score: number;
+  private score: number;
 
   private keypress: {
     [KeyCode.UP]: boolean;
@@ -43,7 +43,7 @@ export class Player {
 
     this.width = SETTINGS.PLAYER.WIDTH;
     this.height = SETTINGS.PLAYER.HEIGHT;
-    // this.score = 0;
+    this.score = 0;
 
     this.keypress = {
       [KeyCode.UP]: false,
@@ -59,6 +59,7 @@ export class Player {
       y: this.y,
       width: this.width,
       height: this.height,
+      score: this.score,
     };
   }
 
@@ -79,6 +80,10 @@ export class Player {
     if (keyCode === KeyCode.UP || keyCode === KeyCode.DOWN) {
       this.keypress[keyCode] = isDown;
     }
+  }
+
+  increaseScore() {
+    this.score += 1;
   }
 
   private moveup(): void {
