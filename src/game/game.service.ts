@@ -159,24 +159,29 @@ export class GameService {
     return allGameRoomsConverted;
   }
 
-  async getAllGameRoomsWithPaging(page: number) {
+  async getAllGameRoomsWithPaging(perPage: number, page: number) {
     // 한 화면에 8번
-    const GAMEROOM_PER_PER_PAGE = 8;
-    const allGameRoomsWithPassword = await this.gameRoomRepository
+    console.log(perPage);
+    console.log(page);
+    const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
-      .innerJoinAndSelect('gameroom.gameMembers', 'gamemember')
-      .innerJoinAndSelect('gamemember.user', 'user')
-      .orderBy('gameroom.createdAt', 'DESC')
-      .select(['gameroom', 'user.userId', 'user.nickname', 'gamemember.status'])
+      .orderBy('gameroom.gameRoomId', 'ASC')
       .addSelect('gameroom.password')
-      .limit(GAMEROOM_PER_PER_PAGE)
-      .offset(GAMEROOM_PER_PER_PAGE * (page - 1))
+      .limit(perPage)
+      .offset(perPage * (page - 1))
       .getMany();
 
     const allGameRoomsConverted = await Promise.all(
-      allGameRoomsWithPassword.map(async (gameRoomList: any) => {
+      allGameRoomsList.map(async (gameRoomList: any) => {
+        gameRoomList.gameMembers = await this.gameMemberRepository
+          .createQueryBuilder('gamemember')
+          .innerJoinAndSelect('gamemember.user', 'user')
+          .where('gamemember.gameRoomId = :gameRoomId', {
+            gameRoomId: gameRoomList.gameRoomId,
+          })
+          .select(['gamemember.status', 'gamemember.userId', 'user.nickname'])
+          .getMany();
         gameRoomList.gameMembers.map((x) => {
-          x.userId = x.user.userId;
           x.nickname = x.user.nickname;
           delete x.user;
           return x;
@@ -848,10 +853,9 @@ export class GameService {
     return result;
   }
 
-  async getUserRaningWithPaging(pageNumber: number) {
+  async getUserRaningWithPaging(perPage: number, pageNumber: number) {
     const result = await this.getAllUserRanking();
-    const PAGE_SIZE = 10;
 
-    return result.slice((pageNumber - 1) * PAGE_SIZE, pageNumber * PAGE_SIZE);
+    return result.slice((pageNumber - 1) * perPage, pageNumber * perPage);
   }
 }
