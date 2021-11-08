@@ -133,11 +133,6 @@ const GameMemberInitData = [
     status: GameMemberStatus.PLAYER_TWO,
   },
   {
-    gameRoomId: 4,
-    userId: 9,
-    status: GameMemberStatus.OBSERVER,
-  },
-  {
     gameRoomId: 6,
     userId: 12,
     status: GameMemberStatus.PLAYER_ONE,
