@@ -775,7 +775,63 @@ export class GameService {
     return returnTargetUser;
   }
 
-  async getGameResults(userId: number): Promise<GameResultUserDto[]> {
+  async countGameResultsOfUser(userId: number) {
+    return (await this.getAllGameResults(userId)).length;
+  }
+
+  async getAllGameResults(userId: number): Promise<GameResultUserDto[]> {
+    const result = await this.gameResultRepository
+      .createQueryBuilder('gameresults')
+      .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
+      .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.startAt IS NOT NULL').andWhere(
+            'gameresults.endAt is not null',
+          );
+        }),
+      )
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.playerOneId = :userId', { userId }).orWhere(
+            'gameresults.playerTwoId = :userId',
+            { userId },
+          );
+        }),
+      )
+      .getMany();
+
+    // result.map((gameResults) => {
+    //   [
+    //     'userId',
+    //     'email',
+    //     'rankId',
+    //     'intraUsername',
+    //     'imagePath',
+    //     'status',
+    //     'experience',
+    //     'banDate',
+    //     'isStatusPublic',
+    //     'isHistoryPublic',
+    //     'createdAt',
+    //     ' lastModifiedAt',
+    //     'deletedAt',
+    //     'isTwoFactorAuthEnabled',
+    //     'twoFactorAuthSecret',
+    //     'currentHAshedRefreshToken',
+    //   ].forEach(function (key) {
+    //     delete gameResults.playerOne[key];
+    //   });
+    //   return gameResults;
+    // });
+    return result;
+  }
+
+  async getGameResultsPagenation(
+    perPage: number,
+    page: number,
+    userId: number,
+  ): Promise<GameResultUserDto[]> {
     const result = await this.gameResultRepository
       .createQueryBuilder('gameresults')
       .andWhere(
@@ -793,7 +849,10 @@ export class GameService {
           );
         }),
       )
+      .limit(perPage)
+      .offset(perPage * (page - 1))
       .getMany();
+
     return result;
   }
 
@@ -811,7 +870,7 @@ export class GameService {
   }
 
   async getUserWinRate(userId: number): Promise<GameResultWinRateDto> {
-    const result = await this.getGameResults(userId);
+    const result = await this.getAllGameResults(userId);
     const totalPlayCount = result.length;
     const winCount = this.getUserWinCount(userId, result);
     const loseCount = totalPlayCount - winCount;
