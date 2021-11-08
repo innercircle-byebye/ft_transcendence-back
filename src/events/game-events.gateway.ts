@@ -45,8 +45,28 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
 
   @SubscribeMessage('ready')
   handleReady(@ConnectedSocket() socket: Socket) {
-    console.log('-- ready --');
-    console.log(socket.id);
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+    if (gameRoomId) {
+      const room = this.roomManagerService
+        .getRoomsByGameRoomId()
+        .get(gameRoomId);
+      room.getPlayerBySocketId(socket.id).setReady(true);
+    }
+  }
+
+  @SubscribeMessage('unReady')
+  handleUnReady(@ConnectedSocket() socket: Socket) {
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+    if (gameRoomId) {
+      const room = this.roomManagerService
+        .getRoomsByGameRoomId()
+        .get(gameRoomId);
+      room.getPlayerBySocketId(socket.id).setReady(false);
+    }
   }
 
   @SubscribeMessage('keyDown')

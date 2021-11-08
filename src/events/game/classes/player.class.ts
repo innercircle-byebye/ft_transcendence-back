@@ -12,7 +12,7 @@ export class Player {
 
   private role: string;
 
-  // private ready: boolean;
+  private ready: boolean;
 
   private x: number;
 
@@ -32,7 +32,7 @@ export class Player {
   constructor(id: string, role: string) {
     this.id = id;
     this.role = role;
-    // this.ready = false;
+    this.ready = false;
 
     if (role === 'player1') {
       this.x = SETTINGS.PLAYER.GAP;
@@ -84,6 +84,14 @@ export class Player {
 
   increaseScore() {
     this.score += 1;
+  }
+
+  setReady(value: boolean) {
+    this.ready = value;
+  }
+
+  getReady() {
+    return this.ready;
   }
 
   private moveup(): void {
