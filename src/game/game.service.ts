@@ -870,7 +870,7 @@ export class GameService {
       totalPlayCount,
       winCount,
       loseCount,
-      winRate: winRate.toFixed(5),
+      winRate: Number.isNaN(winRate) ? '0' : winRate.toFixed(5),
     };
     return resultTwo;
   }
