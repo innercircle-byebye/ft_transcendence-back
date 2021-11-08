@@ -6,6 +6,8 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -15,6 +17,7 @@ import { IChannelChat } from './interfaces/IChannelChat';
 import { IChannelMember } from './interfaces/IChannelMember';
 import { IGameMember } from './interfaces/IGameMember';
 import { IUser } from './interfaces/IUser';
+import { Rank } from './Rank';
 
 export enum UserStatus {
   ONLINE = 'online',
@@ -183,6 +186,10 @@ export class User extends BaseEntity implements IUser {
 
   @OneToMany('GameMember', 'user')
   gameMembers: IGameMember[];
+
+  @ManyToOne(() => Rank)
+  @JoinColumn({ name: 'rank' })
+  rank: Rank;
 
   constructor(partial: Partial<User>) {
     super();
