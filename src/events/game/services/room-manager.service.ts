@@ -9,7 +9,7 @@ export class RoomManagerService {
   gameRoomIdsBySocketId: Map<string, number> = new Map<string, number>();
 
   createRoom(server: Server, gameRoomId: number, player1Socket: Socket): void {
-    const room = new Room(gameRoomId, player1Socket);
+    const room = new Room(gameRoomId, player1Socket, server);
     player1Socket.join(`game-${gameRoomId.toString()}`);
 
     this.roomsByGameRoomId.set(gameRoomId, room);

@@ -12,27 +12,8 @@ export class GameManagerService {
 
   @Interval(10)
   update() {
-    this.roomManagerService
-      .getRoomsByGameRoomId()
-      .forEach((room, gameRoomId) => {
-        const statuses = [];
-        const { player1, player2 } = room.getPlayers();
-        player1.update();
-        statuses.push(player1.getStatus());
-        if (player2) {
-          player2.update();
-          statuses.push(player2.getStatus());
-        }
-
-        const ball = room.getBall();
-        if (ball) {
-          ball.update();
-          statuses.push(ball.getStatus());
-        }
-
-        this.gameEventsGateway.server
-          .to(`game-${gameRoomId.toString()}`)
-          .emit('update', statuses);
-      });
+    this.roomManagerService.getRoomsByGameRoomId().forEach((room) => {
+      room.loop();
+    });
   }
 }

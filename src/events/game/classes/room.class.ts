@@ -1,6 +1,11 @@
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
+
+export enum RoomStatus {
+  READY = 'ready',
+  PLAYING = 'playing',
+}
 
 export class Room {
   private id: number;
@@ -15,17 +20,23 @@ export class Room {
 
   private ball: Ball;
 
-  // private player1Score: Score;
-  // private player2Score: Score;
+  private roomStatus: RoomStatus;
+
+  private server: Server;
+
+  loop: () => void;
+
   // private observers: Socket[];
   // private countdown: Countdown;
 
-  constructor(id: number, player1Socket: Socket) {
+  constructor(id: number, player1Socket: Socket, server: Server) {
     this.id = id;
     this.player1 = new Player(player1Socket.id, 'player1');
     this.participants.push(player1Socket);
     this.players.set(player1Socket.id, this.player1);
     this.ball = null;
+    this.server = server;
+    this.readyInit();
   }
 
   getPlayers() {
@@ -52,5 +63,54 @@ export class Room {
 
   getBall(): Ball | null {
     return this.ball;
+  }
+
+  readyInit(): void {
+    this.roomStatus = RoomStatus.READY;
+    this.loop = this.readyLoop;
+  }
+
+  readyLoop(): void {
+    if (this.player1?.getReady() && this.player2?.getReady()) {
+      this.playingInit();
+    }
+    const statuses = [];
+    this.player1.update();
+    statuses.push(this.player1.getStatus());
+    if (this.player2) {
+      this.player2.update();
+      statuses.push(this.player2.getStatus());
+    }
+
+    if (this.ball) {
+      // this.ball.update();
+      statuses.push(this.ball.getStatus());
+    }
+
+    this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
+  }
+
+  readyDestroy(): void {}
+
+  playingInit(): void {
+    this.roomStatus = RoomStatus.PLAYING;
+    this.loop = this.playingLoop;
+  }
+
+  playingLoop(): void {
+    const statuses = [];
+    this.player1.update();
+    statuses.push(this.player1.getStatus());
+    if (this.player2) {
+      this.player2.update();
+      statuses.push(this.player2.getStatus());
+    }
+
+    if (this.ball) {
+      this.ball.update();
+      statuses.push(this.ball.getStatus());
+    }
+
+    this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
   }
 }
