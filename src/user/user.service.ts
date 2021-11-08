@@ -50,6 +50,28 @@ export class UserService {
     return targetUser;
   }
 
+  async getUserByNickname(nickname: string) {
+    const targetUser: any = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.nickname = :userId', { nickname })
+      .getOne();
+
+    if (!targetUser) {
+      // 이미 삭제 처리가 되어 있는 경우
+      throw new ForbiddenException('존재하지 않는 사용자입니다');
+    }
+
+    targetUser.rankInfo = await this.rankRepository.findOne({
+      where: { criteriaExperience: LessThanOrEqual(targetUser.experience) },
+    });
+    console.log(targetUser.rankInfo);
+
+    delete targetUser.rankInfo.criteriaExperience;
+    delete targetUser.rankInfo.rankId;
+
+    return targetUser;
+  }
+
   // TODO: refactor
   async updateUser(userId: number, updateInfo: UpdateUserDto) {
     const {

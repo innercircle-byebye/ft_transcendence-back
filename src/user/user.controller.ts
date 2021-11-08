@@ -100,6 +100,13 @@ export class UserController {
     return this.userService.getUser(userId);
   }
 
+  @ApiOkResponse({ type: UserWithRankDto })
+  @ApiOperation({ summary: '파라미터를 통한 유저 조회(닉네임)' })
+  @Get('/:nickname')
+  async getUserByNickname(@Param('id') nickname: string) {
+    return this.userService.getUserByNickname(nickname);
+  }
+
   @ApiOkResponse({ type: UpdateUserDto })
   @ApiOperation({ summary: '유저 정보 업데이트' })
   @Patch('/:id')
