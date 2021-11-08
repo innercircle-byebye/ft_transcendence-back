@@ -165,7 +165,7 @@ export class GameService {
     console.log(page);
     const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
-      .orderBy('gameroom.gamerRoomId', 'ASC')
+      .orderBy('gameroom.gameRoomId', 'ASC')
       .addSelect('gameroom.password')
       .limit(perPage)
       .offset(perPage * (page - 1))
