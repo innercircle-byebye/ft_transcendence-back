@@ -289,31 +289,6 @@ export class GameController {
     return 'OK';
   }
 
-  // @ApiOperation({
-  //   summary: '게임에 사용자 초대 (DM/채널에서 방 생성시 보내는 요청)',
-  //   description:
-  //     '게임에 사용자를 초대 하는 메세지를 보냅니다.\n\n' +
-  //     '초대 대상 유저에게 DM을 전송합니다\n\n',
-  // })
-  // @ApiOkResponse({
-  //   description: 'OK',
-  // })
-  // @ApiBadRequestResponse({
-  //   description: '존재하지 않는 채널입니다.\n\n 해당 유저가 존재하지 않습니다.',
-  // })
-  // @Post('/room/:game_room_id/invite')
-  // async initeUserToChannel(
-  //   @Param('game_room_id') gameRoomId: number,
-  //   @AuthUser() user: User,
-  //   @Body() body: GameRoomInviteDto,
-  // ) {
-  //   return this.gameService.inviteUserToGame(
-  //     gameRoomId,
-  //     user.userId,
-  //     body.invitedUserId,
-  //   );
-  // }
-
   @ApiOperation({
     summary: '유저의 게임결과 조회하기',
     description:
