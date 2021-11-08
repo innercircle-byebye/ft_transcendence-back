@@ -165,10 +165,10 @@ export class GameService {
     console.log(page);
     const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
-      .orderBy('gameroom.createdAt', 'DESC')
+      .orderBy('gameroom.gamerRoomId', 'ASC')
       .addSelect('gameroom.password')
       .limit(perPage)
-      .offset(8 * (page - 1))
+      .offset(perPage * (page - 1))
       .getMany();
 
     const allGameRoomsConverted = await Promise.all(
