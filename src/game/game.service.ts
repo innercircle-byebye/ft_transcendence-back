@@ -782,7 +782,7 @@ export class GameService {
   async getAllGameResults(userId: number): Promise<GameResultUserDto[]> {
     const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
-      .orderBy('gameResults.lastModifiedAt', 'DESC')
+      .orderBy('gameresults.lastModifiedAt', 'DESC')
       .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
       .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
       .andWhere(
@@ -819,7 +819,7 @@ export class GameService {
   ): Promise<GameResultUserDto[]> {
     const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
-      .orderBy('gameResults.lastModifiedAt', 'DESC')
+      .orderBy('gameresults.lastModifiedAt', 'DESC')
       .andWhere(
         new Brackets((qb) => {
           qb.where('gameresults.startAt IS NOT NULL').andWhere(
