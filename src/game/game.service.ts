@@ -860,6 +860,10 @@ export class GameService {
     return result;
   }
 
+  getAllUserCount() {
+    return this.userRepository.createQueryBuilder('user').getCount();
+  }
+
   async getUserRaningWithPaging(perPage: number, pageNumber: number) {
     const result = await this.getAllUserRanking();
 
