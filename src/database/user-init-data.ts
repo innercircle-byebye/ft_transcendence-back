@@ -8,7 +8,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/10/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -18,7 +18,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/100/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -28,7 +28,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1000/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -38,7 +38,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1002/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -48,7 +48,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1003/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -58,7 +58,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1004/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -68,7 +68,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/101/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -78,7 +78,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1018/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -88,7 +88,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1019/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -98,7 +98,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1022/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -108,7 +108,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1023/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -118,7 +118,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1024/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -128,7 +128,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1025/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
   {
@@ -138,7 +138,7 @@ const userInitData = [
     imagePath: 'https://picsum.photos/id/1026/500/500',
     status: UserStatus.ONLINE,
     banDate: null,
-    experience: 0,
+    experience: 42,
     rankId: 1,
   },
 ];

@@ -6,10 +6,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Connection, LessThanOrEqual, Repository } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
 import { User, UserStatus } from 'src/entities/User';
 import * as fs from 'fs';
+import { Rank } from 'src/entities/Rank';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 
@@ -18,6 +19,8 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Rank)
+    private rankRepository: Repository<Rank>,
     private connection: Connection,
   ) {}
 
@@ -26,11 +29,24 @@ export class UserService {
   }
 
   async getUser(userId: number) {
-    const targetUser = await this.userRepository.findOne({ where: { userId } });
+    const targetUser: any = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.userId = :userId', { userId })
+      .getOne();
+
     if (!targetUser) {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
+
+    targetUser.rankInfo = await this.rankRepository.findOne({
+      where: { criteriaExperience: LessThanOrEqual(targetUser.experience) },
+    });
+    console.log(targetUser.rankInfo);
+
+    delete targetUser.rankInfo.criteriaExperience;
+    delete targetUser.rankInfo.rankId;
+
     return targetUser;
   }
 
@@ -44,7 +60,7 @@ export class UserService {
       isHistoryPublic,
       isStatusPublic,
       experience,
-      rankId,
+      // rankId,
       banDate,
     } = updateInfo;
     const targetUser = await this.userRepository.findOne({ where: { userId } });
@@ -62,7 +78,7 @@ export class UserService {
       targetUser.isStatusPublic = isStatusPublic;
     if (targetUser.experience !== experience)
       targetUser.experience = experience;
-    if (targetUser.rankId !== rankId) targetUser.rankId = rankId;
+    // if (targetUser.rankId !== rankId) targetUser.rankId = rankId;
     if (targetUser.banDate !== banDate) targetUser.banDate = banDate;
     await this.userRepository.save(targetUser);
     return targetUser;

@@ -32,6 +32,7 @@ import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { UserUpdateImageDto } from './dto/user-updateimage.dto';
+import { UserWithRankDto } from './dto/user-withrank.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
@@ -92,10 +93,10 @@ export class UserController {
     return this.userService.updateUserProfileV2(user.userId, formData);
   }
 
-  @ApiOkResponse({ type: UserDto })
+  @ApiOkResponse({ type: UserWithRankDto })
   @ApiOperation({ summary: '파라미터를 통한 유저 조회' })
   @Get('/:id')
-  async getUserByParam(@Param('id') userId) {
+  async getUserByParam(@Param('id') userId: number) {
     return this.userService.getUser(userId);
   }
 

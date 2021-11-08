@@ -2,10 +2,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 // import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
+import { Rank } from 'src/entities/Rank';
 import { UserService } from './user.service';
 import { User } from '../entities/User';
 
 const mockUserRepository = () => ({
+  save: jest.fn(),
+  find: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
+
+const mockRankRepository = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
@@ -28,6 +36,10 @@ describe('UserService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository(),
+        },
+        {
+          provide: getRepositoryToken(Rank),
+          useValue: mockRankRepository(),
         },
         {
           provide: Connection,

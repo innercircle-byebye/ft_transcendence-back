@@ -2,6 +2,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Rank } from 'src/entities/Rank';
 import { User } from 'src/entities/User';
 import { UserService } from 'src/user/user.service';
 import { Connection } from 'typeorm';
@@ -14,6 +15,12 @@ const mockUserRepository = () => ({
   softDelete: jest.fn(),
 });
 
+const mockRankRepository = () => ({
+  save: jest.fn(),
+  find: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
 const mockConnection = () => ({
   transaction: jest.fn(),
 });
@@ -38,6 +45,10 @@ describe('AuthService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository(),
+        },
+        {
+          provide: getRepositoryToken(Rank),
+          useValue: mockRankRepository(),
         },
         {
           provide: Connection,

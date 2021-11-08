@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { IRank } from './interfaces/IRank';
 
 @Entity('rank')
-export class Rank {
+export class Rank implements IRank {
   @ApiProperty({
     description: '랭크 테이블 ID번호',
     example: 1,
