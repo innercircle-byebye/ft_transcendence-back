@@ -780,7 +780,7 @@ export class GameService {
   }
 
   async getAllGameResults(userId: number): Promise<GameResultUserDto[]> {
-    const result = await this.gameResultRepository
+    const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
       .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
       .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
@@ -801,29 +801,13 @@ export class GameService {
       )
       .getMany();
 
-    // result.map((gameResults) => {
-    //   [
-    //     'userId',
-    //     'email',
-    //     'rankId',
-    //     'intraUsername',
-    //     'imagePath',
-    //     'status',
-    //     'experience',
-    //     'banDate',
-    //     'isStatusPublic',
-    //     'isHistoryPublic',
-    //     'createdAt',
-    //     ' lastModifiedAt',
-    //     'deletedAt',
-    //     'isTwoFactorAuthEnabled',
-    //     'twoFactorAuthSecret',
-    //     'currentHAshedRefreshToken',
-    //   ].forEach(function (key) {
-    //     delete gameResults.playerOne[key];
-    //   });
-    //   return gameResults;
-    // });
+    result.map((gameResults) => {
+      gameResults.playerOneNickname = gameResults.playerOne.nickname;
+      gameResults.playerTwoNickname = gameResults.playerTwo.nickname;
+      delete gameResults.playerOne;
+      delete gameResults.playerTwo;
+      return gameResults;
+    });
     return result;
   }
 
@@ -832,7 +816,7 @@ export class GameService {
     page: number,
     userId: number,
   ): Promise<GameResultUserDto[]> {
-    const result = await this.gameResultRepository
+    const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
       .andWhere(
         new Brackets((qb) => {
@@ -853,6 +837,13 @@ export class GameService {
       .offset(perPage * (page - 1))
       .getMany();
 
+    result.map((gameResults) => {
+      gameResults.playerOneNickname = gameResults.playerOne.nickname;
+      gameResults.playerTwoNickname = gameResults.playerTwo.nickname;
+      delete gameResults.playerOne;
+      delete gameResults.playerTwo;
+      return gameResults;
+    });
     return result;
   }
 

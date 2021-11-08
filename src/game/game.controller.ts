@@ -45,7 +45,6 @@ export class GameController {
   })
   @ApiOkResponse({
     type: Number,
-    isArray: true,
     description: '전체 유저 명수',
   })
   @Get('/ranking/count')
@@ -102,7 +101,6 @@ export class GameController {
   })
   @ApiOkResponse({
     type: Number,
-    isArray: true,
     description: '전체 게임 방 갯수',
   })
   @Get('/room/list/count')
@@ -319,7 +317,6 @@ export class GameController {
   })
   @ApiOkResponse({
     type: Number,
-    isArray: true,
     description: '해당 유저의 게임 횟수',
   })
   @Get('/:user_id/results/count')
