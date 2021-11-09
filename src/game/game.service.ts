@@ -826,13 +826,6 @@ export class GameService {
     ballSpeed: string,
     date: Date,
   ): Promise<GameResultUserDto[]> {
-    // const targetVsUser = await this.userRepository.findOne({
-    //   where: { userId: vsUserId },
-    // });
-
-    // if (!targetVsUser)
-    //   throw new BadRequestException('상대 사용자가 존재하지 않습니다.');
-
     if (userId === vsUserId)
       throw new BadRequestException(
         '사용자 아이디와 상대 아이디가 동일합니다.',
@@ -859,7 +852,13 @@ export class GameService {
         }),
       );
 
-    if (vsUserId)
+    if (vsUserId) {
+      const targetVsUser = await this.userRepository.findOne({
+        where: { userId: vsUserId },
+      });
+      if (!targetVsUser)
+        throw new BadRequestException('상대 사용자가 존재하지 않습니다.');
+
       gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
         new Brackets((qb) => {
           qb.where('gameresults.playerOneId = :userId', {
@@ -869,9 +868,12 @@ export class GameService {
           });
         }),
       );
+    }
+
     if (ballSpeed) {
       if (!Object.values(BallSpeed).some((v) => v === ballSpeed))
         throw new BadRequestException('유효하지 않은 게임 속도 값 입니다.');
+
       gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
         'gameresults.ballSpeed = :ballSpeed',
         {
@@ -879,6 +881,7 @@ export class GameService {
         },
       );
     }
+
     if (date && !Number.isNaN(new Date(date).getTime())) {
       const startDate = new Date(date);
       const endDate = new Date(date);
@@ -887,11 +890,13 @@ export class GameService {
       endDate.setSeconds(endDate.getSeconds() + 59);
       console.log(startDate, endDate);
       gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
-        'gameresults.lastModifiedAt BETWEEN :startDate AND :endDate',
-        {
-          startDate,
-          endDate,
-        },
+        new Brackets((qb) => {
+          qb.where('gameresults.startAt > :startDate', {
+            startDate,
+          }).andWhere('gameresults.endAt <= :endDate', {
+            endDate,
+          });
+        }),
       );
     }
 

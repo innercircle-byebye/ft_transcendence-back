@@ -341,8 +341,8 @@ export class GameController {
   })
   @ApiBadRequestResponse({
     description:
-      '상대 사용자가 존재하지 않습니다.\n\n' +
       '사용자 아이디와 상대 아이디가 동일합니다.\n\n' +
+      '상대 사용자가 존재하지 않습니다.\n\n' +
       '유효하지 않은 게임 속도 값 입니다.',
   })
   @ApiQuery({ name: 'perPage', required: false })
