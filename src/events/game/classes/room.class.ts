@@ -116,6 +116,7 @@ export class Room {
   readyDestroy(): void {}
 
   playingInit(): void {
+    this.server.to(`game-${this.id.toString()}`).emit('playing');
     this.ball.initPosition();
     this.roomStatus = RoomStatus.PLAYING;
     this.loop = this.playingLoop;
