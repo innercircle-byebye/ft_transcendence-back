@@ -102,7 +102,7 @@ export class UserController {
 
   @ApiOkResponse({ type: UserWithRankDto })
   @ApiOperation({ summary: '파라미터를 통한 유저 조회(닉네임)' })
-  @Get('/:nickname')
+  @Get('/nickname/:nickname')
   async getUserByNickname(@Param('nickname') nickname: string) {
     return this.userService.getUserByNickname(nickname);
   }

@@ -53,7 +53,7 @@ export class UserService {
   async getUserByNickname(nickname: string) {
     const targetUser: any = await this.userRepository
       .createQueryBuilder('user')
-      .where('user.nickname = :userId', { nickname })
+      .where('user.nickname = :nickname', { nickname })
       .getOne();
 
     if (!targetUser) {
