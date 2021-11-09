@@ -841,7 +841,7 @@ export class GameService {
             totalPlayCount,
             winCount,
             loseCount,
-            winRate: winRate === 'NaN' ? '0.00000' : winRate,
+            winRate: winRate === 'NaN' ? '0' : winRate,
             experience,
             user: {
               userId,
