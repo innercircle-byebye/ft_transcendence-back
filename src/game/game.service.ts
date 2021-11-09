@@ -869,7 +869,7 @@ export class GameService {
           ballSpeed,
         },
       );
-    if (date) {
+    if (date && !Number.isNaN(new Date(date).getTime())) {
       const startDate = new Date(date);
       const endDate = new Date(date);
       endDate.setHours(endDate.getHours() + 23);
