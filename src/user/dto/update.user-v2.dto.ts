@@ -16,7 +16,6 @@ export class UpdateUserVersionTwoDto extends PartialType(
   ]),
 ) {
   @IsOptional()
-  @IsNotEmpty()
   @IsEmail()
   email: string;
 
