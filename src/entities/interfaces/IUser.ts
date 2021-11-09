@@ -11,7 +11,7 @@ export interface IUser {
 
   experience: number;
 
-  rankId: number;
+  // rankId: number;
 
   banDate: Date | null;
 

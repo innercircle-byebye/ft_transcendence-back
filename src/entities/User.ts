@@ -85,15 +85,15 @@ export class User extends BaseEntity implements IUser {
   @Column('integer', { name: 'experience' })
   experience: number;
 
-  @ApiProperty({
-    description: '유저 랭크',
-    default: 1,
-    example: 1,
-  })
-  // nullable 하면 업데이트시 null로 초기화 됨
-  // @Column('integer', { name: 'rank_id', nullable: true })
-  @Column('integer', { name: 'rank_id' })
-  rankId: number; // 안써도 잘 동작하는데 명시적으로 넣은듯
+  // @ApiProperty({
+  //   description: '유저 랭크',
+  //   default: 1,
+  //   example: 1,
+  // })
+  // // nullable 하면 업데이트시 null로 초기화 됨
+  // // @Column('integer', { name: 'rank_id', nullable: true })
+  // @Column('integer', { name: 'rank_id' })
+  // rankId: number; // 안써도 잘 동작하는데 명시적으로 넣은듯
 
   @ApiProperty({
     description: '유저 밴 기한',
