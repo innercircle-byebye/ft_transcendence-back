@@ -819,7 +819,7 @@ export class GameService {
       totalPlayCount,
       winCount,
       loseCount,
-      winRate: winRate.toFixed(5),
+      winRate: winRate.toFixed(0),
     };
     return resultTwo;
   }
