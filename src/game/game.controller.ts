@@ -40,6 +40,19 @@ export class GameController {
   constructor(private gameService: GameService) {}
 
   @ApiOperation({
+    summary: '전체 랭킹 조회 대상 유저 명수',
+    description: '전체 랭킹 조회 대상 유저 명수를 조회합니다.\n\n',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: '전체 유저 명수',
+  })
+  @Get('/ranking/count')
+  countAllUsers() {
+    return this.gameService.getAllUserCount();
+  }
+
+  @ApiOperation({
     summary: '전체 유저 랭킹조회',
     description:
       '전체 유저의 랭킹을 조회합니다.\n\n개발단계라 승리 횟수(winCount) 기준으로 정렬하였습니다.' +
@@ -80,6 +93,19 @@ export class GameController {
     if (!perPage || !page) return this.gameService.getAllGameRooms();
     console.log(typeof perPage);
     return this.gameService.getAllGameRoomsWithPaging(perPage, page);
+  }
+
+  @ApiOperation({
+    summary: '전체 게임 방 (개수)',
+    description: '전체 게임 방의 개수를 조회합니다.\n\n',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: '전체 게임 방 갯수',
+  })
+  @Get('/room/list/count')
+  countGameRooms() {
+    return this.gameService.countGameRooms();
   }
 
   @ApiOperation({
@@ -289,18 +315,40 @@ export class GameController {
   }
 
   @ApiOperation({
+    summary: '해당 유저의 게임 횟수',
+    description: '조회 대상 유저의 게임 결과의 갯수를 전달합니다\n\n',
+  })
+  @ApiOkResponse({
+    type: Number,
+    description: '해당 유저의 게임 횟수',
+  })
+  @Get('/:user_id/results/count')
+  countGameResultsByUserId(@Param('user_id') userId: number) {
+    return this.gameService.countGameResultsOfUser(userId);
+  }
+
+  @ApiOperation({
     summary: '유저의 게임결과 조회하기',
     description:
       '파라미터로 전달되는 유저의 게임 결과 전체를 조회합니다.\n\n' +
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
+      'perPage, page가 하나라도 없거나 숫자값이 아니면, 전체 결과를 조회합니다.\n\n' +
       '현재 진행중인 게임의 결과는 제외합니다.',
   })
   @ApiOkResponse({
     type: GameResultUserDto,
     isArray: true,
   })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiQuery({ name: 'page', required: false })
   @Get('/:user_id/results')
-  getGameResultsByUserId(@Param('user_id') userId: number) {
-    return this.gameService.getGameResults(userId);
+  async getGameResultsByUserId(
+    @Query('perPage') perPage: number,
+    @Query('page') page: number,
+    @Param('user_id') userId: number,
+  ) {
+    if (!perPage || !page) return this.gameService.getAllGameResults(userId);
+    return this.gameService.getGameResultsPagenation(perPage, page, userId);
   }
 
   @ApiOperation({
