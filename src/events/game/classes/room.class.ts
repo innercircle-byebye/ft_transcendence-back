@@ -141,7 +141,22 @@ export class Room {
       const chatData = { type: 'log', content: `${winner}가 이겼습니다.` };
       this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
-      this.server.to(`game-${this.id.toString()}`).emit('gameover');
+      this.server
+        .to(this.player1.getSocketId())
+        .emit(
+          'gameover',
+          this.player1.getScore() > this.player2.getScore()
+            ? 'YOU WIN!!!'
+            : 'YOU LOSE!!!',
+        );
+      this.server
+        .to(this.player2.getSocketId())
+        .emit(
+          'gameover',
+          this.player2.getScore() > this.player1.getScore()
+            ? 'YOU WIN!!!'
+            : 'YOU LOSE!!!',
+        );
       this.readyInit();
     }
   }
