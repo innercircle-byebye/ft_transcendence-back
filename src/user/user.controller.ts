@@ -75,7 +75,9 @@ export class UserController {
   )
   @ApiOkResponse({ type: UserDto })
   @ApiBadRequestResponse({
-    description: '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.',
+    description:
+      '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.\n\n' +
+      '이미지 파일만 전송 가능합니다. (jpg, jpeg, png, gif)\n\n',
   })
   async editProfileVersionTwo(
     @AuthUser() user: User,
@@ -168,6 +170,9 @@ export class UserController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
+  @ApiBadRequestResponse({
+    description: '이미지 파일만 전송 가능합니다. (jpg, jpeg, png, gif)\n\n',
+  })
   async registerUserWithUploadProfileImage(
     @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
