@@ -825,6 +825,8 @@ export class GameService {
   ): Promise<GameResultUserDto[]> {
     const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
+      .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
+      .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
       .orderBy('gameresults.lastModifiedAt', 'DESC')
       .andWhere(
         new Brackets((qb) => {
@@ -844,7 +846,6 @@ export class GameService {
       .limit(perPage)
       .offset(perPage * (page - 1))
       .getMany();
-
     result.map((gameResults) => {
       gameResults.playerOneNickname = gameResults.playerOne.nickname;
       gameResults.playerTwoNickname = gameResults.playerTwo.nickname;
