@@ -5,6 +5,7 @@ import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { GameMember } from 'src/entities/GameMember';
 import { DmModule } from 'src/dm/dm.module';
+// import { DmService } from 'src/dm/dm.service';
 import { GameService } from './game.service';
 import { GameController } from './game.controller';
 

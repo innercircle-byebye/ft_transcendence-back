@@ -7,6 +7,7 @@ import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { DMType } from 'src/entities/DM';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
@@ -160,9 +161,6 @@ export class GameService {
   }
 
   async getAllGameRoomsWithPaging(perPage: number, page: number) {
-    // 한 화면에 8번
-    console.log(perPage);
-    console.log(page);
     const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
       .orderBy('gameroom.gameRoomId', 'ASC')
@@ -218,6 +216,7 @@ export class GameService {
   async createGameRoom(
     playerOneId: number,
     gameRoomCreateDto: GameRoomCreateDto,
+    invitedUserId: number | null,
   ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -275,6 +274,13 @@ export class GameService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+    if (invitedUserId) {
+      this.inviteUserToGame(
+        gameRoomReturned.gameRoomId,
+        playerOneId,
+        invitedUserId,
+      );
     }
     return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
   }
@@ -857,5 +863,33 @@ export class GameService {
     const result = await this.getAllUserRanking();
 
     return result.slice((pageNumber - 1) * perPage, pageNumber * perPage);
+  }
+
+  async inviteUserToGame(
+    gameRoomId: number,
+    userId: number,
+    invitedUserId: number,
+  ) {
+    const targetChannel = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!targetChannel)
+      throw new BadRequestException('존재 하지 않는 게임방입니다.');
+
+    const targetUser = await this.userRepository.findOne({
+      where: { userId: invitedUserId },
+    });
+
+    if (!targetUser)
+      throw new BadRequestException('해당 유저가 존재하지 않습니다.');
+
+    this.dmService.createDM(
+      userId,
+      invitedUserId,
+      gameRoomId.toString(),
+      DMType.GAME_INVITE,
+    );
+
+    return 'OK';
   }
 }
