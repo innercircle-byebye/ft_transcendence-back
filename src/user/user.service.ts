@@ -276,7 +276,7 @@ export class UserService {
   async removeExistingImagePath(userId: number): Promise<void> {
     const userInfo = await this.userRepository.findOne({ where: { userId } });
     const serverPath = userInfo.imagePath.substring(
-      userInfo.imagePath.indexOf('/profile_image'),
+      userInfo.imagePath.indexOf('/image/profile'),
       userInfo.imagePath.length,
     );
 

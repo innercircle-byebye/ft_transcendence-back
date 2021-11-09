@@ -1,8 +1,14 @@
+import { BadRequestException } from '@nestjs/common';
 import { extname } from 'path';
 
 export const imageFileFilter = (req, file, callback) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-    return callback(new Error('Only image files are allowed!'), false);
+    return callback(
+      new BadRequestException(
+        '이미지 파일만 전송 가능합니다. (jpg, jpeg, png, gif)',
+      ),
+      false,
+    );
   }
   return callback(null, true);
 };

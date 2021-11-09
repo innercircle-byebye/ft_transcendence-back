@@ -37,4 +37,4 @@ lerna-debug.log*
 
 package-lock.json
 .env
-/profile_image
+/image/profile
