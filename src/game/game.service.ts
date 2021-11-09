@@ -900,12 +900,13 @@ export class GameService {
       );
     }
 
-    if (perPage) gameResultQueryBuilder = gameResultQueryBuilder.limit(perPage);
-
-    if (page)
-      gameResultQueryBuilder = gameResultQueryBuilder.offset(
-        perPage * (page - 1),
-      );
+    if (perPage) {
+      gameResultQueryBuilder = gameResultQueryBuilder.limit(perPage);
+      if (page)
+        gameResultQueryBuilder = gameResultQueryBuilder.offset(
+          perPage * (page - 1),
+        );
+    }
     const result = await gameResultQueryBuilder.getMany();
 
     result.map((gameResults) => {
