@@ -74,11 +74,11 @@ AdminJS.registerAdapter({ Database, Resource });
       }),
     } as any),
     MulterModule.register({
-      dest: './profile_image',
+      dest: './image',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'profile_image'),
-      serveRoot: '/profile_image',
+      rootPath: join(__dirname, '..', 'image'),
+      serveRoot: '/image',
     }),
     ChannelModule,
     EventsModule,

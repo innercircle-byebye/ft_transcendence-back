@@ -65,7 +65,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('imagePath', {
       storage: diskStorage({
-        destination: './profile_image',
+        destination: './image/profile/',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
@@ -87,7 +87,7 @@ export class UserController {
       this.userService.removeExistingImagePath(user.userId);
       this.userService.updateProfileImagePath(
         user.userId,
-        `/profile_image/${file.filename}`,
+        `/image/profile/${file.filename}`,
       );
     }
     return this.userService.updateUserProfileV2(user.userId, formData);
@@ -124,7 +124,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './profile_image',
+        destination: './image/profile/',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
@@ -142,7 +142,7 @@ export class UserController {
     this.userService.removeExistingImagePath(user.userId);
     return this.userService.updateProfileImagePath(
       user.userId,
-      `/profile_image/${file.filename}`,
+      `/image/profile/${file.filename}`,
     );
   }
 
@@ -160,7 +160,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './profile_image',
+        destination: './image/profile',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
@@ -189,7 +189,7 @@ export class UserController {
       user.userId,
       formData.email,
       formData.nickname,
-      `/profile_image/${file.filename}`,
+      `/image/profile/${file.filename}`,
     );
   }
 }
