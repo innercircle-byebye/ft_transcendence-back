@@ -45,6 +45,13 @@ export class Ball {
     };
   }
 
+  initPosition() {
+    this.x = (SETTINGS.WIDTH - SETTINGS.BALL.WIDTH) / 2;
+    this.y = (SETTINGS.HEIGHT - SETTINGS.BALL.HEIGHT) / 2;
+    this.dx = 1;
+    this.dy = 1;
+  }
+
   update() {
     this.x += this.dx * this.speed;
     this.y += this.dy * this.speed;

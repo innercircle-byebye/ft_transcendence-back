@@ -8,7 +8,7 @@ export enum KeyCode {
 const UNIT = 2;
 
 export class Player {
-  private id: string; // 소켓아이디
+  private socketId: string; // 소켓아이디
 
   private role: string;
 
@@ -29,8 +29,8 @@ export class Player {
     [KeyCode.DOWN]: boolean;
   };
 
-  constructor(id: string, role: string) {
-    this.id = id;
+  constructor(socketId: string, role: string) {
+    this.socketId = socketId;
     this.role = role;
     this.ready = false;
 
@@ -72,6 +72,19 @@ export class Player {
     }
   }
 
+  changeRole(role: string) {
+    if (role === 'player1') {
+      this.x = SETTINGS.PLAYER.GAP;
+    } else if (role === 'player2') {
+      this.x = SETTINGS.WIDTH - SETTINGS.PLAYER.GAP;
+    }
+    this.y = SETTINGS.HEIGHT / 2;
+  }
+
+  getSocketId() {
+    return this.socketId;
+  }
+
   getRole() {
     return this.role;
   }
@@ -80,6 +93,10 @@ export class Player {
     if (keyCode === KeyCode.UP || keyCode === KeyCode.DOWN) {
       this.keypress[keyCode] = isDown;
     }
+  }
+
+  initScore() {
+    this.score = 0;
   }
 
   increaseScore() {

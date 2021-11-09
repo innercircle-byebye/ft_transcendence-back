@@ -19,11 +19,24 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   constructor(private readonly roomManagerService: RoomManagerService) {}
 
   handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log(socket.id);
+    console.log('connect!!!!!!!!!!  ', socket.id);
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log(socket.id);
+    console.log('disconnect!!!!!!!   ', socket.id);
+
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    room.leave(socket);
+    this.roomManagerService.gameRoomIdsBySocketId.delete(socket.id);
+
+    if (room.isEmpty()) {
+      this.roomManagerService.destroy(this.server, gameRoomId);
+    } else {
+      room.readyInit();
+    }
   }
 
   @SubscribeMessage('joinGameRoom')

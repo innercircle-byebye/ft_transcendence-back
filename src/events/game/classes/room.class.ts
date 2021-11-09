@@ -57,6 +57,26 @@ export class Room {
     this.ball = new Ball(this.player1, this.player2);
   }
 
+  isEmpty() {
+    return !this.player1;
+  }
+
+  leave(player: Socket) {
+    if (this.player1.getSocketId() === player.id) {
+      this.player1 = this.player2;
+      if (this.player1) {
+        this.player1.changeRole('player1');
+      }
+      delete this.player2;
+      this.participants.shift();
+      this.players.delete(player.id);
+    } else if (this.player2 && this.player2.getSocketId() === player.id) {
+      delete this.player2;
+      this.participants.pop();
+      this.players.delete(player.id);
+    }
+  }
+
   getParticipants(): Socket[] {
     return this.participants;
   }
@@ -66,6 +86,12 @@ export class Room {
   }
 
   readyInit(): void {
+    if (this.player1) {
+      this.player1.initScore();
+    }
+    if (this.player2) {
+      this.player2.initScore();
+    }
     this.roomStatus = RoomStatus.READY;
     this.loop = this.readyLoop;
   }
@@ -75,16 +101,13 @@ export class Room {
       this.playingInit();
     }
     const statuses = [];
-    this.player1.update();
-    statuses.push(this.player1.getStatus());
+    if (this.player1) {
+      this.player1.update();
+      statuses.push(this.player1.getStatus());
+    }
     if (this.player2) {
       this.player2.update();
       statuses.push(this.player2.getStatus());
-    }
-
-    if (this.ball) {
-      // this.ball.update();
-      statuses.push(this.ball.getStatus());
     }
 
     this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
@@ -93,14 +116,17 @@ export class Room {
   readyDestroy(): void {}
 
   playingInit(): void {
+    this.ball.initPosition();
     this.roomStatus = RoomStatus.PLAYING;
     this.loop = this.playingLoop;
   }
 
   playingLoop(): void {
     const statuses = [];
-    this.player1.update();
-    statuses.push(this.player1.getStatus());
+    if (this.player1) {
+      this.player1.update();
+      statuses.push(this.player1.getStatus());
+    }
     if (this.player2) {
       this.player2.update();
       statuses.push(this.player2.getStatus());
