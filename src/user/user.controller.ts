@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -31,7 +30,6 @@ import { MeDto } from './dto/me.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
-import { UserUpdateImageDto } from './dto/user-updateimage.dto';
 import { UserWithRankDto } from './dto/user-withrank.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
@@ -117,35 +115,6 @@ export class UserController {
       throw new BadRequestException('요청값 비어있음');
     }
     return this.userService.updateUser(userId, updateData);
-  }
-
-  // @ApiOkResponse({ type: UpdateUserDto })
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: '유저 사진 업로드' })
-  @Put('/profile_image')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './image/profile/',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-      // 파일 용량 제한
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    }),
-  )
-  @ApiOkResponse({ type: UserDto })
-  async uploadProfileImage(
-    @AuthUser() user: User,
-    @UploadedFile() file: Express.Multer.File,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Body() formData: UserUpdateImageDto,
-  ) {
-    this.userService.removeExistingImagePath(user.userId);
-    return this.userService.updateProfileImagePath(
-      user.userId,
-      `/image/profile/${file.filename}`,
-    );
   }
 
   @ApiOkResponse({ type: UserDto })
