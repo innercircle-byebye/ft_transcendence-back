@@ -32,7 +32,6 @@ import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultRankingDto } from './dto/gameresult-ranking.dto';
-// import { GameRoomInviteDto } from './dto/gameroom-invite.dto';
 
 @UseGuards(JwtTwoFactorGuard)
 @ApiTags('Game')
