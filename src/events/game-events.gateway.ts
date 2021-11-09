@@ -42,15 +42,18 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   @SubscribeMessage('joinGameRoom')
   handleJoinGameRoom(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() gameRoomId: number,
+    @MessageBody() data: any,
   ) {
-    if (!this.roomManagerService.checkRoomExist(gameRoomId)) {
-      this.roomManagerService.createRoom(this.server, gameRoomId, socket);
+    const { roomId, userId } = data;
+    console.log(' userId : ', userId);
+
+    if (!this.roomManagerService.checkRoomExist(roomId)) {
+      this.roomManagerService.createRoom(this.server, roomId, socket);
     } else {
-      this.roomManagerService.joinRoom(this.server, gameRoomId, socket);
+      this.roomManagerService.joinRoom(this.server, roomId, socket);
     }
 
-    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
     const role = room.getPlayerBySocketId(socket.id).getRole();
 
     this.server.to(socket.id).emit('initSetting', { role, ...CLIENT_SETTINGS });
