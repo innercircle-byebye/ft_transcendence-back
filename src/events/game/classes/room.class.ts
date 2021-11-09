@@ -89,9 +89,11 @@ export class Room {
   readyInit(): void {
     if (this.player1) {
       this.player1.initScore();
+      this.player1.initPosition();
     }
     if (this.player2) {
       this.player2.initScore();
+      this.player2.initPosition();
     }
     this.roomStatus = RoomStatus.READY;
     this.loop = this.readyLoop;
@@ -101,17 +103,6 @@ export class Room {
     if (this.player1?.getReady() && this.player2?.getReady()) {
       this.playingInit();
     }
-    const statuses = [];
-    if (this.player1) {
-      this.player1.update();
-      statuses.push(this.player1.getStatus());
-    }
-    if (this.player2) {
-      this.player2.update();
-      statuses.push(this.player2.getStatus());
-    }
-
-    this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
   }
 
   readyDestroy(): void {}
@@ -127,19 +118,16 @@ export class Room {
 
   playingLoop(): void {
     const statuses = [];
-    if (this.player1) {
-      this.player1.update();
-      statuses.push(this.player1.getStatus());
-    }
-    if (this.player2) {
-      this.player2.update();
-      statuses.push(this.player2.getStatus());
-    }
 
-    if (this.ball) {
-      this.ball.update();
-      statuses.push(this.ball.getStatus());
-    }
+    this.player1.update();
+    this.player2.update();
+    this.ball.update();
+
+    statuses.push(this.player1.getStatus());
+    statuses.push(this.player2.getStatus());
+    statuses.push(this.ball.getStatus());
+
+    this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
 
     if (this.player1.getScore() === SETTINGS.GOAL) {
       this.readyInit();
@@ -147,8 +135,6 @@ export class Room {
     } else if (this.player2.getScore() === SETTINGS.GOAL) {
       this.readyInit();
       this.server.to(`game-${this.id.toString()}`).emit('gameover');
-    } else {
-      this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
     }
   }
 }

@@ -8,7 +8,7 @@ export enum KeyCode {
 const UNIT = 2;
 
 export class Player {
-  private socketId: string; // 소켓아이디
+  private socketId: string;
 
   private role: string;
 
@@ -93,6 +93,10 @@ export class Player {
     if (keyCode === KeyCode.UP || keyCode === KeyCode.DOWN) {
       this.keypress[keyCode] = isDown;
     }
+  }
+
+  initPosition() {
+    this.y = SETTINGS.HEIGHT / 2;
   }
 
   initScore() {
