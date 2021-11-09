@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DmService } from 'src/dm/dm.service';
 import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
-import { GameResult } from 'src/entities/GameResult';
+import { BallSpeed, GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
@@ -826,6 +826,13 @@ export class GameService {
     ballSpeed: string,
     date: Date,
   ): Promise<GameResultUserDto[]> {
+    // const targetVsUser = await this.userRepository.findOne({
+    //   where: { userId: vsUserId },
+    // });
+
+    // if (!targetVsUser)
+    //   throw new BadRequestException('상대 사용자가 존재하지 않습니다.');
+
     if (userId === vsUserId)
       throw new BadRequestException(
         '사용자 아이디와 상대 아이디가 동일합니다.',
@@ -862,13 +869,16 @@ export class GameService {
           });
         }),
       );
-    if (ballSpeed)
+    if (ballSpeed) {
+      if (!Object.values(BallSpeed).some((v) => v === ballSpeed))
+        throw new BadRequestException('유효하지 않은 게임 속도 값 입니다.');
       gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
         'gameresults.ballSpeed = :ballSpeed',
         {
           ballSpeed,
         },
       );
+    }
     if (date && !Number.isNaN(new Date(date).getTime())) {
       const startDate = new Date(date);
       const endDate = new Date(date);
