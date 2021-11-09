@@ -822,8 +822,16 @@ export class GameService {
     perPage: number,
     page: number,
     userId: number,
+    vsUserId: number,
+    ballSpeed: string,
+    date: Date,
   ): Promise<GameResultUserDto[]> {
-    const result: any = await this.gameResultRepository
+    if (userId === vsUserId)
+      throw new BadRequestException(
+        '사용자 아이디와 상대 아이디가 동일합니다.',
+      );
+
+    let gameResultQueryBuilder: any = this.gameResultRepository
       .createQueryBuilder('gameresults')
       .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
       .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
@@ -842,10 +850,49 @@ export class GameService {
             { userId },
           );
         }),
-      )
-      .limit(perPage)
-      .offset(perPage * (page - 1))
-      .getMany();
+      );
+
+    if (vsUserId)
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.playerOneId = :userId', {
+            userId: vsUserId,
+          }).orWhere('gameresults.playerTwoId = :userId', {
+            userId: vsUserId,
+          });
+        }),
+      );
+    if (ballSpeed)
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        'gameresults.ballSpeed = :ballSpeed',
+        {
+          ballSpeed,
+        },
+      );
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setHours(endDate.getHours() + 23);
+      endDate.setMinutes(endDate.getMinutes() + 59);
+      endDate.setSeconds(endDate.getSeconds() + 59);
+      console.log(startDate, endDate);
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        'gameresults.lastModifiedAt BETWEEN :startDate AND :endDate',
+        {
+          startDate,
+          endDate,
+        },
+      );
+    }
+
+    if (perPage) gameResultQueryBuilder = gameResultQueryBuilder.limit(perPage);
+
+    if (page)
+      gameResultQueryBuilder = gameResultQueryBuilder.offset(
+        perPage * (page - 1),
+      );
+    const result = await gameResultQueryBuilder.getMany();
+
     result.map((gameResults) => {
       gameResults.playerOneNickname = gameResults.playerOne.nickname;
       gameResults.playerTwoNickname = gameResults.playerTwo.nickname;

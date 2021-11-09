@@ -331,24 +331,40 @@ export class GameController {
     summary: '유저의 게임결과 조회하기',
     description:
       '파라미터로 전달되는 유저의 게임 결과 전체를 조회합니다.\n\n' +
-      'perPage(페이지당 보여줄 개수), page(원하는 페이지)값을 query로 받으며,\n\n' +
-      'perPage, page가 하나라도 없거나 숫자값이 아니면, 전체 결과를 조회합니다.\n\n' +
+      'perPage(페이지당 보여줄 개수), page(원하는 페이지), vsUserId(대전 상대 유저 ID번호), ballSpeed(경기 난이도)' +
+      'date(경기 종료 시점)을 query로 받으며, 결과는 경기 종료 시점으로 정렬 되어있습니다. (lastModifiedAt)\n\n' +
       '현재 진행중인 게임의 결과는 제외합니다.',
   })
   @ApiOkResponse({
     type: GameResultUserDto,
     isArray: true,
   })
+  @ApiBadRequestResponse({
+    description: '사용자 아이디와 상대 아이디가 동일합니다.',
+  })
   @ApiQuery({ name: 'perPage', required: false })
   @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'vsUserId', required: false })
+  @ApiQuery({ name: 'ballSpeed', required: false })
+  @ApiQuery({ name: 'date', required: false })
   @Get('/:user_id/results')
   async getGameResultsByUserId(
     @Query('perPage') perPage: number,
     @Query('page') page: number,
+    @Query('vsUserId') vsUserId: number,
+    @Query('ballSpeed') ballSpeed: string,
+    @Query('date') date: Date,
     @Param('user_id') userId: number,
   ) {
-    if (!perPage || !page) return this.gameService.getAllGameResults(userId);
-    return this.gameService.getGameResultsPagenation(perPage, page, userId);
+    // if (!perPage || !page) return this.gameService.getAllGameResults(userId);
+    return this.gameService.getGameResultsPagenation(
+      perPage,
+      page,
+      userId,
+      vsUserId,
+      ballSpeed,
+      date,
+    );
   }
 
   @ApiOperation({
