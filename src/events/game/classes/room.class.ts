@@ -129,12 +129,20 @@ export class Room {
 
     this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
 
-    if (this.player1.getScore() === SETTINGS.GOAL) {
-      this.readyInit();
+    if (
+      this.player1.getScore() === SETTINGS.GOAL ||
+      this.player2.getScore() === SETTINGS.GOAL
+    ) {
+      const winner =
+        this.player1.getScore() > this.player2.getScore()
+          ? 'player1'
+          : 'player2';
+
+      const chatData = { type: 'log', content: `${winner}가 이겼습니다.` };
+      this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
+
       this.server.to(`game-${this.id.toString()}`).emit('gameover');
-    } else if (this.player2.getScore() === SETTINGS.GOAL) {
       this.readyInit();
-      this.server.to(`game-${this.id.toString()}`).emit('gameover');
     }
   }
 }

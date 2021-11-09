@@ -135,4 +135,24 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
       room.getPlayerBySocketId(socket.id).setKeyPress(keyCode, false);
     }
   }
+
+  @SubscribeMessage('gameChat')
+  handleGameChat(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    const { player1 } = room.getPlayers();
+
+    const nickname =
+      player1.getSocketId() === socket.id ? 'player1' : 'player2';
+
+    const chatData = {
+      type: 'chat',
+      nickname,
+      content: data.content,
+    };
+    this.server.to(`game-${gameRoomId.toString()}`).emit('gameChat', chatData);
+  }
 }
