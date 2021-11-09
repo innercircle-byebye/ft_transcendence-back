@@ -103,6 +103,10 @@ export class Player {
     this.score += 1;
   }
 
+  getScore() {
+    return this.score;
+  }
+
   setReady(value: boolean) {
     this.ready = value;
   }

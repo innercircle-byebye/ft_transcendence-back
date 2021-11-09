@@ -1,6 +1,7 @@
 import { Socket, Server } from 'socket.io';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
+import { SETTINGS } from '../SETTINGS';
 
 export enum RoomStatus {
   READY = 'ready',
@@ -116,6 +117,8 @@ export class Room {
   readyDestroy(): void {}
 
   playingInit(): void {
+    this.player1.setReady(false);
+    this.player2.setReady(false);
     this.server.to(`game-${this.id.toString()}`).emit('playing');
     this.ball.initPosition();
     this.roomStatus = RoomStatus.PLAYING;
@@ -138,6 +141,14 @@ export class Room {
       statuses.push(this.ball.getStatus());
     }
 
-    this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
+    if (this.player1.getScore() === SETTINGS.GOAL) {
+      this.readyInit();
+      this.server.to(`game-${this.id.toString()}`).emit('gameover');
+    } else if (this.player2.getScore() === SETTINGS.GOAL) {
+      this.readyInit();
+      this.server.to(`game-${this.id.toString()}`).emit('gameover');
+    } else {
+      this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
+    }
   }
 }
