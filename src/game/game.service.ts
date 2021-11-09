@@ -878,7 +878,7 @@ export class GameService {
       totalPlayCount,
       winCount,
       loseCount,
-      winRate: Number.isNaN(winRate) ? '0' : winRate.toFixed(5),
+      winRate: Number.isNaN(winRate) ? '0' : winRate.toFixed(0),
     };
     return resultTwo;
   }
