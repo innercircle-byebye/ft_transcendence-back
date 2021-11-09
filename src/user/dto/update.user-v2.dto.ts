@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { User } from 'src/entities/User';
 
 // 따로 선언 하는게 아니라 생략가능
@@ -16,10 +16,12 @@ export class UpdateUserVersionTwoDto extends PartialType(
   ]),
 ) {
   @IsOptional()
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   nickname: string;
 
