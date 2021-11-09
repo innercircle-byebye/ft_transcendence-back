@@ -37,7 +37,7 @@ export class Player {
     if (role === 'player1') {
       this.x = SETTINGS.PLAYER.GAP;
     } else {
-      this.x = SETTINGS.WIDTH - SETTINGS.PLAYER.GAP;
+      this.x = SETTINGS.WIDTH - SETTINGS.PLAYER.GAP - SETTINGS.PLAYER.WIDTH;
     }
     this.y = SETTINGS.HEIGHT / 2;
 
@@ -76,7 +76,7 @@ export class Player {
     if (role === 'player1') {
       this.x = SETTINGS.PLAYER.GAP;
     } else if (role === 'player2') {
-      this.x = SETTINGS.WIDTH - SETTINGS.PLAYER.GAP;
+      this.x = SETTINGS.WIDTH - SETTINGS.PLAYER.GAP - SETTINGS.PLAYER.WIDTH;
     }
     this.y = SETTINGS.HEIGHT / 2;
   }
@@ -120,13 +120,13 @@ export class Player {
   }
 
   private moveup(): void {
-    if (this.y - this.height / 2 - UNIT >= 0) {
+    if (this.y - UNIT >= 0) {
       this.y -= UNIT;
     }
   }
 
   private moveDown(): void {
-    if (this.y + this.height / 2 + UNIT <= SETTINGS.HEIGHT) {
+    if (this.y + this.height + UNIT <= SETTINGS.HEIGHT) {
       this.y += UNIT;
     }
   }

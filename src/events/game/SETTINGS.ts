@@ -4,7 +4,7 @@ export const SETTINGS = {
   PLAYER: {
     WIDTH: 20,
     HEIGHT: 80,
-    GAP: 30,
+    GAP: 10,
   },
   BALL: {
     WIDTH: 15,
