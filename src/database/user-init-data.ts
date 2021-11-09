@@ -191,6 +191,26 @@ const userInitData = [
     experience: 42,
     rankId: 1,
   },
+  {
+    email: 'temp20@temp.com',
+    nickname: 'temp20',
+    intraUsername: 'temp_intra_20',
+    imagePath: 'https://picsum.photos/id/1032/500/500',
+    status: UserStatus.ONLINE,
+    banDate: null,
+    experience: 42,
+    rankId: 1,
+  },
+  {
+    email: 'temp21@temp.com',
+    nickname: 'temp21',
+    intraUsername: 'temp_intra_21',
+    imagePath: 'https://picsum.photos/id/1033/500/500',
+    status: UserStatus.ONLINE,
+    banDate: null,
+    experience: 42,
+    rankId: 1,
+  },
 ];
 
 export { userInitData };
