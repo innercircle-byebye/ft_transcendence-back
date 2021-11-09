@@ -66,6 +66,17 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
         .getRoomsByGameRoomId()
         .get(gameRoomId);
       room.getPlayerBySocketId(socket.id).setReady(true);
+
+      const { player1, player2 } = room.getPlayers();
+      if (player1?.getSocketId() === socket.id) {
+        this.server
+          .to(`game-${gameRoomId.toString()}`)
+          .emit('ready', 'player1');
+      } else if (player2?.getSocketId() === socket.id) {
+        this.server
+          .to(`game-${gameRoomId.toString()}`)
+          .emit('ready', 'player2');
+      }
     }
   }
 
@@ -79,6 +90,17 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
         .getRoomsByGameRoomId()
         .get(gameRoomId);
       room.getPlayerBySocketId(socket.id).setReady(false);
+
+      const { player1, player2 } = room.getPlayers();
+      if (player1?.getSocketId() === socket.id) {
+        this.server
+          .to(`game-${gameRoomId.toString()}`)
+          .emit('unReady', 'player1');
+      } else if (player2?.getSocketId() === socket.id) {
+        this.server
+          .to(`game-${gameRoomId.toString()}`)
+          .emit('unReady', 'player2');
+      }
     }
   }
 
