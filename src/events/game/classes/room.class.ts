@@ -101,18 +101,7 @@ export class Room {
     this.roomStatus = RoomStatus.READY;
     this.loop = this.readyLoop;
 
-    if (this.player1) {
-      const player1SocketId = this.player1.getSocketId();
-      this.server
-        .to(player1SocketId)
-        .emit('initSetting', { role: 'player1', ...CLIENT_SETTINGS });
-    }
-    if (this.player2) {
-      const player2SocketId = this.player2.getSocketId();
-      this.server
-        .to(player2SocketId)
-        .emit('initSetting', { role: 'player2', ...CLIENT_SETTINGS });
-    }
+    this.emitInitSetting();
   }
 
   readyLoop(): void {
@@ -187,6 +176,35 @@ export class Room {
             : 'YOU LOSE!!!',
         );
       this.readyInit();
+    }
+  }
+
+  emitInitSetting() {
+    if (this.player1) {
+      const initSettingData = {
+        nickname: {
+          player1: this.player1 ? this.player1.getSocketId() : '',
+          player2: this.player2 ? this.player2.getSocketId() : '',
+        },
+        role: 'player1',
+        ...CLIENT_SETTINGS,
+      };
+
+      const player1SocketId = this.player1.getSocketId();
+      this.server.to(player1SocketId).emit('initSetting', initSettingData);
+    }
+    if (this.player2) {
+      const initSettingData = {
+        nickname: {
+          player1: this.player1 ? this.player1.getSocketId() : '',
+          player2: this.player2 ? this.player2.getSocketId() : '',
+        },
+        role: 'player2',
+        ...CLIENT_SETTINGS,
+      };
+
+      const player2SocketId = this.player2.getSocketId();
+      this.server.to(player2SocketId).emit('initSetting', initSettingData);
     }
   }
 }

@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { RoomManagerService } from './game/services/room-manager.service';
-import { CLIENT_SETTINGS } from './game/SETTINGS';
 
 @WebSocketGateway({ namespace: '/game' })
 // eslint-disable-next-line prettier/prettier
@@ -54,9 +53,8 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     }
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
-    const role = room.getPlayerBySocketId(socket.id).getRole();
 
-    this.server.to(socket.id).emit('initSetting', { role, ...CLIENT_SETTINGS });
+    room.emitInitSetting();
   }
 
   @SubscribeMessage('ready')
@@ -149,7 +147,9 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     const { player1 } = room.getPlayers();
 
     const nickname =
-      player1.getSocketId() === socket.id ? 'player1' : 'player2';
+      player1.getSocketId() === socket.id
+        ? `(player1)${socket.id}`
+        : `(player2)${socket.id}`;
 
     const chatData = {
       type: 'chat',
