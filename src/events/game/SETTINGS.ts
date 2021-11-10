@@ -11,6 +11,8 @@ export const SETTINGS = {
     HEIGHT: 15,
   },
   GOAL: 5,
+  COUNTDOWN_SEC: 5,
+  COUNTDOWN_SIZE: 40,
 };
 
 export const CLIENT_SETTINGS = {

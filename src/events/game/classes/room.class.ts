@@ -2,10 +2,12 @@ import { Socket, Server } from 'socket.io';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
 import { SETTINGS, CLIENT_SETTINGS } from '../SETTINGS';
+import { Countdown } from './countdown.class';
 
 export enum RoomStatus {
   READY = 'ready',
   PLAYING = 'playing',
+  COUNTDOWN = 'countdown',
 }
 
 export class Room {
@@ -25,10 +27,11 @@ export class Room {
 
   private server: Server;
 
+  private countdown: Countdown;
+
   loop: () => void;
 
   // private observers: Socket[];
-  // private countdown: Countdown;
 
   constructor(id: number, player1Socket: Socket, server: Server) {
     this.id = id;
@@ -125,8 +128,9 @@ export class Room {
     this.player2.setReady(false);
     this.server.to(`game-${this.id.toString()}`).emit('playing');
     this.ball.initPosition();
-    this.roomStatus = RoomStatus.PLAYING;
+    this.roomStatus = RoomStatus.COUNTDOWN;
     this.loop = this.playingLoop;
+    this.countdown = new Countdown();
   }
 
   playingLoop(): void {
@@ -134,11 +138,23 @@ export class Room {
 
     this.player1.update();
     this.player2.update();
-    this.ball.update();
+    if (this.roomStatus === RoomStatus.PLAYING) {
+      this.ball.update();
+    }
 
     statuses.push(this.player1.getStatus());
     statuses.push(this.player2.getStatus());
     statuses.push(this.ball.getStatus());
+
+    if (this.roomStatus === RoomStatus.COUNTDOWN && this.countdown) {
+      this.countdown.update();
+      if (this.countdown.isEnd()) {
+        this.roomStatus = RoomStatus.PLAYING;
+        delete this.countdown;
+      } else {
+        statuses.push(this.countdown.getStatus());
+      }
+    }
 
     this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
 
