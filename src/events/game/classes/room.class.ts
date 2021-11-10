@@ -29,6 +29,8 @@ export class Room {
 
   private countdown: Countdown;
 
+  private gameChatIndex: number;
+
   loop: () => void;
 
   // private observers: Socket[];
@@ -41,6 +43,12 @@ export class Room {
     this.ball = null;
     this.server = server;
     this.readyInit();
+    this.gameChatIndex = 0;
+  }
+
+  nextGameChatIndex() {
+    this.gameChatIndex += 1;
+    return this.gameChatIndex;
   }
 
   getPlayers() {
@@ -156,7 +164,11 @@ export class Room {
           ? 'player1'
           : 'player2';
 
-      const chatData = { type: 'log', content: `${winner}가 이겼습니다.` };
+      const chatData = {
+        index: this.nextGameChatIndex(),
+        type: 'log',
+        content: `${winner}가 이겼습니다.`,
+      };
       this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
       this.server

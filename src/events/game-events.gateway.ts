@@ -152,6 +152,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
         : `(player2)${socket.id}`;
 
     const chatData = {
+      index: room.nextGameChatIndex(),
       type: 'chat',
       nickname,
       content: data.content,
