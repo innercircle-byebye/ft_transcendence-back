@@ -1,7 +1,7 @@
 import { Socket, Server } from 'socket.io';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
-import { SETTINGS } from '../SETTINGS';
+import { SETTINGS, CLIENT_SETTINGS } from '../SETTINGS';
 
 export enum RoomStatus {
   READY = 'ready',
@@ -97,6 +97,19 @@ export class Room {
     }
     this.roomStatus = RoomStatus.READY;
     this.loop = this.readyLoop;
+
+    if (this.player1) {
+      const player1SocketId = this.player1.getSocketId();
+      this.server
+        .to(player1SocketId)
+        .emit('initSetting', { role: 'player1', ...CLIENT_SETTINGS });
+    }
+    if (this.player2) {
+      const player2SocketId = this.player2.getSocketId();
+      this.server
+        .to(player2SocketId)
+        .emit('initSetting', { role: 'player2', ...CLIENT_SETTINGS });
+    }
   }
 
   readyLoop(): void {
