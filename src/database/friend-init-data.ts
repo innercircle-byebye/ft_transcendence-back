@@ -13,6 +13,16 @@ const friendInitData = [
   },
   {
     requesterId: 1,
+    respondentId: 11,
+    status: FriendStatus.WAIT,
+  },
+  {
+    requesterId: 1,
+    respondentId: 12,
+    status: FriendStatus.WAIT,
+  },
+  {
+    requesterId: 1,
     respondentId: 5,
     status: FriendStatus.APPROVE,
   },
