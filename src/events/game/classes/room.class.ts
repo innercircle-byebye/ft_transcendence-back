@@ -70,12 +70,51 @@ export class Room {
     this.ball = new Ball(this.player1, this.player2);
   }
 
+  unSetPlayer1() {
+    const currentPlayer1SocketId = this.player1.getSocketId();
+    delete this.player1;
+    this.players.delete(currentPlayer1SocketId);
+  }
+
+  unSetPlayer2() {
+    const currentPlayer2SocketId = this.player2.getSocketId();
+    delete this.player2;
+    this.players.delete(currentPlayer2SocketId);
+  }
+
   joinByObserver(observerSocketId: string) {
     this.observers.push(observerSocketId);
   }
 
   isEmpty() {
     return !this.player1;
+  }
+
+  isObserver(socketId: string) {
+    const index = this.observers.indexOf(socketId);
+    return index !== -1;
+  }
+
+  getObserverCnt() {
+    return this.observers.length;
+  }
+
+  toPlayer(socketId: string) {
+    const index = this.observers.indexOf(socketId);
+    this.observers.splice(index, 1);
+    this.setPlayer2(socketId);
+  }
+
+  player2ToPlayer1() {
+    this.player1 = this.player2;
+    this.player1.changeRole('player1');
+    delete this.player2;
+  }
+
+  observerToPlayer1() {
+    const newPlayer1SocketId = this.observers.shift();
+    this.setPlayer1(newPlayer1SocketId);
+    this.players.set(newPlayer1SocketId, this.player1);
   }
 
   leave(participantSocketId: string) {
@@ -278,6 +317,11 @@ export class Room {
   }
 
   emitGameRoomData() {
+    console.log('!!!!!! observers : ', this.observers);
+    console.log('!!!!!! players   : ', this.players);
+    console.log('!!!!!! player1.socketId : ', this.player1.getSocketId());
+    console.log('!!!!!! player2.socketId : ', this.player2?.getSocketId());
+
     const player1SocketId = this.player1 ? this.player1.getSocketId() : '';
     const player2SocketId = this.player2 ? this.player2.getSocketId() : '';
     const isPlaying = this.roomStatus !== RoomStatus.READY;

@@ -164,4 +164,52 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     };
     this.server.to(`game-${gameRoomId.toString()}`).emit('gameChat', chatData);
   }
+
+  @SubscribeMessage('toPlayer')
+  handleToPlayer(@ConnectedSocket() socket: Socket) {
+    console.log('~~~~~~~~ toPlayer evnet ~~~~~~~~');
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+
+    const { player2 } = room.getPlayers();
+    if (!player2 && room.isObserver(socket.id)) {
+      room.toPlayer(socket.id);
+    }
+    room.emitGameRoomData();
+  }
+
+  @SubscribeMessage('toObserver')
+  handleToObserver(@ConnectedSocket() socket: Socket) {
+    console.log('~~~~~~~~ toObserver evnet ~~~~~~~~');
+    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
+      socket.id,
+    );
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+
+    const { player1, player2 } = room.getPlayers();
+
+    if (player1.getSocketId() === socket.id) {
+      console.log('~~~ player1 => observer');
+      if (player2) {
+        console.log('player2를 player1로 하고 player1은 관전자로된다.');
+        room.unSetPlayer1();
+        room.player2ToPlayer1();
+        room.joinByObserver(socket.id);
+      } else if (room.getObserverCnt() > 0) {
+        console.log('관전자중 하나를  player1로 하고 player1은 관전자로된다.');
+        room.unSetPlayer1();
+        room.observerToPlayer1();
+        room.joinByObserver(socket.id);
+      } else {
+        console.log('아무일도 안일어난다');
+      }
+    } else if (player2.getSocketId() === socket.id) {
+      room.unSetPlayer2();
+      room.joinByObserver(socket.id);
+    }
+
+    room.emitGameRoomData();
+  }
 }
