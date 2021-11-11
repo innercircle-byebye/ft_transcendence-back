@@ -119,7 +119,6 @@ export class GameController {
   })
   @Get('/room/find_user/:user_id')
   async findGameRoomByUserId(@Param('user_id') userId: number) {
-    console.log(userId);
     return this.gameService.findGameRoomByUserId(userId);
   }
 

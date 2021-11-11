@@ -957,12 +957,10 @@ export class GameService {
   }
 
   async findGameRoomByUserId(userId: number) {
-    console.log(userId);
     const checkUserInGame = await this.userRepository.findOne({
       where: { userId },
     });
 
-    console.log(checkUserInGame);
     if (checkUserInGame.status !== UserStatus.IN_GAME)
       throw new BadRequestException('유저가 게임중이 아닙니다.');
 
@@ -970,6 +968,6 @@ export class GameService {
       where: { userId },
     });
 
-    return this.getGameRoomTotalInfo(gameMemberByUserId.userId);
+    return this.getGameRoomTotalInfo(gameMemberByUserId.gameRoomId);
   }
 }
