@@ -108,6 +108,21 @@ export class GameController {
     return this.gameService.countGameRooms();
   }
 
+  // GET /api/game/room/find_user/{user_id}
+  @ApiOperation({
+    summary: '유저가 참여한 게임방 조회',
+    description: '유저가 참여하고 있는 게임방을 조회합니다.',
+  })
+  @ApiOkResponse({ type: GameRoomDto })
+  @ApiBadRequestResponse({
+    description: '유저가 게임중이 아닙니다.',
+  })
+  @Get('/room/find_user/:user_id')
+  async findGameRoomByUserId(@Param('user_id') userId: number) {
+    console.log(userId);
+    return this.gameService.findGameRoomByUserId(userId);
+  }
+
   @ApiOperation({
     summary: '게임 방 정보 조회',
     description:
