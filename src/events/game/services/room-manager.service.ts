@@ -34,9 +34,9 @@ export class RoomManagerService {
   destroy(server: Server, gameRoomId) {
     const room = this.roomsByGameRoomId.get(gameRoomId);
     const participants = room.getParticipants();
-    participants.forEach((socket) => {
-      this.gameRoomIdsBySocketId.delete(socket.id);
-      server.to(socket.id).emit('destroy');
+    participants.forEach((socketId) => {
+      this.gameRoomIdsBySocketId.delete(socketId);
+      server.to(socketId).emit('destroy');
     });
     this.roomsByGameRoomId.delete(gameRoomId);
   }

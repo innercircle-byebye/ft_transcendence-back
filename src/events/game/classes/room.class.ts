@@ -17,8 +17,6 @@ export class Room {
 
   private player2: Player;
 
-  private participants: Socket[] = [];
-
   private observers: string[] = []; // 소켓아이디 저장
 
   private players: Map<string, Player> = new Map<string, Player>();
@@ -40,7 +38,6 @@ export class Room {
   constructor(id: number, player1Socket: Socket, server: Server) {
     this.id = id;
     this.player1 = new Player(player1Socket.id, 'player1');
-    this.participants.push(player1Socket);
     this.players.set(player1Socket.id, this.player1);
     this.ball = null;
     this.server = server;
@@ -66,13 +63,11 @@ export class Room {
 
   setPlayer2(player2Socket: Socket) {
     this.player2 = new Player(player2Socket.id, 'player2');
-    this.participants.push(player2Socket);
     this.players.set(player2Socket.id, this.player2);
     this.ball = new Ball(this.player1, this.player2);
   }
 
   joinByObserver(observer: Socket) {
-    this.participants.push(observer);
     this.observers.push(observer.id);
   }
 
@@ -87,11 +82,9 @@ export class Room {
         this.player1.changeRole('player1');
       }
       delete this.player2;
-      this.participants.shift();
       this.players.delete(participant.id);
     } else if (this.player2 && this.player2.getSocketId() === participant.id) {
       delete this.player2;
-      this.participants.pop();
       this.players.delete(participant.id);
     } else if (this.observers.indexOf(participant.id) !== -1) {
       const index = this.observers.indexOf(participant.id);
@@ -99,8 +92,19 @@ export class Room {
     }
   }
 
-  getParticipants(): Socket[] {
-    return this.participants;
+  getParticipants(): string[] {
+    const participants = [];
+    if (this.player1) {
+      participants.push(this.player1.getSocketId());
+    }
+    if (this.player2) {
+      participants.push(this.player2.getSocketId());
+    }
+    this.observers.forEach((socketId) => {
+      participants.push(socketId);
+    });
+
+    return participants;
   }
 
   getBall(): Ball | null {
