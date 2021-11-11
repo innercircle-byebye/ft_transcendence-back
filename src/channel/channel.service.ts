@@ -152,7 +152,7 @@ export class ChannelService {
     this.dmService.createDMs(
       ownerId,
       invitedUsers,
-      channelReturned.channelId.toString(),
+      name,
       DMType.CHANNEL_INVITE,
     );
 
