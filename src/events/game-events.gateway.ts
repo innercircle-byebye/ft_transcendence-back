@@ -28,7 +28,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
       socket.id,
     );
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-    room.leave(socket);
+    room.leave(socket.id);
     this.roomManagerService.gameRoomIdsBySocketId.delete(socket.id);
 
     if (room.isEmpty()) {

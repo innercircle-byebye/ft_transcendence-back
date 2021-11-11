@@ -9,7 +9,7 @@ export class RoomManagerService {
   gameRoomIdsBySocketId: Map<string, number> = new Map<string, number>();
 
   createRoom(server: Server, gameRoomId: number, player1Socket: Socket): void {
-    const room = new Room(gameRoomId, player1Socket, server);
+    const room = new Room(gameRoomId, player1Socket.id, server);
     player1Socket.join(`game-${gameRoomId.toString()}`);
 
     this.roomsByGameRoomId.set(gameRoomId, room);
@@ -22,9 +22,9 @@ export class RoomManagerService {
 
     const { player2 } = room.getPlayers();
     if (!player2) {
-      room.setPlayer2(newParticipant);
+      room.setPlayer2(newParticipant.id);
     } else {
-      room.joinByObserver(newParticipant);
+      room.joinByObserver(newParticipant.id);
     }
 
     newParticipant.join(`game-${gameRoomId.toString()}`);

@@ -1,4 +1,4 @@
-import { Socket, Server } from 'socket.io';
+import { Server } from 'socket.io';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
 import { SETTINGS, CLIENT_SETTINGS } from '../SETTINGS';
@@ -33,12 +33,10 @@ export class Room {
 
   loop: () => void;
 
-  // private observers: Socket[];
-
-  constructor(id: number, player1Socket: Socket, server: Server) {
+  constructor(id: number, player1SocketId: string, server: Server) {
     this.id = id;
-    this.player1 = new Player(player1Socket.id, 'player1');
-    this.players.set(player1Socket.id, this.player1);
+    this.player1 = new Player(player1SocketId, 'player1');
+    this.players.set(player1SocketId, this.player1);
     this.ball = null;
     this.server = server;
     this.readyInit();
@@ -61,22 +59,27 @@ export class Room {
     return this.players.get(socketId);
   }
 
-  setPlayer2(player2Socket: Socket) {
-    this.player2 = new Player(player2Socket.id, 'player2');
-    this.players.set(player2Socket.id, this.player2);
+  setPlayer1(player1SocketId: string) {
+    this.player1 = new Player(player1SocketId, 'player1');
+    this.players.set(player1SocketId, this.player1);
+  }
+
+  setPlayer2(player2SocketId: string) {
+    this.player2 = new Player(player2SocketId, 'player2');
+    this.players.set(player2SocketId, this.player2);
     this.ball = new Ball(this.player1, this.player2);
   }
 
-  joinByObserver(observer: Socket) {
-    this.observers.push(observer.id);
+  joinByObserver(observerSocketId: string) {
+    this.observers.push(observerSocketId);
   }
 
   isEmpty() {
     return !this.player1;
   }
 
-  leave(participant: Socket) {
-    if (this.player1.getSocketId() === participant.id) {
+  leave(participantSocketId: string) {
+    if (this.player1.getSocketId() === participantSocketId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winner = 'player2';
@@ -101,13 +104,23 @@ export class Room {
         this.readyInit();
       }
 
-      this.player1 = this.player2;
-      if (this.player1) {
+      if (this.player2) {
+        this.player1 = this.player2;
         this.player1.changeRole('player1');
+        delete this.player2;
+      } else if (this.observers.length !== 0) {
+        const newPlayer1SocketId = this.observers.shift();
+        this.setPlayer1(newPlayer1SocketId);
+        this.players.set(newPlayer1SocketId, this.player1);
+      } else {
+        delete this.player1;
       }
-      delete this.player2;
-      this.players.delete(participant.id);
-    } else if (this.player2 && this.player2.getSocketId() === participant.id) {
+
+      this.players.delete(participantSocketId);
+    } else if (
+      this.player2 &&
+      this.player2.getSocketId() === participantSocketId
+    ) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winner = 'player1';
@@ -133,9 +146,9 @@ export class Room {
       }
 
       delete this.player2;
-      this.players.delete(participant.id);
-    } else if (this.observers.indexOf(participant.id) !== -1) {
-      const index = this.observers.indexOf(participant.id);
+      this.players.delete(participantSocketId);
+    } else if (this.observers.indexOf(participantSocketId) !== -1) {
+      const index = this.observers.indexOf(participantSocketId);
       this.observers.splice(index, 1);
     }
   }
