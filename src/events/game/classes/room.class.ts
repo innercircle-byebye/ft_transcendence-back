@@ -19,7 +19,7 @@ export class Room {
 
   private participants: Socket[] = [];
 
-  private observers: string[] = []; // 소켓아이디 저장
+  private observers: string[] = ['aaa', 'bbb', 'ccc']; // 소켓아이디 저장
 
   private players: Map<string, Player> = new Map<string, Player>();
 
@@ -202,9 +202,17 @@ export class Room {
 
     const gameRoomData = {
       participants: {
-        player1: player1SocketId,
-        player2: player2SocketId,
-        observers: this.observers,
+        player1: {
+          nickname: player1SocketId,
+        },
+        player2: {
+          nickname: player2SocketId,
+        },
+        observers: this.observers.map((socketId) => {
+          return {
+            nickname: socketId,
+          };
+        }),
       },
       role: '',
       isPlaying,
