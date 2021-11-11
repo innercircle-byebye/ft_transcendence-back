@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -13,7 +14,7 @@ import { IAdmin } from './interfaces/IAdmin';
 import { IAnnouncement } from './interfaces/IAnnouncement';
 
 @Entity('announcement')
-export class Announcement implements IAnnouncement {
+export class Announcement extends BaseEntity implements IAnnouncement {
   @ApiProperty({
     description: '공지사항 아이디 번호 (순번)',
     example: 1,
