@@ -34,7 +34,12 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     if (room.isEmpty()) {
       this.roomManagerService.destroy(this.server, gameRoomId);
     } else {
-      room.readyInit();
+      const { player2 } = room.getPlayers();
+      if (player2) {
+        room.emitGameRoomData();
+      } else {
+        room.readyInit();
+      }
     }
   }
 

@@ -17,12 +17,18 @@ export class RoomManagerService {
     console.log('Room Created : ', gameRoomId);
   }
 
-  joinRoom(server: Server, gameRoomId: number, player2Socket: Socket): void {
+  joinRoom(server: Server, gameRoomId: number, newParticipant: Socket): void {
     const room = this.roomsByGameRoomId.get(gameRoomId);
-    room.setPlayer2(player2Socket);
-    player2Socket.join(`game-${gameRoomId.toString()}`);
 
-    this.gameRoomIdsBySocketId.set(player2Socket.id, gameRoomId);
+    const { player2 } = room.getPlayers();
+    if (!player2) {
+      room.setPlayer2(newParticipant);
+    } else {
+      room.joinByObserver(newParticipant);
+    }
+
+    newParticipant.join(`game-${gameRoomId.toString()}`);
+    this.gameRoomIdsBySocketId.set(newParticipant.id, gameRoomId);
   }
 
   destroy(server: Server, gameRoomId) {

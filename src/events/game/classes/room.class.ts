@@ -19,7 +19,7 @@ export class Room {
 
   private participants: Socket[] = [];
 
-  private observers: string[] = ['aaa', 'bbb', 'ccc']; // 소켓아이디 저장
+  private observers: string[] = []; // 소켓아이디 저장
 
   private players: Map<string, Player> = new Map<string, Player>();
 
@@ -71,23 +71,31 @@ export class Room {
     this.ball = new Ball(this.player1, this.player2);
   }
 
+  joinByObserver(observer: Socket) {
+    this.participants.push(observer);
+    this.observers.push(observer.id);
+  }
+
   isEmpty() {
     return !this.player1;
   }
 
-  leave(player: Socket) {
-    if (this.player1.getSocketId() === player.id) {
+  leave(participant: Socket) {
+    if (this.player1.getSocketId() === participant.id) {
       this.player1 = this.player2;
       if (this.player1) {
         this.player1.changeRole('player1');
       }
       delete this.player2;
       this.participants.shift();
-      this.players.delete(player.id);
-    } else if (this.player2 && this.player2.getSocketId() === player.id) {
+      this.players.delete(participant.id);
+    } else if (this.player2 && this.player2.getSocketId() === participant.id) {
       delete this.player2;
       this.participants.pop();
-      this.players.delete(player.id);
+      this.players.delete(participant.id);
+    } else if (this.observers.indexOf(participant.id) !== -1) {
+      const index = this.observers.indexOf(participant.id);
+      this.observers.splice(index, 1);
     }
   }
 
@@ -189,6 +197,17 @@ export class Room {
             ? 'YOU WIN!!!'
             : 'YOU LOSE!!!',
         );
+
+      this.observers.forEach((socketId) => {
+        this.server
+          .to(socketId)
+          .emit(
+            'gameover',
+            this.player1.getScore() > this.player2.getScore()
+              ? 'PLAYER1 WIN!!!'
+              : 'PLAYER2 WIN!!!',
+          );
+      });
       this.readyInit();
     }
   }
