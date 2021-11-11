@@ -19,6 +19,8 @@ export class Room {
 
   private participants: Socket[] = [];
 
+  private observers: string[] = []; // 소켓아이디 저장
+
   private players: Map<string, Player> = new Map<string, Player>();
 
   private ball: Ball;
@@ -109,7 +111,7 @@ export class Room {
     this.roomStatus = RoomStatus.READY;
     this.loop = this.readyLoop;
 
-    this.emitInitSetting();
+    this.emitGameRoomData();
   }
 
   readyLoop(): void {
@@ -191,32 +193,40 @@ export class Room {
     }
   }
 
-  emitInitSetting() {
+  emitGameRoomData() {
+    const player1SocketId = this.player1 ? this.player1.getSocketId() : '';
+    const player2SocketId = this.player2 ? this.player2.getSocketId() : '';
+    const isPlaying = this.roomStatus !== RoomStatus.READY;
+    const player1Ready = this.player1 ? this.player1.getReady() : false;
+    const player2Ready = this.player2 ? this.player2.getReady() : false;
+
+    const gameRoomData = {
+      participants: {
+        player1: player1SocketId,
+        player2: player2SocketId,
+        observers: this.observers,
+      },
+      role: '',
+      isPlaying,
+      player1Ready,
+      player2Ready,
+      width: CLIENT_SETTINGS.WIDTH,
+      height: CLIENT_SETTINGS.HEIGHT,
+    };
+
     if (this.player1) {
-      const initSettingData = {
-        nickname: {
-          player1: this.player1 ? this.player1.getSocketId() : '',
-          player2: this.player2 ? this.player2.getSocketId() : '',
-        },
-        role: 'player1',
-        ...CLIENT_SETTINGS,
-      };
-
-      const player1SocketId = this.player1.getSocketId();
-      this.server.to(player1SocketId).emit('initSetting', initSettingData);
+      gameRoomData.role = 'player1';
+      this.server.to(player1SocketId).emit('gameRoomData', gameRoomData);
     }
+
     if (this.player2) {
-      const initSettingData = {
-        nickname: {
-          player1: this.player1 ? this.player1.getSocketId() : '',
-          player2: this.player2 ? this.player2.getSocketId() : '',
-        },
-        role: 'player2',
-        ...CLIENT_SETTINGS,
-      };
-
-      const player2SocketId = this.player2.getSocketId();
-      this.server.to(player2SocketId).emit('initSetting', initSettingData);
+      gameRoomData.role = 'player2';
+      this.server.to(player2SocketId).emit('gameRoomData', gameRoomData);
     }
+
+    gameRoomData.role = 'observer';
+    this.observers.forEach((socketId) => {
+      this.server.to(socketId).emit('gameRoomData', gameRoomData);
+    });
   }
 }

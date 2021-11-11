@@ -54,7 +54,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
 
-    room.emitInitSetting();
+    room.emitGameRoomData();
   }
 
   @SubscribeMessage('ready')
