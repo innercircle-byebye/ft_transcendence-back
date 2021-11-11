@@ -77,6 +77,30 @@ export class Room {
 
   leave(participant: Socket) {
     if (this.player1.getSocketId() === participant.id) {
+      // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
+      if (this.roomStatus !== RoomStatus.READY) {
+        const winner = 'player2';
+
+        const chatData = {
+          index: this.nextGameChatIndex(),
+          type: 'log',
+          content: `${winner}가 이겼습니다.`,
+        };
+        this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
+
+        this.server
+          .to(this.player1.getSocketId())
+          .emit('gameover', 'YOU LOSE!!!');
+        this.server
+          .to(this.player2.getSocketId())
+          .emit('gameover', 'YOU WIN!!!');
+
+        this.observers.forEach((socketId) => {
+          this.server.to(socketId).emit('gameover', 'PLAYER2 WIN!!!');
+        });
+        this.readyInit();
+      }
+
       this.player1 = this.player2;
       if (this.player1) {
         this.player1.changeRole('player1');
@@ -84,6 +108,30 @@ export class Room {
       delete this.player2;
       this.players.delete(participant.id);
     } else if (this.player2 && this.player2.getSocketId() === participant.id) {
+      // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
+      if (this.roomStatus !== RoomStatus.READY) {
+        const winner = 'player1';
+
+        const chatData = {
+          index: this.nextGameChatIndex(),
+          type: 'log',
+          content: `${winner}가 이겼습니다.`,
+        };
+        this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
+
+        this.server
+          .to(this.player1.getSocketId())
+          .emit('gameover', 'YOU WIN!!!');
+        this.server
+          .to(this.player2.getSocketId())
+          .emit('gameover', 'YOU LOSE!!!');
+
+        this.observers.forEach((socketId) => {
+          this.server.to(socketId).emit('gameover', 'PLAYER1 WIN!!!');
+        });
+        this.readyInit();
+      }
+
       delete this.player2;
       this.players.delete(participant.id);
     } else if (this.observers.indexOf(participant.id) !== -1) {
