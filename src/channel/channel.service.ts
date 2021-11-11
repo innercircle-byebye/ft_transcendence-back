@@ -173,12 +173,7 @@ export class ChannelService {
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
 
-    this.dmService.createDMs(
-      userId,
-      invitedUsers,
-      channelIdByName.channelId.toString(),
-      DMType.CHANNEL_INVITE,
-    );
+    this.dmService.createDMs(userId, invitedUsers, name, DMType.CHANNEL_INVITE);
 
     return 'OK';
   }
