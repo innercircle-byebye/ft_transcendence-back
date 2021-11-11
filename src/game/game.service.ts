@@ -4,7 +4,7 @@ import { DmService } from 'src/dm/dm.service';
 import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
-import { User } from 'src/entities/User';
+import { User, UserStatus } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { DMType } from 'src/entities/DM';
@@ -954,5 +954,20 @@ export class GameService {
     );
 
     return 'OK';
+  }
+
+  async findGameRoomByUserId(userId: number) {
+    const checkUserInGame = await this.userRepository.findOne({
+      where: { userId },
+    });
+
+    if (checkUserInGame.status !== UserStatus.IN_GAME)
+      throw new BadRequestException('유저가 게임중이 아닙니다.');
+
+    const gameMemberByUserId = await this.gameMemberRepository.findOne({
+      where: { userId },
+    });
+
+    return this.getGameRoomTotalInfo(gameMemberByUserId.gameRoomId);
   }
 }
