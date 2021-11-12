@@ -237,9 +237,12 @@ export class GameController {
   })
   @ApiBadRequestResponse({
     description:
-      '게임방이 존재하지 않습니다.\n\n 비밀번호가 일치하지 않습니다.\n\n' +
-      '이미 다른 게임방에 참여중입니다. \n\n' +
-      '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n 게임방에 참여할 수 없습니다. (관전 정원초과)',
+      '이미 다른 게임방에 참여중입니다.\n\n' +
+      '게임방이 존재하지 않습니다.\n\n' +
+      '비밀번호가 일치하지 않습니다.\n\n' +
+      '게임방에 참여할 수 없습니다. (정원 초과)\n\n' +
+      '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n' +
+      'ban 처리된 사용자 입니다.',
   })
   @Post('/room/:game_room_id/join')
   async joinGameRoom(
@@ -253,6 +256,7 @@ export class GameController {
         gameRoomId,
         body.password,
       );
+
     return this.gameService.joinGameRoomAsObserver(
       user.userId,
       gameRoomId,

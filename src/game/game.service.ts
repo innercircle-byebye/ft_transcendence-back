@@ -57,7 +57,7 @@ export class GameService {
   }
 
   async checkUserAlreadyInGameRoom(id: number): Promise<boolean> {
-    const gameMemberRepositoryCheck = this.gameMemberRepository.findOne({
+    const gameMemberRepositoryCheck = await this.gameMemberRepository.findOne({
       where: { userId: id },
     });
     if (gameMemberRepositoryCheck) return true;
@@ -382,26 +382,45 @@ export class GameService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId, deletedAt: null },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    if (
-      typeof Object(password) !== undefined &&
-      !(await bcrypt.compare(password, checkGameRoom.password))
-    )
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-    const checkGameMemberInRoom = await this.gameMemberRepository.findOne({
-      where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
-    });
-    if (this.checkUserAlreadyInGameRoom(userId))
+    if (await this.checkUserAlreadyInGameRoom(userId))
       throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
 
-    if (checkGameMemberInRoom)
-      throw new BadRequestException(
-        '게임방에 참여할 수 없습니다. (플레이어 만석)',
-      );
+    const checkGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameRoom')
+      .addSelect('gameRoom.password')
+      .where('gameRoom.gameRoomId = :gameRoomId', { gameRoomId })
+      .getOne();
+
+    // 방 존재여부 체크
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+
+    // 방 비밀번호 체크
+    if (checkGameRoom.password) {
+      if (
+        !password ||
+        !(await bcrypt.compare(password, checkGameRoom.password))
+      ) {
+        throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    // 게임방 정원초과여부, 플레이어 자리 있는지 확인
+    const checkGameMemberInRoom = await this.gameMemberRepository.find({
+      where: [{ gameRoomId }],
+    });
+    if (checkGameMemberInRoom.length >= checkGameRoom.maxParticipantNum) {
+      throw new BadRequestException('게임방에 참여할 수 없습니다. (정원 초과)');
+    }
+    checkGameMemberInRoom.forEach((gameMember) => {
+      if (gameMember.status === GameMemberStatus.PLAYER_TWO) {
+        throw new BadRequestException(
+          '게임방에 참여할 수 없습니다. (플레이어 만석)',
+        );
+      }
+    });
+
+    // TODO: ban된 사용자 처리 나중에 살펴볼 예정
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
