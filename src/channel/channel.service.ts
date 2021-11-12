@@ -209,11 +209,14 @@ export class ChannelService {
         throw new BadRequestException('이미 존재하는 채널 이름입니다.');
     }
 
-    if (typeof Object(password) !== undefined)
+    if (password !== undefined) {
+      console.log('hi');
       targetChannel.password = await bcrypt.hash(
         password,
         parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
       );
+    }
+
     if (
       typeof Object(maxParticipantNum) !== undefined &&
       targetChannel.maxParticipantNum !== maxParticipantNum

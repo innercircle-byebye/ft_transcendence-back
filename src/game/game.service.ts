@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DmService } from 'src/dm/dm.service';
 import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
-import { GameResult } from 'src/entities/GameResult';
+import { BallSpeed, GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User, UserStatus } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
@@ -788,7 +788,7 @@ export class GameService {
   async getAllGameResults(userId: number): Promise<GameResultUserDto[]> {
     const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
-      .orderBy('gameresults.lastModifiedAt', 'DESC')
+      .orderBy('gameresults.endAt', 'DESC')
       .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
       .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
       .andWhere(
@@ -822,10 +822,20 @@ export class GameService {
     perPage: number,
     page: number,
     userId: number,
+    vsUserId: number,
+    ballSpeed: string,
+    date: Date,
   ): Promise<GameResultUserDto[]> {
-    const result: any = await this.gameResultRepository
+    if (userId === vsUserId)
+      throw new BadRequestException(
+        '사용자 아이디와 상대 아이디가 동일합니다.',
+      );
+
+    let gameResultQueryBuilder: any = this.gameResultRepository
       .createQueryBuilder('gameresults')
-      .orderBy('gameresults.lastModifiedAt', 'DESC')
+      .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
+      .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
+      .orderBy('gameresults.endAt', 'DESC')
       .andWhere(
         new Brackets((qb) => {
           qb.where('gameresults.startAt IS NOT NULL').andWhere(
@@ -840,10 +850,64 @@ export class GameService {
             { userId },
           );
         }),
-      )
-      .limit(perPage)
-      .offset(perPage * (page - 1))
-      .getMany();
+      );
+
+    if (vsUserId) {
+      const targetVsUser = await this.userRepository.findOne({
+        where: { userId: vsUserId },
+      });
+      if (!targetVsUser)
+        throw new BadRequestException('상대 사용자가 존재하지 않습니다.');
+
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.playerOneId = :userId', {
+            userId: vsUserId,
+          }).orWhere('gameresults.playerTwoId = :userId', {
+            userId: vsUserId,
+          });
+        }),
+      );
+    }
+
+    if (ballSpeed) {
+      if (!Object.values(BallSpeed).some((v) => v === ballSpeed))
+        throw new BadRequestException('유효하지 않은 게임 속도 값 입니다.');
+
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        'gameresults.ballSpeed = :ballSpeed',
+        {
+          ballSpeed,
+        },
+      );
+    }
+
+    if (date && !Number.isNaN(new Date(date).getTime())) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setHours(endDate.getHours() + 23);
+      endDate.setMinutes(endDate.getMinutes() + 59);
+      endDate.setSeconds(endDate.getSeconds() + 59);
+      console.log(startDate, endDate);
+      gameResultQueryBuilder = gameResultQueryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.startAt > :startDate', {
+            startDate,
+          }).andWhere('gameresults.endAt <= :endDate', {
+            endDate,
+          });
+        }),
+      );
+    }
+
+    if (perPage) {
+      gameResultQueryBuilder = gameResultQueryBuilder.limit(perPage);
+      if (page)
+        gameResultQueryBuilder = gameResultQueryBuilder.offset(
+          perPage * (page - 1),
+        );
+    }
+    const result = await gameResultQueryBuilder.getMany();
 
     result.map((gameResults) => {
       gameResults.playerOneNickname = gameResults.playerOne.nickname;
