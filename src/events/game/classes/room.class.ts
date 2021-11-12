@@ -99,6 +99,10 @@ export class Room {
     return this.observers.length;
   }
 
+  isPlaying() {
+    return this.roomStatus !== RoomStatus.READY;
+  }
+
   toPlayer(socketId: string) {
     const index = this.observers.indexOf(socketId);
     this.observers.splice(index, 1);
@@ -318,7 +322,10 @@ export class Room {
 
   emitGameRoomData() {
     console.log('!!!!!! observers : ', this.observers);
-    console.log('!!!!!! players   : ', this.players);
+    console.log('!!!!!! players   : ');
+    this.players.forEach((vakue, key) => {
+      console.log(key, ' : ', vakue.getSocketId());
+    });
     console.log('!!!!!! player1.socketId : ', this.player1.getSocketId());
     console.log('!!!!!! player2.socketId : ', this.player2?.getSocketId());
 

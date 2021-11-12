@@ -188,6 +188,10 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     );
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
 
+    if (room.isPlaying()) {
+      return;
+    }
+
     const { player1, player2 } = room.getPlayers();
 
     if (player1.getSocketId() === socket.id) {
