@@ -7,6 +7,7 @@ import { Friend } from 'src/entities/Friend';
 import { GameMember } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
+import { Rank } from 'src/entities/Rank';
 import { User } from 'src/entities/User';
 import { Connection } from 'typeorm';
 import { Factory, Seeder } from 'typeorm-seeding';
@@ -21,6 +22,7 @@ import {
   GameResultInitData,
   GameRoomInitData,
 } from '../game-init-data';
+import { rankInitData } from '../rank-init-data';
 import { userInitData } from '../user-init-data';
 
 export class InitialDataSeeder implements Seeder {
@@ -31,6 +33,13 @@ export class InitialDataSeeder implements Seeder {
       .insert()
       .into(User)
       .values(userInitData)
+      .execute();
+
+    await connection
+      .createQueryBuilder()
+      .insert()
+      .into(Rank)
+      .values(rankInitData)
       .execute();
 
     // Friend

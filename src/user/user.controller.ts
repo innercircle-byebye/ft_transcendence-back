@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -31,7 +30,7 @@ import { MeDto } from './dto/me.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { UpdateUserVersionTwoDto } from './dto/update.user-v2.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
-import { UserUpdateImageDto } from './dto/user-updateimage.dto';
+import { UserWithRankDto } from './dto/user-withrank.dto';
 import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
@@ -64,7 +63,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('imagePath', {
       storage: diskStorage({
-        destination: './profile_image',
+        destination: './image/profile/',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
@@ -74,7 +73,9 @@ export class UserController {
   )
   @ApiOkResponse({ type: UserDto })
   @ApiBadRequestResponse({
-    description: '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.',
+    description:
+      '동일한 이메일이 존재합니다.\n\n동일한 닉네임이 존재합니다.\n\n' +
+      '이미지 파일만 전송 가능합니다. (jpg, jpeg, png, gif)\n\n',
   })
   async editProfileVersionTwo(
     @AuthUser() user: User,
@@ -86,17 +87,24 @@ export class UserController {
       this.userService.removeExistingImagePath(user.userId);
       this.userService.updateProfileImagePath(
         user.userId,
-        `/profile_image/${file.filename}`,
+        `/image/profile/${file.filename}`,
       );
     }
     return this.userService.updateUserProfileV2(user.userId, formData);
   }
 
-  @ApiOkResponse({ type: UserDto })
+  @ApiOkResponse({ type: UserWithRankDto })
   @ApiOperation({ summary: '파라미터를 통한 유저 조회' })
   @Get('/:id')
-  async getUserByParam(@Param('id') userId) {
+  async getUserByParam(@Param('id') userId: number) {
     return this.userService.getUser(userId);
+  }
+
+  @ApiOkResponse({ type: UserWithRankDto })
+  @ApiOperation({ summary: '파라미터를 통한 유저 조회(닉네임)' })
+  @Get('/nickname/:nickname')
+  async getUserByNickname(@Param('nickname') nickname: string) {
+    return this.userService.getUserByNickname(nickname);
   }
 
   @ApiOkResponse({ type: UpdateUserDto })
@@ -107,35 +115,6 @@ export class UserController {
       throw new BadRequestException('요청값 비어있음');
     }
     return this.userService.updateUser(userId, updateData);
-  }
-
-  // @ApiOkResponse({ type: UpdateUserDto })
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: '유저 사진 업로드' })
-  @Put('/profile_image')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './profile_image',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-      // 파일 용량 제한
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    }),
-  )
-  @ApiOkResponse({ type: UserDto })
-  async uploadProfileImage(
-    @AuthUser() user: User,
-    @UploadedFile() file: Express.Multer.File,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Body() formData: UserUpdateImageDto,
-  ) {
-    this.userService.removeExistingImagePath(user.userId);
-    return this.userService.updateProfileImagePath(
-      user.userId,
-      `/profile_image/${file.filename}`,
-    );
   }
 
   @ApiOkResponse({ type: UserDto })
@@ -152,7 +131,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './profile_image',
+        destination: './image/profile',
         filename: editFileName,
       }),
       fileFilter: imageFileFilter,
@@ -160,6 +139,9 @@ export class UserController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
+  @ApiBadRequestResponse({
+    description: '이미지 파일만 전송 가능합니다. (jpg, jpeg, png, gif)\n\n',
+  })
   async registerUserWithUploadProfileImage(
     @AuthUser() user: User,
     @UploadedFile() file: Express.Multer.File,
@@ -181,7 +163,7 @@ export class UserController {
       user.userId,
       formData.email,
       formData.nickname,
-      `/profile_image/${file.filename}`,
+      `/image/profile/${file.filename}`,
     );
   }
 }

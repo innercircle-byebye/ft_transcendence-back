@@ -26,7 +26,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.useStaticAssets(join(__dirname, '..', 'profile_image'));
+  app.useStaticAssets(join(__dirname, '..', 'image'));
 
   const config = new DocumentBuilder()
     .setTitle('Pong Game API')

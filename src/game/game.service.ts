@@ -4,9 +4,10 @@ import { DmService } from 'src/dm/dm.service';
 import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
-import { User } from 'src/entities/User';
+import { User, UserStatus } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { DMType } from 'src/entities/DM';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
@@ -126,6 +127,13 @@ export class GameService {
     return gameRoomForReturn;
   }
 
+  countGameRooms() {
+    return this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .addSelect('gameroom.password')
+      .getCount();
+  }
+
   async getAllGameRooms(): Promise<GameRoomDto[]> {
     const allGameRoomsWithPassword = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
@@ -160,9 +168,6 @@ export class GameService {
   }
 
   async getAllGameRoomsWithPaging(perPage: number, page: number) {
-    // 한 화면에 8번
-    console.log(perPage);
-    console.log(page);
     const allGameRoomsList = await this.gameRoomRepository
       .createQueryBuilder('gameroom')
       .orderBy('gameroom.gameRoomId', 'ASC')
@@ -218,6 +223,7 @@ export class GameService {
   async createGameRoom(
     playerOneId: number,
     gameRoomCreateDto: GameRoomCreateDto,
+    invitedUserId: number | null,
   ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -275,6 +281,13 @@ export class GameService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+    if (invitedUserId) {
+      this.inviteUserToGame(
+        gameRoomReturned.gameRoomId,
+        playerOneId,
+        invitedUserId,
+      );
     }
     return this.getGameRoomTotalInfo(gameRoomReturned.gameRoomId);
   }
@@ -768,9 +781,16 @@ export class GameService {
     return returnTargetUser;
   }
 
-  async getGameResults(userId: number): Promise<GameResultUserDto[]> {
-    const result = await this.gameResultRepository
+  async countGameResultsOfUser(userId: number) {
+    return (await this.getAllGameResults(userId)).length;
+  }
+
+  async getAllGameResults(userId: number): Promise<GameResultUserDto[]> {
+    const result: any = await this.gameResultRepository
       .createQueryBuilder('gameresults')
+      .orderBy('gameresults.lastModifiedAt', 'DESC')
+      .innerJoinAndSelect('gameresults.playerOne', 'playerOne')
+      .innerJoinAndSelect('gameresults.playerTwo', 'playerTwo')
       .andWhere(
         new Brackets((qb) => {
           qb.where('gameresults.startAt IS NOT NULL').andWhere(
@@ -787,6 +807,51 @@ export class GameService {
         }),
       )
       .getMany();
+
+    result.map((gameResults) => {
+      gameResults.playerOneNickname = gameResults.playerOne.nickname;
+      gameResults.playerTwoNickname = gameResults.playerTwo.nickname;
+      delete gameResults.playerOne;
+      delete gameResults.playerTwo;
+      return gameResults;
+    });
+    return result;
+  }
+
+  async getGameResultsPagenation(
+    perPage: number,
+    page: number,
+    userId: number,
+  ): Promise<GameResultUserDto[]> {
+    const result: any = await this.gameResultRepository
+      .createQueryBuilder('gameresults')
+      .orderBy('gameresults.lastModifiedAt', 'DESC')
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.startAt IS NOT NULL').andWhere(
+            'gameresults.endAt is not null',
+          );
+        }),
+      )
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('gameresults.playerOneId = :userId', { userId }).orWhere(
+            'gameresults.playerTwoId = :userId',
+            { userId },
+          );
+        }),
+      )
+      .limit(perPage)
+      .offset(perPage * (page - 1))
+      .getMany();
+
+    result.map((gameResults) => {
+      gameResults.playerOneNickname = gameResults.playerOne.nickname;
+      gameResults.playerTwoNickname = gameResults.playerTwo.nickname;
+      delete gameResults.playerOne;
+      delete gameResults.playerTwo;
+      return gameResults;
+    });
     return result;
   }
 
@@ -804,7 +869,7 @@ export class GameService {
   }
 
   async getUserWinRate(userId: number): Promise<GameResultWinRateDto> {
-    const result = await this.getGameResults(userId);
+    const result = await this.getAllGameResults(userId);
     const totalPlayCount = result.length;
     const winCount = this.getUserWinCount(userId, result);
     const loseCount = totalPlayCount - winCount;
@@ -813,7 +878,7 @@ export class GameService {
       totalPlayCount,
       winCount,
       loseCount,
-      winRate: winRate.toFixed(5),
+      winRate: Number.isNaN(winRate) ? '0' : winRate.toFixed(0),
     };
     return resultTwo;
   }
@@ -835,7 +900,7 @@ export class GameService {
             totalPlayCount,
             winCount,
             loseCount,
-            winRate: winRate === 'NaN' ? '0.00000' : winRate,
+            winRate,
             experience,
             user: {
               userId,
@@ -853,9 +918,56 @@ export class GameService {
     return result;
   }
 
+  getAllUserCount() {
+    return this.userRepository.createQueryBuilder('user').getCount();
+  }
+
   async getUserRaningWithPaging(perPage: number, pageNumber: number) {
     const result = await this.getAllUserRanking();
 
     return result.slice((pageNumber - 1) * perPage, pageNumber * perPage);
+  }
+
+  async inviteUserToGame(
+    gameRoomId: number,
+    userId: number,
+    invitedUserId: number,
+  ) {
+    const targetChannel = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!targetChannel)
+      throw new BadRequestException('존재 하지 않는 게임방입니다.');
+
+    const targetUser = await this.userRepository.findOne({
+      where: { userId: invitedUserId },
+    });
+
+    if (!targetUser)
+      throw new BadRequestException('해당 유저가 존재하지 않습니다.');
+
+    this.dmService.createDM(
+      userId,
+      invitedUserId,
+      gameRoomId.toString(),
+      DMType.GAME_INVITE,
+    );
+
+    return 'OK';
+  }
+
+  async findGameRoomByUserId(userId: number) {
+    const checkUserInGame = await this.userRepository.findOne({
+      where: { userId },
+    });
+
+    if (checkUserInGame.status !== UserStatus.IN_GAME)
+      throw new BadRequestException('유저가 게임중이 아닙니다.');
+
+    const gameMemberByUserId = await this.gameMemberRepository.findOne({
+      where: { userId },
+    });
+
+    return this.getGameRoomTotalInfo(gameMemberByUserId.gameRoomId);
   }
 }

@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -21,7 +20,7 @@ export enum GameMemberStatus {
 }
 
 @Entity('game_member')
-export class GameMember extends BaseEntity implements IGameMember {
+export class GameMember implements IGameMember {
   @ManyToOne('GameRoom', 'gameMembers', { primary: true })
   @JoinColumn({ name: 'game_room_id' })
   gameRoom: IGameRoom;

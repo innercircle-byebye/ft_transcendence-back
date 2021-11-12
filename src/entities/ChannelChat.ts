@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -14,7 +15,7 @@ import { IChannelChat } from './interfaces/IChannelChat';
 import { IUser } from './interfaces/IUser';
 
 @Entity('channel_chat')
-export class ChannelChat implements IChannelChat {
+export class ChannelChat extends BaseEntity implements IChannelChat {
   @ApiProperty({
     description: '채널 내 채팅 id 번호 (사용자 메세지)',
     example: 1,
