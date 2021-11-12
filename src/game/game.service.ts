@@ -473,34 +473,38 @@ export class GameService {
     gameRoomId: number,
     password: string,
   ) {
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId, deletedAt: null },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    if (
-      typeof Object(password) !== undefined &&
-      !(await bcrypt.compare(password, checkGameRoom.password))
-    )
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-    if (this.checkUserAlreadyInGameRoom(userId))
+    if (await this.checkUserAlreadyInGameRoom(userId))
       throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
 
-    let currentObserverCount;
-    currentObserverCount = await this.getCurrentGameRoomMemberCount(gameRoomId);
-    if (
-      this.gameMemberRepository.findOne({
-        where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
-      }) === undefined
-    )
-      currentObserverCount -= 2;
-    else currentObserverCount -= 1;
+    const checkGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameRoom')
+      .addSelect('gameRoom.password')
+      .where('gameRoom.gameRoomId = :gameRoomId', { gameRoomId })
+      .getOne();
 
-    if (checkGameRoom.maxParticipantNum - 2 <= currentObserverCount)
-      throw new BadRequestException(
-        '게임방에 참여할 수 없습니다. (관전 정원 초과)',
-      );
+    // 방 존재여부 체크
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
 
+    // 방 비밀번호 체크
+    if (checkGameRoom.password) {
+      if (
+        !password ||
+        !(await bcrypt.compare(password, checkGameRoom.password))
+      ) {
+        throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    // 게임방 정원초과여부
+    const checkGameMemberInRoom = await this.gameMemberRepository.find({
+      where: [{ gameRoomId }],
+    });
+    if (checkGameMemberInRoom.length >= checkGameRoom.maxParticipantNum) {
+      throw new BadRequestException('게임방에 참여할 수 없습니다. (정원 초과)');
+    }
+
+    // TODO: ban된 사용자 처리 및 관전자입장 나중에 살펴볼 예정
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
