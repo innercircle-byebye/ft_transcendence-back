@@ -207,16 +207,22 @@ export class GameService {
   }
 
   async getPlayableRooms() {
-    const allGameRooms = (await this.getAllGameRooms()).filter(
-      (list) => list.gameRoomStatus === 'playable',
-    );
+    const allGameRooms = (await this.getAllGameRooms()).filter((list) => {
+      return (
+        list.gameRoomStatus === GameRoomStatus.PLAYABLE &&
+        list.isPrivate === false
+      );
+    });
     return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
   }
 
   async getObservableRooms() {
-    const allGameRooms = (await this.getAllGameRooms()).filter(
-      (list) => list.gameRoomStatus === 'observable',
-    );
+    const allGameRooms = (await this.getAllGameRooms()).filter((list) => {
+      return (
+        list.gameRoomStatus === GameRoomStatus.OBSERVABLE &&
+        list.isPrivate === false
+      );
+    });
     return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
   }
 
