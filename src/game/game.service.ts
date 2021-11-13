@@ -421,6 +421,7 @@ export class GameService {
     });
 
     // TODO: ban된 사용자 처리 나중에 살펴볼 예정
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
@@ -504,7 +505,6 @@ export class GameService {
       throw new BadRequestException('게임방에 참여할 수 없습니다. (정원 초과)');
     }
 
-    // TODO: ban된 사용자 처리 및 관전자입장 나중에 살펴볼 예정
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
@@ -516,9 +516,12 @@ export class GameService {
       .withDeleted()
       .getOne();
     if (checkIfAlreadyJoined) {
-      if (checkIfAlreadyJoined.banDate !== null)
+      if (checkIfAlreadyJoined.banDate !== null) {
         throw new BadRequestException('ban 처리된 사용자 입니다');
-      await this.gameMemberRepository.restore(checkIfAlreadyJoined);
+      }
+      checkIfAlreadyJoined.status = GameMemberStatus.OBSERVER;
+      checkIfAlreadyJoined.deletedAt = null;
+      await this.gameMemberRepository.save(checkIfAlreadyJoined);
     } else {
       const gameRoomObserver = new GameMember();
       gameRoomObserver.gameRoomId = gameRoomId;
