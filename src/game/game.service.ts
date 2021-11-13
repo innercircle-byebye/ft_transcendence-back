@@ -601,33 +601,21 @@ export class GameService {
               .getRepository(GameResult)
               .save(latestGameReseult);
           } else {
-            // remove gameroom
+            // remove gameResult
             const latestGameReseult = await queryRunner.manager
               .getRepository(GameResult)
               .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
             await queryRunner.manager
               .getRepository(GameResult)
               .remove(latestGameReseult);
-            // save for later
-            // await Promise.all(
-            //   (
-            //     await this.getAllGameRoomObserversId(gameRoomId)
-            //   ).map(async (observerUserID) => {
-            //     const observerInGameRoom = await queryRunner.manager
-            //       .getRepository(GameMember)
-            //       .findOne({ where: { gameRoomId, userId: observerUserID } });
-            //     console.log(observerInGameRoom);
-            //     await queryRunner.manager
-            //       .getRepository(GameMember)
-            //       .softRemove(observerInGameRoom);
-            //   }),
-            // );
+
+            // remove gameRoom
             const removeTargetGameRoom = await queryRunner.manager
               .getRepository(GameRoom)
               .find({ where: { gameRoomId } });
             await queryRunner.manager
               .getRepository(GameRoom)
-              .remove(removeTargetGameRoom);
+              .softRemove(removeTargetGameRoom);
           }
         }
         await queryRunner.commitTransaction();
