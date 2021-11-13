@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { GameEventsService } from './game-events.service';
 import { RoomManagerService } from './game/services/room-manager.service';
 
 @WebSocketGateway({ namespace: '/game' })
@@ -15,7 +16,10 @@ import { RoomManagerService } from './game/services/room-manager.service';
 export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
 
-  constructor(private readonly roomManagerService: RoomManagerService) {}
+  constructor(
+    private readonly gameEventsService: GameEventsService,
+    private readonly roomManagerService: RoomManagerService,
+  ) {}
 
   handleConnection(@ConnectedSocket() socket: Socket) {
     console.log('connect!!!!!!!!!!  ', socket.id);
@@ -44,20 +48,28 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   }
 
   @SubscribeMessage('joinGameRoom')
-  handleJoinGameRoom(
+  async handleJoinGameRoom(
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: any,
   ) {
-    const { roomId, userId } = data;
-    console.log(' userId : ', userId);
+    // TODO: roomId -> gameRoomId 바꾸자고 말해야함
+    const { roomId: gameRoomId, userId } = data;
 
-    if (!this.roomManagerService.checkRoomExist(roomId)) {
-      this.roomManagerService.createRoom(this.server, roomId, socket);
+    const gameMemberInfo = await this.gameEventsService.getGameMemberInfo(
+      gameRoomId,
+      userId,
+    );
+    console.log('***************************');
+    console.log(gameMemberInfo);
+    console.log('***************************');
+
+    if (!this.roomManagerService.checkRoomExist(gameRoomId)) {
+      this.roomManagerService.createRoom(this.server, gameRoomId, socket);
     } else {
-      this.roomManagerService.joinRoom(this.server, roomId, socket);
+      this.roomManagerService.joinRoom(this.server, gameRoomId, socket);
     }
 
-    const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
 
     room.emitGameRoomData();
   }

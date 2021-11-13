@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameEventsGateway } from './game-events.gateway';
+import { GameEventsService } from './game-events.service';
 import { RoomManagerService } from './game/services/room-manager.service';
 
-class MockRoomManagerService {}
+class MockService {}
 
 describe('GameEventsGateway', () => {
   let gateway: GameEventsGateway;
@@ -11,7 +12,8 @@ describe('GameEventsGateway', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GameEventsGateway,
-        { provide: RoomManagerService, useClass: MockRoomManagerService },
+        { provide: RoomManagerService, useClass: MockService },
+        { provide: GameEventsService, useClass: MockService },
       ],
     }).compile();
 
