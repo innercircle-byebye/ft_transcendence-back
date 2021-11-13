@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { GameMemberStatus } from 'src/entities/GameMember';
 import { GameEventsService } from './game-events.service';
 import { RoomManagerService } from './game/services/room-manager.service';
 
@@ -55,18 +56,30 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     // TODO: roomId -> gameRoomId 바꾸자고 말해야함
     const { roomId: gameRoomId, userId } = data;
 
-    const gameMemberInfo = await this.gameEventsService.getGameMemberInfo(
-      gameRoomId,
-      userId,
-    );
-    console.log('***************************');
-    console.log(gameMemberInfo);
-    console.log('***************************');
+    const gameMemberInfo =
+      await this.gameEventsService.getGameMemberInfoWithUserAndGameRoom(
+        gameRoomId,
+        userId,
+      );
 
-    if (!this.roomManagerService.checkRoomExist(gameRoomId)) {
+    if (!gameMemberInfo) {
+      return;
+    }
+
+    if (gameMemberInfo.status === GameMemberStatus.PLAYER_ONE) {
       this.roomManagerService.createRoom(this.server, gameRoomId, socket);
+    } else if (gameMemberInfo.status === GameMemberStatus.PLAYER_TWO) {
+      this.roomManagerService.joinRoomByPlayer2(
+        this.server,
+        gameRoomId,
+        socket,
+      );
     } else {
-      this.roomManagerService.joinRoom(this.server, gameRoomId, socket);
+      this.roomManagerService.joinRoomByObserver(
+        this.server,
+        gameRoomId,
+        socket,
+      );
     }
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
