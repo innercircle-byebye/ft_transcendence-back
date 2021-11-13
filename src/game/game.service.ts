@@ -420,8 +420,6 @@ export class GameService {
       }
     });
 
-    // TODO: ban된 사용자 처리 나중에 살펴볼 예정
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
@@ -437,20 +435,18 @@ export class GameService {
 
     try {
       let gameRoomPlayerTwo;
-      if (checkIfAlreadyJoined) gameRoomPlayerTwo = checkIfAlreadyJoined;
-      else gameRoomPlayerTwo = new GameMember();
-      gameRoomPlayerTwo.gameRoomId = gameRoomId;
-      gameRoomPlayerTwo.userId = userId;
+      if (checkIfAlreadyJoined) {
+        gameRoomPlayerTwo = checkIfAlreadyJoined;
+        gameRoomPlayerTwo.deletedAt = null;
+      } else {
+        gameRoomPlayerTwo = new GameMember();
+        gameRoomPlayerTwo.gameRoomId = gameRoomId;
+        gameRoomPlayerTwo.userId = userId;
+      }
       gameRoomPlayerTwo.status = GameMemberStatus.PLAYER_TWO;
-
-      if (checkIfAlreadyJoined)
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .restore(gameRoomPlayerTwo);
-      else
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .save(gameRoomPlayerTwo);
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .save(gameRoomPlayerTwo);
 
       const latestGameReseult = await queryRunner.manager
         .getRepository(GameResult)
@@ -459,6 +455,7 @@ export class GameService {
       await queryRunner.manager
         .getRepository(GameResult)
         .save(latestGameReseult);
+
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
