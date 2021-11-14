@@ -11,6 +11,7 @@ import { Socket, Server } from 'socket.io';
 import { GameMemberStatus } from 'src/entities/GameMember';
 import { GameEventsService } from './game-events.service';
 import { RoomManagerService } from './game/services/room-manager.service';
+import { onlineGameMap } from './onlineGameMap';
 
 @WebSocketGateway({ namespace: '/game' })
 // eslint-disable-next-line prettier/prettier
@@ -46,6 +47,8 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
         room.readyInit();
       }
     }
+
+    delete onlineGameMap[socket.id];
   }
 
   @SubscribeMessage('joinGameRoom')
@@ -55,6 +58,8 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   ) {
     // TODO: roomId -> gameRoomId 바꾸자고 말해야함
     const { roomId: gameRoomId, userId } = data;
+
+    onlineGameMap[socket.id] = userId;
 
     const gameMemberInfo =
       await this.gameEventsService.getGameMemberInfoWithUserAndGameRoom(
