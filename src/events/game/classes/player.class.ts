@@ -1,3 +1,4 @@
+import { IUser } from 'src/entities/interfaces/IUser';
 import { SETTINGS } from '../SETTINGS';
 
 export enum KeyCode {
@@ -8,7 +9,7 @@ export enum KeyCode {
 const UNIT = 2;
 
 export class Player {
-  private userId: number;
+  private user: IUser;
 
   private role: string;
 
@@ -29,8 +30,8 @@ export class Player {
     [KeyCode.DOWN]: boolean;
   };
 
-  constructor(userId: number, role: string) {
-    this.userId = userId;
+  constructor(user: IUser, role: string) {
+    this.user = user;
     this.role = role;
     this.ready = false;
 
@@ -81,8 +82,8 @@ export class Player {
     this.y = SETTINGS.HEIGHT / 2;
   }
 
-  getUserId() {
-    return this.userId;
+  getUser() {
+    return this.user;
   }
 
   getRole() {
