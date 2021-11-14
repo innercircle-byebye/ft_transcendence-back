@@ -315,7 +315,7 @@ export class GameService {
     const checkExistGameRoom = await this.gameRoomRepository.findOne({
       where: [{ title: gameRoomUpdateDto.title, deletedAt: null }],
     });
-    if (checkExistGameRoom)
+    if (checkExistGameRoom && checkExistGameRoom.gameRoomId !== gameRoomId)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
 
     const checkGameRoomUpdateAuth = this.gameMemberRepository.findOne({
