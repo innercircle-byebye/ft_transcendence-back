@@ -1,51 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
+import { onlineGameMap } from 'src/events/onlineGameMap';
 import { Room } from '../classes/room.class';
 
 @Injectable()
 export class RoomManagerService {
   roomsByGameRoomId: Map<number, Room> = new Map<number, Room>();
 
-  gameRoomIdsBySocketId: Map<string, number> = new Map<string, number>();
+  gameRoomIdsByUserId: Map<number, number> = new Map<number, number>();
 
-  createRoom(server: Server, gameRoomId: number, player1Socket: Socket): void {
-    const room = new Room(gameRoomId, player1Socket.id, server);
-    player1Socket.join(`game-${gameRoomId.toString()}`);
-
+  createRoom(server: Server, gameRoomId: number, player1UserId: number): void {
+    const room = new Room(gameRoomId, player1UserId, server);
+    // player1Socket.join(`game-${gameRoomId.toString()}`);
     this.roomsByGameRoomId.set(gameRoomId, room);
-    this.gameRoomIdsBySocketId.set(player1Socket.id, gameRoomId);
+    this.gameRoomIdsByUserId.set(player1UserId, gameRoomId);
     console.log('Room Created : ', gameRoomId);
   }
 
-  joinRoomByPlayer2(
-    server: Server,
-    gameRoomId: number,
-    newParticipant: Socket,
-  ): void {
+  joinRoomByPlayer2(gameRoomId: number, player2UserId: number): void {
     const room = this.roomsByGameRoomId.get(gameRoomId);
-    room.setPlayer2(newParticipant.id);
-
-    newParticipant.join(`game-${gameRoomId.toString()}`);
-    this.gameRoomIdsBySocketId.set(newParticipant.id, gameRoomId);
+    room.setPlayer2(player2UserId);
+    // newParticipant.join(`game-${gameRoomId.toString()}`);
+    this.gameRoomIdsByUserId.set(player2UserId, gameRoomId);
   }
 
-  joinRoomByObserver(
-    server: Server,
-    gameRoomId: number,
-    newParticipant: Socket,
-  ): void {
+  joinRoomByObserver(gameRoomId: number, observerUserId: number): void {
     const room = this.roomsByGameRoomId.get(gameRoomId);
-    room.joinByObserver(newParticipant.id);
-
-    newParticipant.join(`game-${gameRoomId.toString()}`);
-    this.gameRoomIdsBySocketId.set(newParticipant.id, gameRoomId);
+    room.joinByObserver(observerUserId);
+    // newParticipant.join(`game-${gameRoomId.toString()}`);
+    this.gameRoomIdsByUserId.set(observerUserId, gameRoomId);
   }
 
   destroy(server: Server, gameRoomId) {
     const room = this.roomsByGameRoomId.get(gameRoomId);
     const participants = room.getParticipants();
-    participants.forEach((socketId) => {
-      this.gameRoomIdsBySocketId.delete(socketId);
+    participants.forEach((userId) => {
+      this.gameRoomIdsByUserId.delete(userId);
+
+      const socketId = Object.keys(onlineGameMap).find(
+        (key) => onlineGameMap[key] === userId,
+      );
       server.to(socketId).emit('destroy');
     });
     this.roomsByGameRoomId.delete(gameRoomId);
@@ -55,8 +49,8 @@ export class RoomManagerService {
     return this.roomsByGameRoomId;
   }
 
-  getGameRoomIdBySocketId(socketId: string): number {
-    return this.gameRoomIdsBySocketId.get(socketId);
+  getGameRoomIdByUserId(userId: number): number {
+    return this.gameRoomIdsByUserId.get(userId);
   }
 
   checkRoomExist(gameRoomId): boolean {

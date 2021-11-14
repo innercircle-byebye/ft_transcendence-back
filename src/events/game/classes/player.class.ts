@@ -8,7 +8,7 @@ export enum KeyCode {
 const UNIT = 2;
 
 export class Player {
-  private socketId: string;
+  private userId: number;
 
   private role: string;
 
@@ -29,8 +29,8 @@ export class Player {
     [KeyCode.DOWN]: boolean;
   };
 
-  constructor(socketId: string, role: string) {
-    this.socketId = socketId;
+  constructor(userId: number, role: string) {
+    this.userId = userId;
     this.role = role;
     this.ready = false;
 
@@ -81,8 +81,8 @@ export class Player {
     this.y = SETTINGS.HEIGHT / 2;
   }
 
-  getSocketId() {
-    return this.socketId;
+  getUserId() {
+    return this.userId;
   }
 
   getRole() {

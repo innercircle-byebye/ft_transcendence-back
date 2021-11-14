@@ -30,21 +30,25 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnect!!!!!!!   ', socket.id);
 
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
-    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-    room.leave(socket.id);
-    this.roomManagerService.gameRoomIdsBySocketId.delete(socket.id);
+    const userId = onlineGameMap[socket.id];
 
-    if (room.isEmpty()) {
-      this.roomManagerService.destroy(this.server, gameRoomId);
-    } else {
-      const { player2 } = room.getPlayers();
-      if (player2) {
-        room.emitGameRoomData();
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (gameRoomId) {
+      const room = this.roomManagerService
+        .getRoomsByGameRoomId()
+        .get(gameRoomId);
+      room.leave(userId);
+      this.roomManagerService.gameRoomIdsByUserId.delete(userId);
+
+      if (room.isEmpty()) {
+        this.roomManagerService.destroy(this.server, gameRoomId);
       } else {
-        room.readyInit();
+        const { player2 } = room.getPlayers();
+        if (player2) {
+          room.emitGameRoomData();
+        } else {
+          room.readyInit();
+        }
       }
     }
 
@@ -56,8 +60,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: any,
   ) {
-    // TODO: roomId -> gameRoomId 바꾸자고 말해야함
-    const { roomId: gameRoomId, userId } = data;
+    const { gameRoomId, userId } = data;
 
     onlineGameMap[socket.id] = userId;
 
@@ -72,71 +75,63 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     }
 
     if (gameMemberInfo.status === GameMemberStatus.PLAYER_ONE) {
-      this.roomManagerService.createRoom(this.server, gameRoomId, socket);
+      this.roomManagerService.createRoom(this.server, gameRoomId, userId);
+      socket.join(`game-${gameRoomId.toString()}`);
     } else if (gameMemberInfo.status === GameMemberStatus.PLAYER_TWO) {
-      this.roomManagerService.joinRoomByPlayer2(
-        this.server,
-        gameRoomId,
-        socket,
-      );
+      this.roomManagerService.joinRoomByPlayer2(gameRoomId, userId);
+      socket.join(`game-${gameRoomId.toString()}`);
     } else {
-      this.roomManagerService.joinRoomByObserver(
-        this.server,
-        gameRoomId,
-        socket,
-      );
+      this.roomManagerService.joinRoomByObserver(gameRoomId, userId);
+      socket.join(`game-${gameRoomId.toString()}`);
     }
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-
     room.emitGameRoomData();
   }
 
   @SubscribeMessage('ready')
   handleReady(@ConnectedSocket() socket: Socket) {
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
-    if (gameRoomId) {
-      const room = this.roomManagerService
-        .getRoomsByGameRoomId()
-        .get(gameRoomId);
-      room.getPlayerBySocketId(socket.id).setReady(true);
+    const userId = onlineGameMap[socket.id];
+    if (!userId) return;
 
-      const { player1, player2 } = room.getPlayers();
-      if (player1?.getSocketId() === socket.id) {
-        this.server
-          .to(`game-${gameRoomId.toString()}`)
-          .emit('ready', 'player1');
-      } else if (player2?.getSocketId() === socket.id) {
-        this.server
-          .to(`game-${gameRoomId.toString()}`)
-          .emit('ready', 'player2');
-      }
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (!gameRoomId) return;
+
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    const player = room.getPlayerByUserId(userId);
+    if (!player) return;
+
+    player.setReady(true);
+    const { player1, player2 } = room.getPlayers();
+    if (player1?.getUserId() === userId) {
+      this.server.to(`game-${gameRoomId.toString()}`).emit('ready', 'player1');
+    } else if (player2?.getUserId() === userId) {
+      this.server.to(`game-${gameRoomId.toString()}`).emit('ready', 'player2');
     }
   }
 
   @SubscribeMessage('unReady')
   handleUnReady(@ConnectedSocket() socket: Socket) {
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
-    if (gameRoomId) {
-      const room = this.roomManagerService
-        .getRoomsByGameRoomId()
-        .get(gameRoomId);
-      room.getPlayerBySocketId(socket.id).setReady(false);
+    const userId = onlineGameMap[socket.id];
+    if (!userId) return;
 
-      const { player1, player2 } = room.getPlayers();
-      if (player1?.getSocketId() === socket.id) {
-        this.server
-          .to(`game-${gameRoomId.toString()}`)
-          .emit('unReady', 'player1');
-      } else if (player2?.getSocketId() === socket.id) {
-        this.server
-          .to(`game-${gameRoomId.toString()}`)
-          .emit('unReady', 'player2');
-      }
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (!gameRoomId) return;
+
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    const player = room.getPlayerByUserId(userId);
+    if (!player) return;
+
+    player.setReady(false);
+    const { player1, player2 } = room.getPlayers();
+    if (player1?.getUserId() === userId) {
+      this.server
+        .to(`game-${gameRoomId.toString()}`)
+        .emit('unReady', 'player1');
+    } else if (player2?.getUserId() === userId) {
+      this.server
+        .to(`game-${gameRoomId.toString()}`)
+        .emit('unReady', 'player2');
     }
   }
 
@@ -145,15 +140,13 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     @ConnectedSocket() socket: Socket,
     @MessageBody() keyCode: number,
   ) {
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
-    if (gameRoomId) {
-      const room = this.roomManagerService
-        .getRoomsByGameRoomId()
-        .get(gameRoomId);
-      room.getPlayerBySocketId(socket.id).setKeyPress(keyCode, true);
-    }
+    const userId = onlineGameMap[socket.id];
+    if (!userId) return;
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (!gameRoomId) return;
+
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    room.getPlayerByUserId(userId)?.setKeyPress(keyCode, true);
   }
 
   @SubscribeMessage('keyUp')
@@ -161,30 +154,31 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     @ConnectedSocket() socket: Socket,
     @MessageBody() keyCode: number,
   ) {
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
-    if (gameRoomId) {
-      const room = this.roomManagerService
-        .getRoomsByGameRoomId()
-        .get(gameRoomId);
-      room.getPlayerBySocketId(socket.id).setKeyPress(keyCode, false);
-    }
+    const userId = onlineGameMap[socket.id];
+    if (!userId) return;
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (!gameRoomId) return;
+
+    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
+    room.getPlayerByUserId(userId)?.setKeyPress(keyCode, false);
   }
 
   @SubscribeMessage('gameChat')
   handleGameChat(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
+    const userId = onlineGameMap[socket.id];
+    if (!userId) return;
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+    if (!gameRoomId) return;
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-    const { player1 } = room.getPlayers();
+    const { player1, player2 } = room.getPlayers();
 
-    const nickname =
-      player1.getSocketId() === socket.id
-        ? `(player1)${socket.id}`
-        : `(player2)${socket.id}`;
+    let nickname = `${userId}`;
+    if (player1?.getUserId() === userId) {
+      nickname = `(player1)${userId}`;
+    } else if (player2?.getUserId() === userId) {
+      nickname = `(player2)${userId}`;
+    }
 
     const chatData = {
       index: room.nextGameChatIndex(),
@@ -198,14 +192,13 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   @SubscribeMessage('toPlayer')
   handleToPlayer(@ConnectedSocket() socket: Socket) {
     console.log('~~~~~~~~ toPlayer evnet ~~~~~~~~');
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
+    const userId = onlineGameMap[socket.id];
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
 
     const { player2 } = room.getPlayers();
-    if (!player2 && room.isObserver(socket.id)) {
-      room.toPlayer(socket.id);
+    if (!player2 && room.isObserver(userId)) {
+      room.toPlayer(userId);
     }
     room.emitGameRoomData();
   }
@@ -213,9 +206,8 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   @SubscribeMessage('toObserver')
   handleToObserver(@ConnectedSocket() socket: Socket) {
     console.log('~~~~~~~~ toObserver evnet ~~~~~~~~');
-    const gameRoomId = this.roomManagerService.getGameRoomIdBySocketId(
-      socket.id,
-    );
+    const userId = onlineGameMap[socket.id];
+    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
 
     if (room.isPlaying()) {
@@ -224,24 +216,24 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
 
     const { player1, player2 } = room.getPlayers();
 
-    if (player1.getSocketId() === socket.id) {
+    if (player1.getUserId() === userId) {
       console.log('~~~ player1 => observer');
       if (player2) {
         console.log('player2를 player1로 하고 player1은 관전자로된다.');
         room.unSetPlayer1();
         room.player2ToPlayer1();
-        room.joinByObserver(socket.id);
+        room.joinByObserver(userId);
       } else if (room.getObserverCnt() > 0) {
         console.log('관전자중 하나를  player1로 하고 player1은 관전자로된다.');
         room.unSetPlayer1();
         room.observerToPlayer1();
-        room.joinByObserver(socket.id);
+        room.joinByObserver(userId);
       } else {
         console.log('아무일도 안일어난다');
       }
-    } else if (player2.getSocketId() === socket.id) {
+    } else if (player2.getUserId() === userId) {
       room.unSetPlayer2();
-      room.joinByObserver(socket.id);
+      room.joinByObserver(userId);
     }
 
     room.emitGameRoomData();

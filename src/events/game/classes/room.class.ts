@@ -3,6 +3,7 @@ import { Ball } from './ball.class';
 import { Player } from './player.class';
 import { SETTINGS, CLIENT_SETTINGS } from '../SETTINGS';
 import { Countdown } from './countdown.class';
+import { onlineGameMap } from '../../onlineGameMap';
 
 export enum RoomStatus {
   READY = 'ready',
@@ -17,9 +18,9 @@ export class Room {
 
   private player2: Player;
 
-  private observers: string[] = []; // 소켓아이디 저장
+  private observers: number[] = [];
 
-  private players: Map<string, Player> = new Map<string, Player>();
+  private players: Map<number, Player> = new Map<number, Player>();
 
   private ball: Ball;
 
@@ -33,10 +34,10 @@ export class Room {
 
   loop: () => void;
 
-  constructor(id: number, player1SocketId: string, server: Server) {
+  constructor(id: number, player1UserId: number, server: Server) {
     this.id = id;
-    this.player1 = new Player(player1SocketId, 'player1');
-    this.players.set(player1SocketId, this.player1);
+    this.player1 = new Player(player1UserId, 'player1');
+    this.players.set(player1UserId, this.player1);
     this.ball = null;
     this.server = server;
     this.readyInit();
@@ -55,43 +56,43 @@ export class Room {
     };
   }
 
-  getPlayerBySocketId(socketId: string) {
-    return this.players.get(socketId);
+  getPlayerByUserId(userId: number) {
+    return this.players.get(userId);
   }
 
-  setPlayer1(player1SocketId: string) {
-    this.player1 = new Player(player1SocketId, 'player1');
-    this.players.set(player1SocketId, this.player1);
+  setPlayer1(player1UserId: number) {
+    this.player1 = new Player(player1UserId, 'player1');
+    this.players.set(player1UserId, this.player1);
   }
 
-  setPlayer2(player2SocketId: string) {
-    this.player2 = new Player(player2SocketId, 'player2');
-    this.players.set(player2SocketId, this.player2);
+  setPlayer2(player2UserId: number) {
+    this.player2 = new Player(player2UserId, 'player2');
+    this.players.set(player2UserId, this.player2);
     this.ball = new Ball(this.player1, this.player2);
   }
 
   unSetPlayer1() {
-    const currentPlayer1SocketId = this.player1.getSocketId();
+    const currentPlayer1UserId = this.player1.getUserId();
     delete this.player1;
-    this.players.delete(currentPlayer1SocketId);
+    this.players.delete(currentPlayer1UserId);
   }
 
   unSetPlayer2() {
-    const currentPlayer2SocketId = this.player2.getSocketId();
+    const currentPlayer2UserId = this.player2.getUserId();
     delete this.player2;
-    this.players.delete(currentPlayer2SocketId);
+    this.players.delete(currentPlayer2UserId);
   }
 
-  joinByObserver(observerSocketId: string) {
-    this.observers.push(observerSocketId);
+  joinByObserver(observerUserId: number) {
+    this.observers.push(observerUserId);
   }
 
   isEmpty() {
     return !this.player1;
   }
 
-  isObserver(socketId: string) {
-    const index = this.observers.indexOf(socketId);
+  isObserver(userId: number) {
+    const index = this.observers.indexOf(userId);
     return index !== -1;
   }
 
@@ -103,10 +104,10 @@ export class Room {
     return this.roomStatus !== RoomStatus.READY;
   }
 
-  toPlayer(socketId: string) {
-    const index = this.observers.indexOf(socketId);
+  toPlayer(userId: number) {
+    const index = this.observers.indexOf(userId);
     this.observers.splice(index, 1);
-    this.setPlayer2(socketId);
+    this.setPlayer2(userId);
   }
 
   player2ToPlayer1() {
@@ -116,13 +117,13 @@ export class Room {
   }
 
   observerToPlayer1() {
-    const newPlayer1SocketId = this.observers.shift();
-    this.setPlayer1(newPlayer1SocketId);
-    this.players.set(newPlayer1SocketId, this.player1);
+    const newPlayer1UserId = this.observers.shift();
+    this.setPlayer1(newPlayer1UserId);
+    this.players.set(newPlayer1UserId, this.player1);
   }
 
-  leave(participantSocketId: string) {
-    if (this.player1.getSocketId() === participantSocketId) {
+  leave(participantUserId: number) {
+    if (this.player1.getUserId() === participantUserId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winner = 'player2';
@@ -134,14 +135,19 @@ export class Room {
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
-        this.server
-          .to(this.player1.getSocketId())
-          .emit('gameover', 'YOU LOSE!!!');
-        this.server
-          .to(this.player2.getSocketId())
-          .emit('gameover', 'YOU WIN!!!');
+        const player1SocketId = Object.keys(onlineGameMap).find(
+          (key) => onlineGameMap[key] === this.player1.getUserId(),
+        );
+        const player2SocketId = Object.keys(onlineGameMap).find(
+          (key) => onlineGameMap[key] === this.player2.getUserId(),
+        );
+        this.server.to(player1SocketId).emit('gameover', 'YOU LOSE!!!');
+        this.server.to(player2SocketId).emit('gameover', 'YOU WIN!!!');
 
-        this.observers.forEach((socketId) => {
+        this.observers.forEach((userId) => {
+          const socketId = Object.keys(onlineGameMap).find(
+            (key) => onlineGameMap[key] === userId,
+          );
           this.server.to(socketId).emit('gameover', 'PLAYER2 WIN!!!');
         });
         this.readyInit();
@@ -152,18 +158,15 @@ export class Room {
         this.player1.changeRole('player1');
         delete this.player2;
       } else if (this.observers.length !== 0) {
-        const newPlayer1SocketId = this.observers.shift();
-        this.setPlayer1(newPlayer1SocketId);
-        this.players.set(newPlayer1SocketId, this.player1);
+        const newPlayer1UserId = this.observers.shift();
+        this.setPlayer1(newPlayer1UserId);
+        this.players.set(newPlayer1UserId, this.player1);
       } else {
         delete this.player1;
       }
 
-      this.players.delete(participantSocketId);
-    } else if (
-      this.player2 &&
-      this.player2.getSocketId() === participantSocketId
-    ) {
+      this.players.delete(participantUserId);
+    } else if (this.player2 && this.player2.getUserId() === participantUserId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winner = 'player1';
@@ -175,37 +178,42 @@ export class Room {
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
-        this.server
-          .to(this.player1.getSocketId())
-          .emit('gameover', 'YOU WIN!!!');
-        this.server
-          .to(this.player2.getSocketId())
-          .emit('gameover', 'YOU LOSE!!!');
+        const player1SocketId = Object.keys(onlineGameMap).find(
+          (key) => onlineGameMap[key] === this.player1.getUserId(),
+        );
+        const player2SocketId = Object.keys(onlineGameMap).find(
+          (key) => onlineGameMap[key] === this.player2.getUserId(),
+        );
+        this.server.to(player1SocketId).emit('gameover', 'YOU WIN!!!');
+        this.server.to(player2SocketId).emit('gameover', 'YOU LOSE!!!');
 
-        this.observers.forEach((socketId) => {
-          this.server.to(socketId).emit('gameover', 'PLAYER1 WIN!!!');
+        this.observers.forEach((userId) => {
+          const socketId = Object.keys(onlineGameMap).find(
+            (key) => onlineGameMap[key] === userId,
+          );
+          this.server.to(socketId).emit('gameover', 'PLAYER1 WIN!!!'); // TODO
         });
         this.readyInit();
       }
 
       delete this.player2;
-      this.players.delete(participantSocketId);
-    } else if (this.observers.indexOf(participantSocketId) !== -1) {
-      const index = this.observers.indexOf(participantSocketId);
+      this.players.delete(participantUserId);
+    } else if (this.observers.indexOf(participantUserId) !== -1) {
+      const index = this.observers.indexOf(participantUserId);
       this.observers.splice(index, 1);
     }
   }
 
-  getParticipants(): string[] {
+  getParticipants(): number[] {
     const participants = [];
     if (this.player1) {
-      participants.push(this.player1.getSocketId());
+      participants.push(this.player1.getUserId());
     }
     if (this.player2) {
-      participants.push(this.player2.getSocketId());
+      participants.push(this.player2.getUserId());
     }
-    this.observers.forEach((socketId) => {
-      participants.push(socketId);
+    this.observers.forEach((userId) => {
+      participants.push(userId);
     });
 
     return participants;
@@ -289,8 +297,14 @@ export class Room {
       };
       this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
+      const player1SocketId = Object.keys(onlineGameMap).find(
+        (key) => onlineGameMap[key] === this.player1.getUserId(),
+      );
+      const player2SocketId = Object.keys(onlineGameMap).find(
+        (key) => onlineGameMap[key] === this.player2.getUserId(),
+      );
       this.server
-        .to(this.player1.getSocketId())
+        .to(player1SocketId)
         .emit(
           'gameover',
           this.player1.getScore() > this.player2.getScore()
@@ -298,7 +312,7 @@ export class Room {
             : 'YOU LOSE!!!',
         );
       this.server
-        .to(this.player2.getSocketId())
+        .to(player2SocketId)
         .emit(
           'gameover',
           this.player2.getScore() > this.player1.getScore()
@@ -306,7 +320,10 @@ export class Room {
             : 'YOU LOSE!!!',
         );
 
-      this.observers.forEach((socketId) => {
+      this.observers.forEach((userId) => {
+        const socketId = Object.keys(onlineGameMap).find(
+          (key) => onlineGameMap[key] === userId,
+        );
         this.server
           .to(socketId)
           .emit(
@@ -324,13 +341,13 @@ export class Room {
     console.log('!!!!!! observers : ', this.observers);
     console.log('!!!!!! players   : ');
     this.players.forEach((vakue, key) => {
-      console.log(key, ' : ', vakue.getSocketId());
+      console.log(key, ' : ', vakue.getUserId());
     });
-    console.log('!!!!!! player1.socketId : ', this.player1.getSocketId());
-    console.log('!!!!!! player2.socketId : ', this.player2?.getSocketId());
+    console.log('!!!!!! player1.userId : ', this.player1.getUserId());
+    console.log('!!!!!! player2.userId : ', this.player2?.getUserId());
 
-    const player1SocketId = this.player1 ? this.player1.getSocketId() : '';
-    const player2SocketId = this.player2 ? this.player2.getSocketId() : '';
+    const player1UserId = this.player1 ? this.player1.getUserId() : '';
+    const player2UserId = this.player2 ? this.player2.getUserId() : '';
     const isPlaying = this.roomStatus !== RoomStatus.READY;
     const player1Ready = this.player1 ? this.player1.getReady() : false;
     const player2Ready = this.player2 ? this.player2.getReady() : false;
@@ -338,14 +355,14 @@ export class Room {
     const gameRoomData = {
       participants: {
         player1: {
-          nickname: player1SocketId,
+          nickname: player1UserId,
         },
         player2: {
-          nickname: player2SocketId,
+          nickname: player2UserId,
         },
-        observers: this.observers.map((socketId) => {
+        observers: this.observers.map((userId) => {
           return {
-            nickname: socketId,
+            nickname: userId,
           };
         }),
       },
@@ -357,18 +374,26 @@ export class Room {
       height: CLIENT_SETTINGS.HEIGHT,
     };
 
+    const player1SocketId = Object.keys(onlineGameMap).find(
+      (key) => onlineGameMap[key] === player1UserId,
+    );
+    const player2SocketId = Object.keys(onlineGameMap).find(
+      (key) => onlineGameMap[key] === player2UserId,
+    );
     if (this.player1) {
       gameRoomData.role = 'player1';
       this.server.to(player1SocketId).emit('gameRoomData', gameRoomData);
     }
-
     if (this.player2) {
       gameRoomData.role = 'player2';
       this.server.to(player2SocketId).emit('gameRoomData', gameRoomData);
     }
 
     gameRoomData.role = 'observer';
-    this.observers.forEach((socketId) => {
+    this.observers.forEach((userId) => {
+      const socketId = Object.keys(onlineGameMap).find(
+        (key) => onlineGameMap[key] === userId,
+      );
       this.server.to(socketId).emit('gameRoomData', gameRoomData);
     });
   }
