@@ -337,7 +337,10 @@ export class GameService {
         .findOne({ where: { gameRoomId } });
       if (gameRoomUpdateDto.title)
         targetGameRoom.title = gameRoomUpdateDto.title;
-      if (gameRoomUpdateDto.password) {
+
+      if (gameRoomUpdateDto.password === null) {
+        targetGameRoom.password = null;
+      } else if (gameRoomUpdateDto.password) {
         targetGameRoom.password = await bcrypt.hash(
           gameRoomUpdateDto.password,
           parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
