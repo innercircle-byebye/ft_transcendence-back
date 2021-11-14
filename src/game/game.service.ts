@@ -354,7 +354,7 @@ export class GameService {
       const latestGameReseult = await queryRunner.manager
         .getRepository(GameResult)
         .findOne({
-          where: [{ gameRoomId }, { startAt: null }, { endAt: null }],
+          where: [{ gameRoomId, startAt: null, endAt: null }],
         });
       if (gameRoomUpdateDto.ballSpeed)
         latestGameReseult.ballSpeed = gameRoomUpdateDto.ballSpeed;
