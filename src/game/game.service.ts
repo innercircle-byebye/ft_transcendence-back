@@ -337,16 +337,13 @@ export class GameService {
         .findOne({ where: { gameRoomId } });
       if (gameRoomUpdateDto.title)
         targetGameRoom.title = gameRoomUpdateDto.title;
-      if (typeof Object(gameRoomUpdateDto.password) !== undefined) {
+      if (gameRoomUpdateDto.password) {
         targetGameRoom.password = await bcrypt.hash(
           gameRoomUpdateDto.password,
           parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
         );
       }
-      if (
-        typeof Object(gameRoomUpdateDto.maxParticipantNum) !== undefined &&
-        targetGameRoom.maxParticipantNum !== gameRoomUpdateDto.maxParticipantNum
-      )
+      if (gameRoomUpdateDto.maxParticipantNum)
         targetGameRoom.maxParticipantNum = gameRoomUpdateDto.maxParticipantNum;
       updatedGameRoom = await queryRunner.manager
         .getRepository(GameRoom)
