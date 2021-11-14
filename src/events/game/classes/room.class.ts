@@ -375,7 +375,7 @@ export class Room {
     const gameRoomData = {
       participants: {
         player1: player1User,
-        palyer2: player2User,
+        player2: player2User,
         observers: this.observers,
       },
       role: '',
