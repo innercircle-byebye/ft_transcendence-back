@@ -9,7 +9,7 @@ export const SETTINGS = {
   BALL: {
     WIDTH: 15,
     HEIGHT: 15,
-    SPEED_FAST: 2.5,
+    SPEED_FAST: 3,
     SPEED_MEDIUM: 2,
     SPEED_SLOW: 1.5,
   },

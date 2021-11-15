@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { IUser } from 'src/entities/interfaces/IUser';
 import { BallSpeed } from 'src/entities/GameResult';
+import { GameEventsService } from 'src/events/game-events.service';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
 import { CLIENT_SETTINGS } from '../SETTINGS';
@@ -38,6 +39,8 @@ export class Room {
 
   private gameChatIndex: number;
 
+  private gameEventsService: GameEventsService;
+
   loop: () => void;
 
   constructor(
@@ -46,6 +49,7 @@ export class Room {
     server: Server,
     ballSpeed: BallSpeed,
     winPoint: number,
+    gameEventsService: GameEventsService,
   ) {
     this.id = id;
     this.player1 = new Player(player1User, 'player1');
@@ -56,11 +60,16 @@ export class Room {
     this.server = server;
     this.readyInit();
     this.gameChatIndex = 0;
+    this.gameEventsService = gameEventsService;
   }
 
   nextGameChatIndex() {
     this.gameChatIndex += 1;
     return this.gameChatIndex;
+  }
+
+  gameRoomId(): number {
+    return this.id;
   }
 
   getPlayers() {
@@ -72,6 +81,14 @@ export class Room {
 
   getPlayerByUserId(userId: number) {
     return this.players.get(userId);
+  }
+
+  getWinPoint(): number {
+    return this.winPoint;
+  }
+
+  getBallSpeed(): BallSpeed {
+    return this.ballSpeed;
   }
 
   setPlayer1(player1User: IUser) {
@@ -287,6 +304,7 @@ export class Room {
     this.roomStatus = RoomStatus.COUNTDOWN;
     this.loop = this.playingLoop;
     this.countdown = new Countdown();
+    this.gameEventsService.setGameResultStartTime(this.id);
   }
 
   playingLoop(): void {
@@ -318,6 +336,8 @@ export class Room {
       this.player1.getScore() === this.winPoint ||
       this.player2.getScore() === this.winPoint
     ) {
+      this.gameEventsService.setGameResult(this);
+
       const winner =
         this.player1.getScore() > this.player2.getScore()
           ? 'player1'
