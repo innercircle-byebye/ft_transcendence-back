@@ -85,12 +85,22 @@ export class GameEventsService {
     await this.gameResultRepository.save(gameResult);
 
     // 새로운 gameResult 생성
-    await this.gameResultRepository.save({
-      gameRoomId,
-      playerOneId,
-      playerTwoId,
-      winPoint,
-      ballSpeed,
-    });
+    if (plyaerTwoScore > playerOneScore) {
+      await this.gameResultRepository.save({
+        gameRoomId,
+        playerOneId: playerTwoId,
+        playerTwoId: playerOneId,
+        winPoint,
+        ballSpeed,
+      });
+    } else {
+      await this.gameResultRepository.save({
+        gameRoomId,
+        playerOneId,
+        playerTwoId,
+        winPoint,
+        ballSpeed,
+      });
+    }
   }
 }

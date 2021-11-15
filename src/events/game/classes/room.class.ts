@@ -99,7 +99,6 @@ export class Room {
   setPlayer2(player2User: IUser) {
     this.player2 = new Player(player2User, 'player2');
     this.players.set(player2User.userId, this.player2);
-    this.ball = new Ball(this.player1, this.player2, this.ballSpeed);
   }
 
   unSetPlayer1() {
@@ -150,6 +149,15 @@ export class Room {
 
     const targetObserver = this.observers.splice(index, 1)[0];
     this.setPlayer2(targetObserver);
+  }
+
+  switchPlayers(): void {
+    const temp = this.player1;
+    this.player1 = this.player2;
+    this.player2 = temp;
+
+    this.player1.changeRole('player1');
+    this.player2.changeRole('player2');
   }
 
   player2ToPlayer1() {
@@ -300,7 +308,7 @@ export class Room {
     this.player1.setReady(false);
     this.player2.setReady(false);
     this.server.to(`game-${this.id.toString()}`).emit('playing');
-    this.ball.initPosition();
+    this.ball = new Ball(this.player1, this.player2, this.ballSpeed);
     this.roomStatus = RoomStatus.COUNTDOWN;
     this.loop = this.playingLoop;
     this.countdown = new Countdown();
@@ -336,8 +344,6 @@ export class Room {
       this.player1.getScore() === this.winPoint ||
       this.player2.getScore() === this.winPoint
     ) {
-      this.gameEventsService.setGameResult(this);
-
       const winner =
         this.player1.getScore() > this.player2.getScore()
           ? 'player1'
@@ -386,19 +392,17 @@ export class Room {
               : 'PLAYER2 WIN!!!',
           );
       });
+
+      this.gameEventsService.setGameResult(this);
+      // player2가 이기면 player1이된다.
+      if (this.player2.getScore() > this.player1.getScore()) {
+        this.switchPlayers();
+      }
       this.readyInit();
     }
   }
 
   emitGameRoomData() {
-    console.log('!!!!!! observers : ', this.observers);
-    console.log('!!!!!! players   : ');
-    this.players.forEach((value, key) => {
-      console.log(key, ' : ', value.getUser().userId);
-    });
-    console.log('!!!!!! player1.userId : ', this.player1.getUser().userId);
-    console.log('!!!!!! player2.userId : ', this.player2?.getUser().userId);
-
     const player1User = this.player1?.getUser();
     const player2User = this.player2?.getUser();
     const isPlaying = this.roomStatus !== RoomStatus.READY;
