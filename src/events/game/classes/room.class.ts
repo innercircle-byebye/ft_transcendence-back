@@ -176,12 +176,13 @@ export class Room {
     if (this.player1.getUser().userId === participantUserId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
-        const winner = 'player2';
+        const winnerNickname = this.player2.getUser().nickname;
+        const loserNickname = this.player1.getUser().nickname;
 
         const chatData = {
           index: this.nextGameChatIndex(),
           type: 'log',
-          content: `${winner}가 이겼습니다.`,
+          content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
@@ -198,7 +199,9 @@ export class Room {
           const socketId = Object.keys(onlineGameMap).find(
             (key) => onlineGameMap[key] === user.userId,
           );
-          this.server.to(socketId).emit('gameover', 'PLAYER2 WIN!!!');
+          this.server
+            .to(socketId)
+            .emit('gameover', `[${winnerNickname}] WIN!!!`);
         });
         this.readyInit();
       }
@@ -222,12 +225,13 @@ export class Room {
     ) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
-        const winner = 'player1';
+        const winnerNickname = this.player1.getUser().nickname;
+        const loserNickname = this.player2.getUser().nickname;
 
         const chatData = {
           index: this.nextGameChatIndex(),
           type: 'log',
-          content: `${winner}가 이겼습니다.`,
+          content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
@@ -244,7 +248,9 @@ export class Room {
           const socketId = Object.keys(onlineGameMap).find(
             (key) => onlineGameMap[key] === user.userId,
           );
-          this.server.to(socketId).emit('gameover', 'PLAYER1 WIN!!!');
+          this.server
+            .to(socketId)
+            .emit('gameover', `[${winnerNickname}] WIN!!!`);
         });
         this.readyInit();
       }
@@ -344,15 +350,20 @@ export class Room {
       this.player1.getScore() === this.winPoint ||
       this.player2.getScore() === this.winPoint
     ) {
-      const winner =
-        this.player1.getScore() > this.player2.getScore()
-          ? 'player1'
-          : 'player2';
+      let winnerNickname;
+      let loserNickname;
+      if (this.player1.getScore() > this.player2.getScore()) {
+        winnerNickname = this.player1.getUser().nickname;
+        loserNickname = this.player2.getUser().nickname;
+      } else {
+        winnerNickname = this.player2.getUser().nickname;
+        loserNickname = this.player1.getUser().nickname;
+      }
 
       const chatData = {
         index: this.nextGameChatIndex(),
         type: 'log',
-        content: `${winner}가 이겼습니다.`,
+        content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
       };
       this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
 
@@ -383,14 +394,7 @@ export class Room {
         const socketId = Object.keys(onlineGameMap).find(
           (key) => onlineGameMap[key] === user.userId,
         );
-        this.server
-          .to(socketId)
-          .emit(
-            'gameover',
-            this.player1.getScore() > this.player2.getScore()
-              ? 'PLAYER1 WIN!!!'
-              : 'PLAYER2 WIN!!!',
-          );
+        this.server.to(socketId).emit('gameover', `[${winnerNickname}] WIN!!!`);
       });
 
       this.gameEventsService.setGameResult(this);

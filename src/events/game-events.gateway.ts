@@ -184,14 +184,13 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     if (!gameRoomId) return;
 
     const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-    const { player1, player2 } = room.getPlayers();
 
-    let nickname = `${userId}`;
-    if (player1?.getUser().userId === userId) {
-      nickname = `(player1)${userId}`;
-    } else if (player2?.getUser().userId === userId) {
-      nickname = `(player2)${userId}`;
-    }
+    let nickname: string;
+    room.getParticipants().forEach((user) => {
+      if (user.userId === userId) {
+        nickname = user.nickname;
+      }
+    });
 
     const chatData = {
       index: room.nextGameChatIndex(),
