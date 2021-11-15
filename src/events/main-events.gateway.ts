@@ -23,5 +23,6 @@ export class MainEventsGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
   ) {
     onlineMap[socket.id] = userId;
+    socket.nsp.emit('onlineList', Object.values(onlineMap));
   }
 }
