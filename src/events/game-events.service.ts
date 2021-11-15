@@ -19,7 +19,7 @@ export class GameEventsService {
     private gameResultRepository: Repository<GameResult>,
   ) {}
 
-  async getGameMemberInfoWithUserAndGameRoom(
+  async getGameMemberInfoWithUser(
     gameRoomId: number,
     userId: number,
   ): Promise<GameMember> {
@@ -28,7 +28,20 @@ export class GameEventsService {
       .where({ userId })
       .andWhere({ gameRoomId })
       .innerJoinAndSelect('gameMember.user', 'user')
-      .innerJoinAndSelect('gameMember.gameRoom', 'gameRoom')
+      .getOne();
+  }
+
+  async getGameResultForCreateRoom(
+    gameRoomId: number,
+    userId: number,
+  ): Promise<GameResult> {
+    return this.gameResultRepository
+      .createQueryBuilder('gameResult')
+      .where({ gameRoomId })
+      .andWhere({ playerOneId: userId })
+      .andWhere({ playerTwoId: null })
+      .andWhere({ startAt: null })
+      .andWhere({ endAt: null })
       .getOne();
   }
 }

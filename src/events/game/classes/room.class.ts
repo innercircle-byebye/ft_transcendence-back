@@ -1,8 +1,9 @@
 import { Server } from 'socket.io';
 import { IUser } from 'src/entities/interfaces/IUser';
+import { BallSpeed } from 'src/entities/GameResult';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
-import { SETTINGS, CLIENT_SETTINGS } from '../SETTINGS';
+import { CLIENT_SETTINGS } from '../SETTINGS';
 import { Countdown } from './countdown.class';
 import { onlineGameMap } from '../../onlineGameMap';
 
@@ -23,7 +24,11 @@ export class Room {
 
   private players: Map<number, Player> = new Map<number, Player>(); // key: userId , value: Player
 
+  private ballSpeed: BallSpeed;
+
   private ball: Ball;
+
+  private winPoint: number;
 
   private roomStatus: RoomStatus;
 
@@ -35,11 +40,19 @@ export class Room {
 
   loop: () => void;
 
-  constructor(id: number, player1User: IUser, server: Server) {
+  constructor(
+    id: number,
+    player1User: IUser,
+    server: Server,
+    ballSpeed: BallSpeed,
+    winPoint: number,
+  ) {
     this.id = id;
     this.player1 = new Player(player1User, 'player1');
     this.players.set(player1User.userId, this.player1);
+    this.ballSpeed = ballSpeed;
     this.ball = null;
+    this.winPoint = winPoint;
     this.server = server;
     this.readyInit();
     this.gameChatIndex = 0;
@@ -69,7 +82,7 @@ export class Room {
   setPlayer2(player2User: IUser) {
     this.player2 = new Player(player2User, 'player2');
     this.players.set(player2User.userId, this.player2);
-    this.ball = new Ball(this.player1, this.player2);
+    this.ball = new Ball(this.player1, this.player2, this.ballSpeed);
   }
 
   unSetPlayer1() {
@@ -302,8 +315,8 @@ export class Room {
     this.server.to(`game-${this.id.toString()}`).emit('update', statuses);
 
     if (
-      this.player1.getScore() === SETTINGS.GOAL ||
-      this.player2.getScore() === SETTINGS.GOAL
+      this.player1.getScore() === this.winPoint ||
+      this.player2.getScore() === this.winPoint
     ) {
       const winner =
         this.player1.getScore() > this.player2.getScore()

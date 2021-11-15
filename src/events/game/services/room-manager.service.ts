@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
+import { BallSpeed } from 'src/entities/GameResult';
 import { IUser } from 'src/entities/interfaces/IUser';
 import { onlineGameMap } from 'src/events/onlineGameMap';
 import { Room } from '../classes/room.class';
@@ -10,8 +11,14 @@ export class RoomManagerService {
 
   gameRoomIdsByUserId: Map<number, number> = new Map<number, number>(); // key: userId, value: gameRoomId
 
-  createRoom(server: Server, gameRoomId: number, player1User: IUser): void {
-    const room = new Room(gameRoomId, player1User, server);
+  createRoom(
+    server: Server,
+    gameRoomId: number,
+    player1User: IUser,
+    ballSpeed: BallSpeed,
+    winPoint: number,
+  ): void {
+    const room = new Room(gameRoomId, player1User, server, ballSpeed, winPoint);
     // player1Socket.join(`game-${gameRoomId.toString()}`);
     this.roomsByGameRoomId.set(gameRoomId, room);
     this.gameRoomIdsByUserId.set(player1User.userId, gameRoomId);

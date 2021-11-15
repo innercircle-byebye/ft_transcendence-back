@@ -1,3 +1,4 @@
+import { BallSpeed } from 'src/entities/GameResult';
 import { SETTINGS } from '../SETTINGS';
 import { Player } from './player.class';
 
@@ -24,7 +25,7 @@ export class Ball {
 
   private speed: number;
 
-  constructor(player1: Player, player2: Player) {
+  constructor(player1: Player, player2: Player, ballSpeed: BallSpeed) {
     this.x = (SETTINGS.WIDTH - SETTINGS.BALL.WIDTH) / 2;
     this.y = (SETTINGS.HEIGHT - SETTINGS.BALL.HEIGHT) / 2;
     this.width = SETTINGS.BALL.WIDTH;
@@ -32,7 +33,13 @@ export class Ball {
     this.players = [player1, player2];
     this.dx = 1;
     this.dy = 1;
-    this.speed = 2;
+    if (ballSpeed === BallSpeed.FAST) {
+      this.speed = SETTINGS.BALL.SPEED_FAST;
+    } else if (ballSpeed === BallSpeed.MEDIUM) {
+      this.speed = SETTINGS.BALL.SPEED_MEDIUM;
+    } else {
+      this.speed = SETTINGS.BALL.SPEED_SLOW;
+    }
   }
 
   getStatus() {

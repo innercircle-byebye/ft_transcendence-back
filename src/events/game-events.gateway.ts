@@ -65,7 +65,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     onlineGameMap[socket.id] = userId;
 
     const gameMemberInfo =
-      await this.gameEventsService.getGameMemberInfoWithUserAndGameRoom(
+      await this.gameEventsService.getGameMemberInfoWithUser(
         gameRoomId,
         userId,
       );
@@ -74,11 +74,21 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
       return;
     }
 
-    // const { user, gameRoom } = gameMemberInfo;
     const { user } = gameMemberInfo;
 
     if (gameMemberInfo.status === GameMemberStatus.PLAYER_ONE) {
-      this.roomManagerService.createRoom(this.server, gameRoomId, user);
+      const gameResultInfo =
+        await this.gameEventsService.getGameResultForCreateRoom(
+          gameRoomId,
+          user.userId,
+        );
+      this.roomManagerService.createRoom(
+        this.server,
+        gameRoomId,
+        user,
+        gameResultInfo.ballSpeed,
+        gameResultInfo.winPoint,
+      );
       socket.join(`game-${gameRoomId.toString()}`);
     } else if (gameMemberInfo.status === GameMemberStatus.PLAYER_TWO) {
       this.roomManagerService.joinRoomByPlayer2(gameRoomId, user);
