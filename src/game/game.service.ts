@@ -207,16 +207,22 @@ export class GameService {
   }
 
   async getPlayableRooms() {
-    const allGameRooms = (await this.getAllGameRooms()).filter(
-      (list) => list.gameRoomStatus === 'playable',
-    );
+    const allGameRooms = (await this.getAllGameRooms()).filter((list) => {
+      return (
+        list.gameRoomStatus === GameRoomStatus.PLAYABLE &&
+        list.isPrivate === false
+      );
+    });
     return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
   }
 
   async getObservableRooms() {
-    const allGameRooms = (await this.getAllGameRooms()).filter(
-      (list) => list.gameRoomStatus === 'observable',
-    );
+    const allGameRooms = (await this.getAllGameRooms()).filter((list) => {
+      return (
+        list.gameRoomStatus === GameRoomStatus.OBSERVABLE &&
+        list.isPrivate === false
+      );
+    });
     return allGameRooms[Math.floor(Math.random() * allGameRooms.length)];
   }
 
@@ -896,7 +902,9 @@ export class GameService {
     if (date && !Number.isNaN(new Date(date).getTime())) {
       const startDate = new Date(date);
       const endDate = new Date(date);
-      endDate.setHours(endDate.getHours() + 23);
+      console.log(startDate.getTimezoneOffset());
+      startDate.setHours(startDate.getHours() - 9);
+      endDate.setHours(endDate.getHours() + 14);
       endDate.setMinutes(endDate.getMinutes() + 59);
       endDate.setSeconds(endDate.getSeconds() + 59);
       console.log(startDate, endDate);
