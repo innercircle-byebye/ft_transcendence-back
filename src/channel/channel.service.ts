@@ -223,7 +223,7 @@ export class ChannelService {
       targetChannel.maxParticipantNum !== maxParticipantNum
     )
       targetChannel.maxParticipantNum = maxParticipantNum;
-    if (name !== updateName) {
+    if (updateName) {
       targetChannel.name = updateName;
       this.chatEventsGateway.server.emit('updateChannelName', updateName);
     }
