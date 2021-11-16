@@ -27,7 +27,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     console.log('connect!!!!!!!!!!  ', socket.id);
   }
 
-  handleDisconnect(@ConnectedSocket() socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnect!!!!!!!   ', socket.id);
 
     const userId = onlineGameMap[socket.id];
@@ -35,7 +35,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
 
     if (gameRoomId) {
-      this.gameEventsService.leaveGameRoom(userId, gameRoomId);
+      await this.gameEventsService.leaveGameRoom(userId, gameRoomId);
 
       const room = this.roomManagerService
         .getRoomsByGameRoomId()

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameMember, GameMemberStatus } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
@@ -167,18 +167,40 @@ export class GameEventsService {
           .findOne({
             where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
           });
-        // Player 2 becomes Player 1
+
         if (checkGameMemberInPlayerTwo) {
+          // Player 2 becomes Player 1
           const latestGameReseult = await queryRunner.manager
             .getRepository(GameResult)
-            .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-          if (!latestGameReseult)
-            throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
-          latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
-          latestGameReseult.playerTwoId = null;
-          await queryRunner.manager
-            .getRepository(GameResult)
-            .save(latestGameReseult);
+            .findOne({
+              where: {
+                gameRoomId,
+                playerOneId: userId,
+                endAt: null,
+              },
+            });
+
+          if (latestGameReseult.startAt) {
+            latestGameReseult.endAt = new Date();
+            latestGameReseult.playerOneScore = 0;
+            latestGameReseult.playerTwoScore = latestGameReseult.winPoint;
+            await queryRunner.manager
+              .getRepository(GameResult)
+              .save(latestGameReseult);
+
+            await queryRunner.manager.getRepository(GameResult).save({
+              gameRoomId,
+              playerOneId: latestGameReseult.playerTwoId,
+              winPoint: latestGameReseult.winPoint,
+              ballSpeed: latestGameReseult.ballSpeed,
+            });
+          } else {
+            latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
+            latestGameReseult.playerTwoId = null;
+            await queryRunner.manager
+              .getRepository(GameResult)
+              .save(latestGameReseult);
+          }
           checkGameMemberInPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
           await queryRunner.manager
             .getRepository(GameMember)
