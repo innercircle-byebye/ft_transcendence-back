@@ -209,7 +209,10 @@ export class GameEventsService {
           // observer becomes player 1
           const observerToPlayerOne = await queryRunner.manager
             .getRepository(GameMember)
-            .findOne({ gameRoomId, status: GameMemberStatus.OBSERVER });
+            .createQueryBuilder('gameMember')
+            .where({ gameRoomId, status: GameMemberStatus.OBSERVER })
+            .orderBy('gameMember.lastModifiedAt', 'ASC')
+            .getOne();
           observerToPlayerOne.status = GameMemberStatus.PLAYER_ONE;
           await queryRunner.manager
             .getRepository(GameMember)
