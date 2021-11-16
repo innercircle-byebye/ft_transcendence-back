@@ -74,6 +74,7 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
       );
 
     if (!gameMemberInfo) {
+      socket.emit('leave');
       return;
     }
 
