@@ -15,6 +15,9 @@ export class MainEventsGateway implements OnGatewayDisconnect {
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     delete onlineMap[socket.id];
+    const onlineSet = new Set(Object.values(onlineMap));
+    const uniqueOnlineList = [...onlineSet];
+    socket.nsp.emit('onlineList', uniqueOnlineList);
   }
 
   @SubscribeMessage('login')
@@ -23,5 +26,8 @@ export class MainEventsGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
   ) {
     onlineMap[socket.id] = userId;
+    const onlineSet = new Set(Object.values(onlineMap));
+    const uniqueOnlineList = [...onlineSet];
+    socket.nsp.emit('onlineList', uniqueOnlineList);
   }
 }
