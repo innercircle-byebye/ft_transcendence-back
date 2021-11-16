@@ -13,6 +13,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
@@ -309,6 +310,30 @@ export class GameController {
     @Body() body: GameMemberMoveDto,
   ) {
     return this.gameService.movePlayerOrObserver(gameRoomId, user.userId, body);
+    return 'OK';
+  }
+
+  @ApiOperation({
+    summary: '게임방에서 플레이어로 이동',
+    description: '게임방에서 관전자 -> 플레이어로 이동합니다.',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '플레이어로 이동 성공시 별도의 응답없음.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '이미 플레이어입니다.\n\n' +
+      '이동 가능한 플레이어 자리가 없습니다.',
+  })
+  @Patch('/room/:game_room_id/move/player')
+  async moveToPlayerInGameRoom(
+    @Param('game_room_id') gameRoomId: number,
+    @AuthUser() user: User,
+  ) {
+    await this.gameService.moveToPlayer(gameRoomId, user.userId);
     return 'OK';
   }
 

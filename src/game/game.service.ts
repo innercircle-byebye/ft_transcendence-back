@@ -692,6 +692,55 @@ export class GameService {
     return returnTargetUser;
   }
 
+  async moveToPlayer(gameRoomId: number, userId: number) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom) {
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    }
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
+    });
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
+    }
+    if (checkGameMember.status !== GameMemberStatus.OBSERVER) {
+      throw new BadRequestException('이미 플레이어입니다.');
+    }
+    const checkExistPlayerTwo = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
+    });
+    if (checkExistPlayerTwo) {
+      throw new BadRequestException('이동 가능한 플레이어 자리가 없습니다.');
+    }
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const gameMember = await queryRunner.manager
+        .getRepository(GameMember)
+        .findOne({ where: { gameRoomId, userId } });
+      const gameResult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+
+      gameMember.status = GameMemberStatus.PLAYER_TWO;
+      gameResult.playerTwoId = userId;
+
+      await queryRunner.manager.getRepository(GameMember).save(gameMember);
+      await queryRunner.manager.getRepository(GameResult).save(gameResult);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async countGameResultsOfUser(userId: number) {
     return (await this.getAllGameResults(userId)).length;
   }
