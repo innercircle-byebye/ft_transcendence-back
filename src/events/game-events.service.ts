@@ -112,102 +112,116 @@ export class GameEventsService {
   }
 
   async leaveGameRoom(userId: number, gameRoomId: number) {
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
     const checkGameMember = await this.gameMemberRepository.findOne({
       where: { gameRoomId, userId },
     });
-    if (!checkGameMember)
-      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+    if (!checkGameMember) return;
 
     if (checkGameMember.status === GameMemberStatus.OBSERVER) {
       await this.gameMemberRepository.softRemove(checkGameMember);
-    } else {
-      const queryRunner = this.connection.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      try {
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .softRemove(checkGameMember);
+      return;
+    }
 
-        if (checkGameMember.status === GameMemberStatus.PLAYER_TWO) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .softRemove(checkGameMember);
+
+      if (checkGameMember.status === GameMemberStatus.PLAYER_TWO) {
+        const latestGameReseult = await queryRunner.manager
+          .getRepository(GameResult)
+          .findOne({
+            where: {
+              gameRoomId,
+              playerTwoId: userId,
+              endAt: null,
+            },
+          });
+
+        if (latestGameReseult.startAt) {
+          latestGameReseult.endAt = new Date();
+          latestGameReseult.playerOneScore = latestGameReseult.winPoint;
+          latestGameReseult.playerTwoScore = 0;
+          await queryRunner.manager
+            .getRepository(GameResult)
+            .save(latestGameReseult);
+
+          await queryRunner.manager.getRepository(GameResult).save({
+            gameRoomId,
+            playerOneId: latestGameReseult.playerOneId,
+            winPoint: latestGameReseult.winPoint,
+            ballSpeed: latestGameReseult.ballSpeed,
+          });
+        } else {
+          latestGameReseult.playerTwoId = null;
+          await queryRunner.manager
+            .getRepository(GameResult)
+            .save(latestGameReseult);
+        }
+      } else if (checkGameMember.status === GameMemberStatus.PLAYER_ONE) {
+        const checkGameMemberInPlayerTwo = await queryRunner.manager
+          .getRepository(GameMember)
+          .findOne({
+            where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
+          });
+        // Player 2 becomes Player 1
+        if (checkGameMemberInPlayerTwo) {
           const latestGameReseult = await queryRunner.manager
             .getRepository(GameResult)
             .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
           if (!latestGameReseult)
             throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
+          latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
           latestGameReseult.playerTwoId = null;
           await queryRunner.manager
             .getRepository(GameResult)
             .save(latestGameReseult);
-        } else if (checkGameMember.status === GameMemberStatus.PLAYER_ONE) {
-          const checkGameMemberInPlayerTwo = await queryRunner.manager
+          checkGameMemberInPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
             .getRepository(GameMember)
-            .findOne({
-              where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
-            });
-          // Player 2 becomes Player 1
-          if (checkGameMemberInPlayerTwo) {
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            if (!latestGameReseult)
-              throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
-            latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
-            latestGameReseult.playerTwoId = null;
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .save(latestGameReseult);
-            checkGameMemberInPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
-            await queryRunner.manager
-              .getRepository(GameMember)
-              .save(checkGameMemberInPlayerTwo);
-          } else if ((await this.countAllGameRoomObservers(gameRoomId)) > 0) {
-            // observer becomes player 1
-            const observerToPlayerOne = await queryRunner.manager
-              .getRepository(GameMember)
-              .findOne({ gameRoomId, status: GameMemberStatus.OBSERVER });
-            observerToPlayerOne.status = GameMemberStatus.PLAYER_ONE;
-            await queryRunner.manager
-              .getRepository(GameMember)
-              .save(observerToPlayerOne);
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            latestGameReseult.playerOneId = observerToPlayerOne.userId;
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .save(latestGameReseult);
-          } else {
-            // remove gameResult
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .remove(latestGameReseult);
+            .save(checkGameMemberInPlayerTwo);
+        } else if ((await this.countAllGameRoomObservers(gameRoomId)) > 0) {
+          // observer becomes player 1
+          const observerToPlayerOne = await queryRunner.manager
+            .getRepository(GameMember)
+            .findOne({ gameRoomId, status: GameMemberStatus.OBSERVER });
+          observerToPlayerOne.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
+            .getRepository(GameMember)
+            .save(observerToPlayerOne);
+          const latestGameReseult = await queryRunner.manager
+            .getRepository(GameResult)
+            .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+          latestGameReseult.playerOneId = observerToPlayerOne.userId;
+          await queryRunner.manager
+            .getRepository(GameResult)
+            .save(latestGameReseult);
+        } else {
+          // remove gameResult
+          const latestGameReseult = await queryRunner.manager
+            .getRepository(GameResult)
+            .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+          await queryRunner.manager
+            .getRepository(GameResult)
+            .remove(latestGameReseult);
 
-            // remove gameRoom
-            const removeTargetGameRoom = await queryRunner.manager
-              .getRepository(GameRoom)
-              .find({ where: { gameRoomId } });
-            await queryRunner.manager
-              .getRepository(GameRoom)
-              .softRemove(removeTargetGameRoom);
-          }
+          // remove gameRoom
+          const removeTargetGameRoom = await queryRunner.manager
+            .getRepository(GameRoom)
+            .find({ where: { gameRoomId } });
+          await queryRunner.manager
+            .getRepository(GameRoom)
+            .softRemove(removeTargetGameRoom);
         }
-        await queryRunner.commitTransaction();
-      } catch (error) {
-        await queryRunner.rollbackTransaction();
-        throw error;
-      } finally {
-        await queryRunner.release();
       }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
-    return 'OK';
   }
 }
