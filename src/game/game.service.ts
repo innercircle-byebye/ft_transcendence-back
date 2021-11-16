@@ -891,7 +891,9 @@ export class GameService {
     if (date && !Number.isNaN(new Date(date).getTime())) {
       const startDate = new Date(date);
       const endDate = new Date(date);
-      endDate.setHours(endDate.getHours() + 23);
+      console.log(startDate.getTimezoneOffset());
+      startDate.setHours(startDate.getHours() - 9);
+      endDate.setHours(endDate.getHours() + 14);
       endDate.setMinutes(endDate.getMinutes() + 59);
       endDate.setSeconds(endDate.getSeconds() + 59);
       console.log(startDate, endDate);
