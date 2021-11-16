@@ -78,4 +78,14 @@ export class RoomManagerService {
     }
     return false;
   }
+
+  moveToPlayer(userId: number) {
+    const roomId = this.getGameRoomIdByUserId(userId);
+    const room = this.getRoomsByGameRoomId().get(roomId);
+    const { player2 } = room.getPlayers();
+    if (!player2 && room.isObserver(userId)) {
+      room.toPlayer(userId);
+    }
+    room.emitGameRoomData();
+  }
 }

@@ -25,7 +25,7 @@ import { MainEventsGateway } from './main-events.gateway';
     MainEventsGateway,
     ChatEventsGateway,
     GameEventsGateway,
-    // RoomManagerService,
+    RoomManagerService,
     // GameManagerService,
     // GameEventsService,
   ],

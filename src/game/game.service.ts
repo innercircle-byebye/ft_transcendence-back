@@ -8,6 +8,7 @@ import { User, UserStatus } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { DMType } from 'src/entities/DM';
+import { RoomManagerService } from 'src/events/game/services/room-manager.service';
 import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
@@ -29,6 +30,7 @@ export class GameService {
     private gameResultRepository: Repository<GameResult>,
     private connection: Connection,
     private dmService: DmService, // events module needed private readonly chatEventsGateway: ChatEventsGateway,
+    private readonly roomManagerService: RoomManagerService,
   ) {}
 
   async getCurrentGameRoomMemberCount(id: number) {
@@ -731,8 +733,9 @@ export class GameService {
 
       await queryRunner.manager.getRepository(GameMember).save(gameMember);
       await queryRunner.manager.getRepository(GameResult).save(gameResult);
-
       await queryRunner.commitTransaction();
+
+      this.roomManagerService.moveToPlayer(userId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

@@ -205,20 +205,6 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     this.server.to(`game-${gameRoomId.toString()}`).emit('gameChat', chatData);
   }
 
-  @SubscribeMessage('toPlayer')
-  handleToPlayer(@ConnectedSocket() socket: Socket) {
-    console.log('~~~~~~~~ toPlayer evnet ~~~~~~~~');
-    const userId = onlineGameMap[socket.id];
-    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
-    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-
-    const { player2 } = room.getPlayers();
-    if (!player2 && room.isObserver(userId)) {
-      room.toPlayer(userId);
-    }
-    room.emitGameRoomData();
-  }
-
   @SubscribeMessage('toObserver')
   handleToObserver(@ConnectedSocket() socket: Socket) {
     console.log('~~~~~~~~ toObserver evnet ~~~~~~~~');
