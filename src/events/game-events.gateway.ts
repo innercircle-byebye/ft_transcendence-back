@@ -33,6 +33,9 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     const userId = onlineGameMap[socket.id];
 
     const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
+
+    this.gameEventsService.leaveGameRoom(userId, gameRoomId);
+
     if (gameRoomId) {
       const room = this.roomManagerService
         .getRoomsByGameRoomId()
