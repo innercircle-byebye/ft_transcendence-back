@@ -250,22 +250,21 @@ export class ChannelService {
     });
     if (!channelIdByName)
       throw new BadRequestException('존재 하지 않는 채널입니다.');
-    return (
-      this.channelMemberRepository
-        .createQueryBuilder('channelMembers')
-        .innerJoin(
-          'channelMembers.channel',
-          'channel',
-          'channel.name = :channelName',
-          {
-            channelName: name,
-          },
-        )
-        .innerJoinAndSelect('channelMembers.user', 'user')
-        .select(['channelMembers', 'user.nickname', 'user.imagePath'])
-        // .withDeleted()
-        .getMany()
-    );
+    return this.channelMemberRepository
+      .createQueryBuilder('channelMembers')
+      .innerJoin(
+        'channelMembers.channel',
+        'channel',
+        'channel.name = :channelName',
+        {
+          channelName: name,
+        },
+      )
+      .innerJoinAndSelect('channelMembers.user', 'user')
+      .select(['channelMembers', 'user.nickname', 'user.imagePath'])
+      .withDeleted()
+      .addSelect('channelMember.banDate is not null')
+      .getMany();
   }
 
   async getCurrentChannelMemberCount(name: string) {
