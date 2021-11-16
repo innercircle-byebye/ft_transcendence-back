@@ -226,7 +226,8 @@ export class ChannelService {
       targetChannel.name = updateName;
       this.chatEventsGateway.server.emit('updateChannelName', updateName);
     }
-    this.channelRepository.save(targetChannel);
+    console.log(targetChannel.password);
+    await this.channelRepository.save(targetChannel);
     delete targetChannel.password;
     return targetChannel;
   }
