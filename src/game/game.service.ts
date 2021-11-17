@@ -366,6 +366,15 @@ export class GameService {
         .getRepository(GameResult)
         .save(latestGameReseult);
       await queryRunner.commitTransaction();
+
+      const roomId = this.roomManagerService.getGameRoomIdByUserId(playerOneId);
+      const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
+      if (gameRoomUpdateDto.ballSpeed) {
+        room?.setBallSpeed(gameRoomUpdateDto.ballSpeed);
+      }
+      if (gameRoomUpdateDto.winPoint) {
+        room?.setWinPoint(gameRoomUpdateDto.winPoint);
+      }
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

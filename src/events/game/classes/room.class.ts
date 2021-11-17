@@ -96,8 +96,16 @@ export class Room {
     return this.winPoint;
   }
 
+  setWinPoint(winPoint: number) {
+    this.winPoint = winPoint;
+  }
+
   getBallSpeed(): BallSpeed {
     return this.ballSpeed;
+  }
+
+  setBallSpeed(ballSpeed: BallSpeed) {
+    this.ballSpeed = ballSpeed;
   }
 
   setPlayer1(player1User: IUser) {
