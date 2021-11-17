@@ -210,11 +210,12 @@ export class ChannelService {
     }
 
     if (password !== undefined) {
-      console.log('hi');
-      targetChannel.password = await bcrypt.hash(
-        password,
-        parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
-      );
+      if (password === null) targetChannel.password = null;
+      else
+        targetChannel.password = await bcrypt.hash(
+          password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
     }
 
     if (
@@ -222,7 +223,7 @@ export class ChannelService {
       targetChannel.maxParticipantNum !== maxParticipantNum
     )
       targetChannel.maxParticipantNum = maxParticipantNum;
-    if (name !== updateName) {
+    if (updateName) {
       targetChannel.name = updateName;
       this.chatEventsGateway.server.emit('updateChannelName', updateName);
     }
