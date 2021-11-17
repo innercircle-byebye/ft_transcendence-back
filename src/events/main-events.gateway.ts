@@ -30,6 +30,12 @@ export class MainEventsGateway implements OnGatewayDisconnect {
     const onlineSet = new Set(Object.values(onlineMap));
     const uniqueOnlineList = [...onlineSet];
     socket.nsp.emit('onlineList', uniqueOnlineList);
+
+    const playerListData = {
+      player1: Array.from(playerSets.player1),
+      player2: Array.from(playerSets.player2),
+    };
+    this.server.to(socket.id).emit('playerList', playerListData);
   }
 
   emitPlayerList() {
