@@ -13,7 +13,7 @@ export const SETTINGS = {
     SPEED_MEDIUM: 2,
     SPEED_SLOW: 1.5,
   },
-  COUNTDOWN_SEC: 5,
+  COUNTDOWN_SEC: 2,
   COUNTDOWN_SIZE: 40,
 };
 
