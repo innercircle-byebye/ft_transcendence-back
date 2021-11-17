@@ -25,13 +25,10 @@ import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomJoinDto } from './dto/gameroom-join.dto';
 import { GameRoomListDto } from './dto/gameroom-list.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
-import { GameMemberBanDto } from './dto/gamemember-ban.dto';
 import { GameService } from './game.service';
-import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameRoomDto } from './dto/gameroom.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
-import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultRankingDto } from './dto/gameresult-ranking.dto';
 
 @UseGuards(JwtTwoFactorGuard)
@@ -263,55 +260,6 @@ export class GameController {
       gameRoomId,
       body.password,
     );
-  }
-
-  @ApiOperation({
-    summary: '게임방 멤버 차단/차단해제 하기',
-    description:
-      '게임방에서 해당 사용자를 차단 /차단 해제 합니다. \n\n 멤버 차단/차단해제는 플레이어1만 가능합니다.\n\n' +
-      'body에 플레이어/관전자 정보를 전달 받게됩니다.',
-  })
-  @ApiOkResponse({ type: GameMemberDto })
-  @ApiBadRequestResponse({
-    description:
-      '게임방이 존재하지 않습니다.\n\n 차단 권한이 없습니다.\n\n' +
-      '유저가 존재 하지 않습니다.\n\n게임 중에는 나갈 수 없습니다.\n\n',
-  })
-  @Patch('/room/:game_room_id/ban')
-  banPlayerFromGameRoom(
-    @Param('game_room_id') gameRoomId: number,
-    @AuthUser() user: User,
-    @Body() body: GameMemberBanDto,
-  ) {
-    if (body.banDate)
-      return this.gameService.banGameMember(
-        gameRoomId,
-        user.userId,
-        body.userId,
-        body.banDate,
-      );
-    return this.gameService.restoreGameMemberFromBan(
-      gameRoomId,
-      user.userId,
-      body.userId,
-    );
-  }
-
-  @ApiOperation({
-    summary: '게임방 멤버 상태 전환 (플레이어 <-> 관전자)',
-    description:
-      '게임방에서 해당 사용자의 상태를 변경합니다.\n\n' +
-      'body에 플레이어/관전자 정보를 전달 받게됩니다.',
-  })
-  @ApiOkResponse({ type: GameMemberDto })
-  @Patch('/room/:game_room_id/move')
-  moveGameMemberInGameRoom(
-    @Param('game_room_id') gameRoomId: number,
-    @AuthUser() user: User,
-    @Body() body: GameMemberMoveDto,
-  ) {
-    return this.gameService.movePlayerOrObserver(gameRoomId, user.userId, body);
-    return 'OK';
   }
 
   @ApiOperation({

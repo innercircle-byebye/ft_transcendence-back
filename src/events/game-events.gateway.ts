@@ -24,14 +24,13 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
   ) {}
 
   handleConnection(@ConnectedSocket() socket: Socket) {
-    console.log('connect!!!!!!!!!!  ', socket.id);
+    console.log('connect! ', socket.id);
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log('disconnect!!!!!!!   ', socket.id);
+    console.log('disconnect! ', socket.id);
 
     const userId = onlineGameMap[socket.id];
-    console.log(userId, ' 나간다~~~~');
 
     const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
 
