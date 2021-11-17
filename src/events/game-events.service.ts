@@ -68,69 +68,94 @@ export class GameEventsService {
     const winPoint = room.getWinPoint();
     const ballSpeed = room.getBallSpeed();
 
-    // 현재 게임중인 gameResult 조회
-    const gameResult = await this.gameResultRepository
-      .createQueryBuilder('gameResult')
-      .where({ gameRoomId })
-      .andWhere({ playerOneId })
-      .andWhere({ playerTwoId })
-      .andWhere('gameResult.startAt IS NOT NULL')
-      .andWhere({ endAt: null })
-      .getOne();
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    // TODO: 트렌젝션 묶어야할듯
-    // 조회한 gameResult에 점수 반영하고 저장
-    gameResult.endAt = new Date();
-    gameResult.playerOneScore = playerOneScore;
-    gameResult.playerTwoScore = plyaerTwoScore;
-    await this.gameResultRepository.save(gameResult);
+    try {
+      // 현재 게임중인 gameResult 조회
+      const gameResult = await queryRunner.manager
+        .getRepository(GameResult)
+        .createQueryBuilder('gameResult')
+        .where({ gameRoomId })
+        .andWhere({ playerOneId })
+        .andWhere({ playerTwoId })
+        .andWhere('gameResult.startAt IS NOT NULL')
+        .andWhere({ endAt: null })
+        .getOne();
 
-    // 새로운 gameResult 생성
-    if (plyaerTwoScore > playerOneScore) {
-      const playerOneGameMember = await this.gameMemberRepository.findOne({
-        where: {
+      // 조회한 gameResult에 점수 반영하고 저장
+      gameResult.endAt = new Date();
+      gameResult.playerOneScore = playerOneScore;
+      gameResult.playerTwoScore = plyaerTwoScore;
+      await queryRunner.manager.getRepository(GameResult).save(gameResult);
+
+      // 새로운 gameResult 생성
+      if (plyaerTwoScore > playerOneScore) {
+        const playerOneGameMember = await queryRunner.manager
+          .getRepository(GameMember)
+          .findOne({
+            where: {
+              gameRoomId,
+              userId: playerOneId,
+            },
+          });
+        playerOneGameMember.status = GameMemberStatus.PLAYER_TWO;
+        await queryRunner.manager
+          .getRepository(GameMember)
+          .save(playerOneGameMember);
+
+        const playerTwoGameMember = await queryRunner.manager
+          .getRepository(GameMember)
+          .findOne({
+            where: {
+              gameRoomId,
+              userId: playerTwoId,
+            },
+          });
+        playerTwoGameMember.status = GameMemberStatus.PLAYER_ONE;
+        await queryRunner.manager
+          .getRepository(GameMember)
+          .save(playerTwoGameMember);
+
+        await queryRunner.manager.getRepository(GameResult).save({
           gameRoomId,
-          userId: playerOneId,
-        },
-      });
-      playerOneGameMember.status = GameMemberStatus.PLAYER_TWO;
-      await this.gameMemberRepository.save(playerOneGameMember);
+          playerOneId: playerTwoId,
+          playerTwoId: playerOneId,
+          winPoint,
+          ballSpeed,
+        });
 
-      const playerTwoGameMember = await this.gameMemberRepository.findOne({
-        where: {
+        const playerTwouser = await queryRunner.manager
+          .getRepository(User)
+          .findOne({
+            where: { userId: playerTwoId },
+          });
+        playerTwouser.experience += 42;
+        await queryRunner.manager.getRepository(User).save(playerTwouser);
+      } else {
+        await queryRunner.manager.getRepository(GameResult).save({
           gameRoomId,
-          userId: playerTwoId,
-        },
-      });
-      playerTwoGameMember.status = GameMemberStatus.PLAYER_ONE;
-      await this.gameMemberRepository.save(playerTwoGameMember);
+          playerOneId,
+          playerTwoId,
+          winPoint,
+          ballSpeed,
+        });
+        const playerOneuser = await queryRunner.manager
+          .getRepository(User)
+          .findOne({
+            where: { userId: playerOneId },
+          });
+        playerOneuser.experience += 42;
+        await queryRunner.manager.getRepository(User).save(playerOneuser);
+      }
 
-      await this.gameResultRepository.save({
-        gameRoomId,
-        playerOneId: playerTwoId,
-        playerTwoId: playerOneId,
-        winPoint,
-        ballSpeed,
-      });
-
-      const playerTwouser = await this.userRepository.findOne({
-        where: { userId: playerTwoId },
-      });
-      playerTwouser.experience += 42;
-      this.userRepository.save(playerTwouser);
-    } else {
-      await this.gameResultRepository.save({
-        gameRoomId,
-        playerOneId,
-        playerTwoId,
-        winPoint,
-        ballSpeed,
-      });
-      const playerOneuser = await this.userRepository.findOne({
-        where: { userId: playerOneId },
-      });
-      playerOneuser.experience += 42;
-      this.userRepository.save(playerOneuser);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -274,6 +299,7 @@ export class GameEventsService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      throw error;
     } finally {
       await queryRunner.release();
     }
