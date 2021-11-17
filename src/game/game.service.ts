@@ -694,6 +694,72 @@ export class GameService {
     return returnTargetUser;
   }
 
+  async kickFromGameRoom(
+    gameRoomId: number,
+    userId: number,
+    targetUserId: number,
+  ) {
+    if (userId === targetUserId) {
+      throw new BadRequestException('본인을 강제퇴장시킬 수 없습니다.');
+    }
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom) {
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    }
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
+    });
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
+    }
+    if (checkGameMember.status !== GameMemberStatus.PLAYER_ONE) {
+      throw new BadRequestException('강제퇴장 권한이 없습니다.');
+    }
+    const checkGameResult = await this.gameResultRepository.findOne({
+      where: { gameRoomId, startAt: null, endAt: null },
+    });
+    if (!checkGameResult) {
+      throw new BadRequestException('플레이 중에는 강제퇴장 시킬 수 없습니다.');
+    }
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const targetGameMember = await queryRunner.manager
+        .getRepository(GameMember)
+        .findOne({ where: { gameRoomId, userId: targetUserId } });
+
+      if (!targetGameMember) {
+        throw new BadRequestException(
+          '강제퇴장 대상이 게임방에 존재하지 않습니다.',
+        );
+      }
+
+      if (targetGameMember.status === GameMemberStatus.PLAYER_TWO) {
+        const gameResult = await queryRunner.manager
+          .getRepository(GameResult)
+          .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+        gameResult.playerTwoId = null;
+        await queryRunner.manager.getRepository(GameResult).save(gameResult);
+      }
+
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .softRemove(targetGameMember);
+      await queryRunner.commitTransaction();
+
+      // this.roomManagerService.kick(userId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async moveToPlayer(gameRoomId: number, userId: number) {
     const checkGameRoom = await this.gameRoomRepository.findOne({
       where: { gameRoomId },

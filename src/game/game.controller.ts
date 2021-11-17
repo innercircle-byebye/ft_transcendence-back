@@ -314,6 +314,37 @@ export class GameController {
   }
 
   @ApiOperation({
+    summary: '게임방에서 특정 사용자를 강제퇴장 시킵니다.',
+    description:
+      '게임방에서 특정 사용자를 강제퇴장 시킵니다.(플레이어1만 할 수 있습니다.)',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '강제퇴장 성공시 별도의 응답없음.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '본인을 강제퇴장시킬 수 없습니다.\n\n' +
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '강제퇴장 권한이 없습니다.\n\n' +
+      '플레이 중에는 강제퇴장 시킬 수 없습니다.\n\n' +
+      '강제퇴장 대상이 게임방에 존재하지 않습니다.',
+  })
+  @Patch('/room/:game_room_id/kick/:target_user_id')
+  async kickFromGameRoom(
+    @Param('game_room_id') gameRoomId: number,
+    @Param('target_user_id') targetUserId: number,
+    @AuthUser() user: User,
+  ) {
+    await this.gameService.kickFromGameRoom(
+      gameRoomId,
+      user.userId,
+      targetUserId,
+    );
+  }
+
+  @ApiOperation({
     summary: '게임방에서 플레이어로 이동',
     description: '게임방에서 관전자 -> 플레이어로 이동합니다.',
   })
