@@ -59,16 +59,6 @@ export class RoomManagerService {
   }
 
   destroy(server: Server, gameRoomId) {
-    const room = this.roomsByGameRoomId.get(gameRoomId);
-    const participants = room.getParticipants();
-    participants.forEach((user) => {
-      this.gameRoomIdsByUserId.delete(user.userId);
-
-      const socketId = Object.keys(onlineGameMap).find(
-        (key) => onlineGameMap[key] === user.userId,
-      );
-      server.to(socketId).emit('destroy');
-    });
     this.roomsByGameRoomId.delete(gameRoomId);
   }
 
