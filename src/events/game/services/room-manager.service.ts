@@ -79,6 +79,29 @@ export class RoomManagerService {
     return false;
   }
 
+  kick(userId: number) {
+    const roomId = this.getGameRoomIdByUserId(userId);
+    const room = this.getRoomsByGameRoomId().get(roomId);
+
+    if (room.isPlaying()) {
+      return;
+    }
+
+    const { player2 } = room.getPlayers();
+    if (player2?.getUser().userId === userId) {
+      room.unSetPlayer2();
+    } else if (room.isObserver(userId)) {
+      room.removeFromObservers(userId);
+    }
+
+    const socketId = Object.keys(onlineGameMap).find(
+      (key) => onlineGameMap[key] === userId,
+    );
+    room.getSocketServer().to(socketId).emit('kick');
+
+    room.emitGameRoomData();
+  }
+
   moveToPlayer(userId: number) {
     const roomId = this.getGameRoomIdByUserId(userId);
     const room = this.getRoomsByGameRoomId().get(roomId);

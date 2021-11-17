@@ -751,7 +751,7 @@ export class GameService {
         .softRemove(targetGameMember);
       await queryRunner.commitTransaction();
 
-      // this.roomManagerService.kick(userId);
+      this.roomManagerService.kick(targetUserId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -331,7 +332,7 @@ export class GameController {
       '플레이 중에는 강제퇴장 시킬 수 없습니다.\n\n' +
       '강제퇴장 대상이 게임방에 존재하지 않습니다.',
   })
-  @Patch('/room/:game_room_id/kick/:target_user_id')
+  @Delete('/room/:game_room_id/kick/:target_user_id')
   async kickFromGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @Param('target_user_id') targetUserId: number,

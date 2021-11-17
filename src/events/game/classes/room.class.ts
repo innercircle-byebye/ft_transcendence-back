@@ -117,6 +117,19 @@ export class Room {
     this.observers.push(observerUser);
   }
 
+  removeFromObservers(observerId: number) {
+    for (let i = 0; i < this.observers.length; i += 1) {
+      if (this.observers[i].userId === observerId) {
+        this.observers.splice(i, 1);
+        return;
+      }
+    }
+  }
+
+  getSocketServer() {
+    return this.server;
+  }
+
   isEmpty() {
     return !this.player1;
   }
