@@ -218,6 +218,7 @@ export class Room {
         const chatData = {
           index: this.nextGameChatIndex(),
           type: 'log',
+          nickname: '[system]',
           content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
@@ -275,6 +276,7 @@ export class Room {
         const chatData = {
           index: this.nextGameChatIndex(),
           type: 'log',
+          nickname: '[system]',
           content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
         };
         this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
@@ -408,6 +410,7 @@ export class Room {
       const chatData = {
         index: this.nextGameChatIndex(),
         type: 'log',
+        nickname: '[system]',
         content: `[${winnerNickname}]님이 [${loserNickname}]님을 이겼습니다.`,
       };
       this.server.to(`game-${this.id.toString()}`).emit('gameChat', chatData);
