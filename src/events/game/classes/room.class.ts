@@ -2,6 +2,8 @@ import { Server } from 'socket.io';
 import { IUser } from 'src/entities/interfaces/IUser';
 import { BallSpeed } from 'src/entities/GameResult';
 import { GameEventsService } from 'src/events/game-events.service';
+import { MainEventsGateway } from 'src/events/main-events.gateway';
+import { playerSets } from 'src/events/playerSets';
 import { Ball } from './ball.class';
 import { Player } from './player.class';
 import { CLIENT_SETTINGS } from '../SETTINGS';
@@ -41,6 +43,8 @@ export class Room {
 
   private gameEventsService: GameEventsService;
 
+  private mainEventsGateway: MainEventsGateway;
+
   loop: () => void;
 
   constructor(
@@ -50,6 +54,7 @@ export class Room {
     ballSpeed: BallSpeed,
     winPoint: number,
     gameEventsService: GameEventsService,
+    mainEventsGateway: MainEventsGateway,
   ) {
     this.id = id;
     this.player1 = new Player(player1User, 'player1');
@@ -61,6 +66,10 @@ export class Room {
     this.readyInit();
     this.gameChatIndex = 0;
     this.gameEventsService = gameEventsService;
+    this.mainEventsGateway = mainEventsGateway;
+
+    playerSets.player1.add(player1User.userId);
+    this.mainEventsGateway.emitPlayerList();
   }
 
   nextGameChatIndex() {
@@ -171,6 +180,12 @@ export class Room {
 
     this.player1.changeRole('player1');
     this.player2.changeRole('player2');
+
+    playerSets.player1.delete(this.player2.getUser().userId);
+    playerSets.player2.delete(this.player1.getUser().userId);
+    playerSets.player1.add(this.player1.getUser().userId);
+    playerSets.player2.add(this.player2.getUser().userId);
+    this.mainEventsGateway.emitPlayerList();
   }
 
   player2ToPlayer1() {
@@ -185,8 +200,8 @@ export class Room {
     this.players.set(newPlayer1User.userId, this.player1);
   }
 
-  leave(participantUserId: number) {
-    if (this.player1.getUser().userId === participantUserId) {
+  leave(leaveUserId: number) {
+    if (this.player1.getUser().userId === leaveUserId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winnerNickname = this.player2.getUser().nickname;
@@ -223,19 +238,27 @@ export class Room {
         this.player1 = this.player2;
         this.player1.changeRole('player1');
         delete this.player2;
+
+        playerSets.player1.delete(leaveUserId);
+        playerSets.player2.delete(this.player1.getUser().userId);
+        playerSets.player1.add(this.player1.getUser().userId);
+        this.mainEventsGateway.emitPlayerList();
       } else if (this.observers.length !== 0) {
         const newPlayer1User = this.observers.shift();
         this.setPlayer1(newPlayer1User);
         this.players.set(newPlayer1User.userId, this.player1);
+
+        playerSets.player1.delete(leaveUserId);
+        playerSets.player1.add(this.player1.getUser().userId);
+        this.mainEventsGateway.emitPlayerList();
       } else {
         delete this.player1;
+        playerSets.player1.delete(leaveUserId);
+        this.mainEventsGateway.emitPlayerList();
       }
 
-      this.players.delete(participantUserId);
-    } else if (
-      this.player2 &&
-      this.player2.getUser().userId === participantUserId
-    ) {
+      this.players.delete(leaveUserId);
+    } else if (this.player2 && this.player2.getUser().userId === leaveUserId) {
       // 플레이어가 나갈때 패처리로 gameover 이벤트 발생하는 부분
       if (this.roomStatus !== RoomStatus.READY) {
         const winnerNickname = this.player1.getUser().nickname;
@@ -269,11 +292,14 @@ export class Room {
       }
 
       delete this.player2;
-      this.players.delete(participantUserId);
-    } else if (this.isObserver(participantUserId)) {
+      this.players.delete(leaveUserId);
+
+      playerSets.player2.delete(leaveUserId);
+      this.mainEventsGateway.emitPlayerList();
+    } else if (this.isObserver(leaveUserId)) {
       let index;
       for (let i = 0; i < this.observers.length; i += 1) {
-        if (this.observers[i].userId === participantUserId) {
+        if (this.observers[i].userId === leaveUserId) {
           index = i;
         }
       }
@@ -320,8 +346,6 @@ export class Room {
       this.playingInit();
     }
   }
-
-  // readyDestroy(): void {}
 
   playingInit(): void {
     this.player1.setReady(false);

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { onlineMap } from './onlineMap';
+import { playerSets } from './playerSets';
 
 @WebSocketGateway({ namespace: '/main' })
 export class MainEventsGateway implements OnGatewayDisconnect {
@@ -29,5 +30,14 @@ export class MainEventsGateway implements OnGatewayDisconnect {
     const onlineSet = new Set(Object.values(onlineMap));
     const uniqueOnlineList = [...onlineSet];
     socket.nsp.emit('onlineList', uniqueOnlineList);
+  }
+
+  emitPlayerList() {
+    const emitData = {
+      player1: Array.from(playerSets.player1),
+      player2: Array.from(playerSets.player2),
+    };
+
+    this.server.emit('playerList', emitData);
   }
 }

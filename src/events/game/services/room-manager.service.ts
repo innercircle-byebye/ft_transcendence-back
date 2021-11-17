@@ -3,7 +3,9 @@ import { Server } from 'socket.io';
 import { BallSpeed } from 'src/entities/GameResult';
 import { IUser } from 'src/entities/interfaces/IUser';
 import { GameEventsService } from 'src/events/game-events.service';
+import { MainEventsGateway } from 'src/events/main-events.gateway';
 import { onlineGameMap } from 'src/events/onlineGameMap';
+import { playerSets } from 'src/events/playerSets';
 import { Room } from '../classes/room.class';
 
 @Injectable()
@@ -12,7 +14,10 @@ export class RoomManagerService {
 
   gameRoomIdsByUserId: Map<number, number> = new Map<number, number>(); // key: userId, value: gameRoomId
 
-  constructor(private readonly gameEventsService: GameEventsService) {}
+  constructor(
+    private readonly gameEventsService: GameEventsService,
+    private readonly mainEventsGateway: MainEventsGateway,
+  ) {}
 
   createRoom(
     server: Server,
@@ -28,6 +33,7 @@ export class RoomManagerService {
       ballSpeed,
       winPoint,
       this.gameEventsService,
+      this.mainEventsGateway,
     );
     // player1Socket.join(`game-${gameRoomId.toString()}`);
     this.roomsByGameRoomId.set(gameRoomId, room);
@@ -40,6 +46,9 @@ export class RoomManagerService {
     room.setPlayer2(player2User);
     // newParticipant.join(`game-${gameRoomId.toString()}`);
     this.gameRoomIdsByUserId.set(player2User.userId, gameRoomId);
+
+    playerSets.player2.add(player2User.userId);
+    this.mainEventsGateway.emitPlayerList();
   }
 
   joinRoomByObserver(gameRoomId: number, observerUser: IUser): void {
@@ -110,6 +119,9 @@ export class RoomManagerService {
       room.toPlayer(userId);
     }
     room.emitGameRoomData();
+
+    playerSets.player2.add(userId);
+    this.mainEventsGateway.emitPlayerList();
   }
 
   moveToObserver(userId: number) {
@@ -128,15 +140,29 @@ export class RoomManagerService {
         room.unSetPlayer1();
         room.player2ToPlayer1();
         room.joinByObserver(player1User);
+
+        playerSets.player1.delete(player1.getUser().userId);
+        playerSets.player1.add(player2.getUser().userId);
+        playerSets.player2.delete(player2.getUser().userId);
+        playerSets.player2.add(player1.getUser().userId);
+        this.mainEventsGateway.emitPlayerList();
       } else if (room.getObserverCnt() > 0) {
         room.unSetPlayer1();
         room.observerToPlayer1();
         room.joinByObserver(player1User);
+
+        const { player1: newPlayer1 } = room.getPlayers();
+        playerSets.player1.delete(player1.getUser().userId);
+        playerSets.player1.add(newPlayer1.getUser().userId);
+        this.mainEventsGateway.emitPlayerList();
       }
     } else if (player2.getUser().userId === userId) {
       const player2User = player2.getUser();
       room.unSetPlayer2();
       room.joinByObserver(player2User);
+
+      playerSets.player2.delete(userId);
+      this.mainEventsGateway.emitPlayerList();
     }
     room.emitGameRoomData();
   }
