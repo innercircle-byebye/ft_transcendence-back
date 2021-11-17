@@ -58,7 +58,7 @@ export class GameEventsService {
     this.gameResultRepository.save(gameResult);
   }
 
-  async setGameResult(room: Room) {
+  async applyGameResult(room: Room) {
     const gameRoomId = room.gameRoomId();
     const { player1, player2 } = room.getPlayers();
     const playerOneId = player1.getUser().userId;
@@ -112,6 +112,12 @@ export class GameEventsService {
         winPoint,
         ballSpeed,
       });
+
+      const playerTwouser = await this.userRepository.findOne({
+        where: { userId: playerTwoId },
+      });
+      playerTwouser.experience += 42;
+      this.userRepository.save(playerTwouser);
     } else {
       await this.gameResultRepository.save({
         gameRoomId,
@@ -120,6 +126,11 @@ export class GameEventsService {
         winPoint,
         ballSpeed,
       });
+      const playerOneuser = await this.userRepository.findOne({
+        where: { userId: playerOneId },
+      });
+      playerOneuser.experience += 42;
+      this.userRepository.save(playerOneuser);
     }
   }
 

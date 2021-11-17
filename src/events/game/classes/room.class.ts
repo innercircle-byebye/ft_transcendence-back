@@ -445,7 +445,7 @@ export class Room {
         this.server.to(socketId).emit('gameover', `[${winnerNickname}] WIN!!!`);
       });
 
-      this.gameEventsService.setGameResult(this);
+      this.gameEventsService.applyGameResult(this);
       // player2가 이기면 player1이된다.
       if (this.player2.getScore() > this.player1.getScore()) {
         this.switchPlayers();
