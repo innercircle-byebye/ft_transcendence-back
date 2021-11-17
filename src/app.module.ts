@@ -91,7 +91,16 @@ AdminJS.registerAdapter({ Database, Resource });
             Announcement,
             User,
             Channel,
-            ChannelMember,
+            {
+              resource: ChannelMember,
+              options: {
+                properties: {
+                  channelMemberId: { isVisible: false },
+                  userId: { isId: true },
+                  channelId: { isId: true },
+                },
+              },
+            },
             ChannelChat,
           ],
         },

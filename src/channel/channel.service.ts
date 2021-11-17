@@ -8,7 +8,7 @@ import { ChannelMember } from 'src/entities/ChannelMember';
 import { DMType } from 'src/entities/DM';
 import { User } from 'src/entities/User';
 import { ChatEventsGateway } from 'src/events/chat-events.gateway';
-import { Connection, MoreThan, Repository } from 'typeorm';
+import { Brackets, Connection, MoreThan, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 // TODO: 채널 조회시 비밀방 유무로 객체 전달
@@ -210,11 +210,12 @@ export class ChannelService {
     }
 
     if (password !== undefined) {
-      console.log('hi');
-      targetChannel.password = await bcrypt.hash(
-        password,
-        parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
-      );
+      if (password === null) targetChannel.password = null;
+      else
+        targetChannel.password = await bcrypt.hash(
+          password,
+          parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
+        );
     }
 
     if (
@@ -222,11 +223,12 @@ export class ChannelService {
       targetChannel.maxParticipantNum !== maxParticipantNum
     )
       targetChannel.maxParticipantNum = maxParticipantNum;
-    if (name !== updateName) {
+    if (updateName) {
       targetChannel.name = updateName;
       this.chatEventsGateway.server.emit('updateChannelName', updateName);
     }
-    this.channelRepository.save(targetChannel);
+    console.log(targetChannel.password);
+    await this.channelRepository.save(targetChannel);
     delete targetChannel.password;
     return targetChannel;
   }
@@ -263,6 +265,13 @@ export class ChannelService {
       .innerJoinAndSelect('channelMembers.user', 'user')
       .select(['channelMembers', 'user.nickname', 'user.imagePath'])
       .withDeleted()
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('channelMembers.deletedAt is null').orWhere(
+            'channelMembers.banDate is not null',
+          );
+        }),
+      )
       .getMany();
   }
 

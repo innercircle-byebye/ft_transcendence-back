@@ -7,7 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { IChannel } from './interfaces/IChannel';
@@ -16,11 +16,14 @@ import { IUser } from './interfaces/IUser';
 
 @Entity('channel_member')
 export class ChannelMember extends BaseEntity implements IChannelMember {
+  @PrimaryGeneratedColumn({ name: 'channel_member_id' })
+  channelMemberId: number;
+
   @ApiProperty({
     description: '유저 ID 번호',
     example: 1,
   })
-  @PrimaryColumn({ name: 'user_id' })
+  @Column({ name: 'user_id' })
   userId: number;
 
   @ManyToOne('User', 'ChannelMembers', { primary: true })
@@ -31,7 +34,7 @@ export class ChannelMember extends BaseEntity implements IChannelMember {
     description: '채널 ID 번호',
     example: 1,
   })
-  @PrimaryColumn({ name: 'channel_id' })
+  @Column({ name: 'channel_id' })
   channelId: number;
 
   @ManyToOne('Channel', 'channelMember', { primary: true })
