@@ -5,7 +5,7 @@ import {
   OmitType,
   PickType,
 } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsNumber, IsOptional } from 'class-validator';
 import { BallSpeed, GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 
@@ -25,6 +25,7 @@ export class GameRoomUpdateDto extends IntersectionType(
   })
   password: string;
 
+  @IsNumber()
   @IsOptional()
   @ApiProperty({
     required: false,
@@ -37,6 +38,7 @@ export class GameRoomUpdateDto extends IntersectionType(
   })
   ballSpeed: BallSpeed;
 
+  @IsNumber()
   @IsOptional()
   @ApiProperty({
     required: false,
