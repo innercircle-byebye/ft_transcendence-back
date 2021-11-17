@@ -87,6 +87,24 @@ export class GameEventsService {
 
     // 새로운 gameResult 생성
     if (plyaerTwoScore > playerOneScore) {
+      const playerOneGameMember = await this.gameMemberRepository.findOne({
+        where: {
+          gameRoomId,
+          userId: playerOneId,
+        },
+      });
+      playerOneGameMember.status = GameMemberStatus.PLAYER_TWO;
+      await this.gameMemberRepository.save(playerOneGameMember);
+
+      const playerTwoGameMember = await this.gameMemberRepository.findOne({
+        where: {
+          gameRoomId,
+          userId: playerTwoId,
+        },
+      });
+      playerTwoGameMember.status = GameMemberStatus.PLAYER_ONE;
+      await this.gameMemberRepository.save(playerTwoGameMember);
+
       await this.gameResultRepository.save({
         gameRoomId,
         playerOneId: playerTwoId,
