@@ -334,7 +334,30 @@ export class GameController {
     @AuthUser() user: User,
   ) {
     await this.gameService.moveToPlayer(gameRoomId, user.userId);
-    return 'OK';
+  }
+
+  @ApiOperation({
+    summary: '게임방에서 관전자로 이동',
+    description: '게임방에서 플레이어 -> 관전자로 이동합니다.',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '관전자로 이동 성공시 별도의 응답없음.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '이미 관전자입니다.\n\n' +
+      '플레이 중에는 관전자로 이동할 수 없습니다.\n\n' +
+      '혼자 있는 경우, 관전자로 이동할 수 없습니다.',
+  })
+  @Patch('/room/:game_room_id/move/observer')
+  async moveToObserverInGameRoom(
+    @Param('game_room_id') gameRoomId: number,
+    @AuthUser() user: User,
+  ) {
+    await this.gameService.moveToObserver(gameRoomId, user.userId);
   }
 
   @ApiOperation({

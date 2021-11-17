@@ -744,6 +744,104 @@ export class GameService {
     }
   }
 
+  async moveToObserver(gameRoomId: number, userId: number) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom) {
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    }
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
+    });
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
+    }
+    if (checkGameMember.status === GameMemberStatus.OBSERVER) {
+      throw new BadRequestException('이미 관전자입니다.');
+    }
+    const checkGameResult = await this.gameResultRepository.findOne({
+      where: { gameRoomId, startAt: null, endAt: null },
+    });
+    if (!checkGameResult) {
+      throw new BadRequestException(
+        '플레이 중에는 관전자로 이동할 수 없습니다.',
+      );
+    }
+    const checkParticipantsCnt = await this.gameMemberRepository.count({
+      where: { gameRoomId },
+    });
+    if (checkParticipantsCnt === 1) {
+      throw new BadRequestException(
+        '혼자 있는 경우, 관전자로 이동할 수 없습니다.',
+      );
+    }
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const gameMember = await queryRunner.manager
+        .getRepository(GameMember)
+        .findOne({ where: { gameRoomId, userId } });
+      const gameResult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+
+      if (gameMember.status === GameMemberStatus.PLAYER_ONE) {
+        // 플레이어1일때
+        console.log('플레이어1일때');
+        if (gameResult.playerTwoId) {
+          // 플레이어2있을때
+          console.log('플레이어2있을때');
+          const gameMemberPlayerTwo = await queryRunner.manager
+            .getRepository(GameMember)
+            .findOne({ where: { gameRoomId, userId: gameResult.playerTwoId } });
+          gameMemberPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
+            .getRepository(GameMember)
+            .save(gameMemberPlayerTwo);
+
+          gameMember.status = GameMemberStatus.OBSERVER;
+          gameResult.playerOneId = gameResult.playerTwoId;
+          gameResult.playerTwoId = null;
+        } else {
+          // 관전자만 있을떄
+          console.log('관전자만 있을때');
+          const gameMemberObserver = await queryRunner.manager
+            .getRepository(GameMember)
+            .createQueryBuilder('gameMember')
+            .where({ gameRoomId, status: GameMemberStatus.OBSERVER })
+            .orderBy('gameMember.lastModifiedAt', 'ASC')
+            .getOne();
+          gameMemberObserver.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
+            .getRepository(GameMember)
+            .save(gameMemberObserver);
+
+          gameMember.status = GameMemberStatus.OBSERVER;
+          gameResult.playerOneId = gameMemberObserver.userId;
+        }
+      } else {
+        // 플레이어2일때
+        console.log('플레이어2일때');
+        gameMember.status = GameMemberStatus.OBSERVER;
+        gameResult.playerTwoId = null;
+      }
+
+      await queryRunner.manager.getRepository(GameMember).save(gameMember);
+      await queryRunner.manager.getRepository(GameResult).save(gameResult);
+      await queryRunner.commitTransaction();
+
+      // this.roomManagerService.moveToObserver(userId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async countGameResultsOfUser(userId: number) {
     return (await this.getAllGameResults(userId)).length;
   }
