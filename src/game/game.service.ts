@@ -790,10 +790,8 @@ export class GameService {
 
       if (gameMember.status === GameMemberStatus.PLAYER_ONE) {
         // 플레이어1일때
-        console.log('플레이어1일때');
         if (gameResult.playerTwoId) {
           // 플레이어2있을때
-          console.log('플레이어2있을때');
           const gameMemberPlayerTwo = await queryRunner.manager
             .getRepository(GameMember)
             .findOne({ where: { gameRoomId, userId: gameResult.playerTwoId } });
@@ -807,7 +805,6 @@ export class GameService {
           gameResult.playerTwoId = null;
         } else {
           // 관전자만 있을떄
-          console.log('관전자만 있을때');
           const gameMemberObserver = await queryRunner.manager
             .getRepository(GameMember)
             .createQueryBuilder('gameMember')
@@ -824,7 +821,6 @@ export class GameService {
         }
       } else {
         // 플레이어2일때
-        console.log('플레이어2일때');
         gameMember.status = GameMemberStatus.OBSERVER;
         gameResult.playerTwoId = null;
       }
@@ -833,7 +829,7 @@ export class GameService {
       await queryRunner.manager.getRepository(GameResult).save(gameResult);
       await queryRunner.commitTransaction();
 
-      // this.roomManagerService.moveToObserver(userId);
+      this.roomManagerService.moveToObserver(userId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

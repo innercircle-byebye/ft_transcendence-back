@@ -88,4 +88,33 @@ export class RoomManagerService {
     }
     room.emitGameRoomData();
   }
+
+  moveToObserver(userId: number) {
+    const gameRoomId = this.getGameRoomIdByUserId(userId);
+    const room = this.getRoomsByGameRoomId().get(gameRoomId);
+
+    if (room.isPlaying()) {
+      return;
+    }
+
+    const { player1, player2 } = room.getPlayers();
+
+    if (player1.getUser().userId === userId) {
+      const player1User = player1.getUser();
+      if (player2) {
+        room.unSetPlayer1();
+        room.player2ToPlayer1();
+        room.joinByObserver(player1User);
+      } else if (room.getObserverCnt() > 0) {
+        room.unSetPlayer1();
+        room.observerToPlayer1();
+        room.joinByObserver(player1User);
+      }
+    } else if (player2.getUser().userId === userId) {
+      const player2User = player2.getUser();
+      room.unSetPlayer2();
+      room.joinByObserver(player2User);
+    }
+    room.emitGameRoomData();
+  }
 }

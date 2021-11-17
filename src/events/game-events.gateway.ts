@@ -204,40 +204,4 @@ export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconne
     };
     this.server.to(`game-${gameRoomId.toString()}`).emit('gameChat', chatData);
   }
-
-  @SubscribeMessage('toObserver')
-  handleToObserver(@ConnectedSocket() socket: Socket) {
-    console.log('~~~~~~~~ toObserver evnet ~~~~~~~~');
-    const userId = onlineGameMap[socket.id];
-    const gameRoomId = this.roomManagerService.getGameRoomIdByUserId(userId);
-    const room = this.roomManagerService.getRoomsByGameRoomId().get(gameRoomId);
-
-    if (room.isPlaying()) {
-      return;
-    }
-
-    const { player1, player2 } = room.getPlayers();
-
-    if (player1.getUser().userId === userId) {
-      console.log('~~~ player1 => observer');
-      if (player2) {
-        console.log('player2를 player1로 하고 player1은 관전자로된다.');
-        room.unSetPlayer1();
-        room.player2ToPlayer1();
-        room.joinByObserver(userId);
-      } else if (room.getObserverCnt() > 0) {
-        console.log('관전자중 하나를  player1로 하고 player1은 관전자로된다.');
-        room.unSetPlayer1();
-        room.observerToPlayer1();
-        room.joinByObserver(userId);
-      } else {
-        console.log('아무일도 안일어난다');
-      }
-    } else if (player2.getUser().userId === userId) {
-      room.unSetPlayer2();
-      room.joinByObserver(userId);
-    }
-
-    room.emitGameRoomData();
-  }
 }
