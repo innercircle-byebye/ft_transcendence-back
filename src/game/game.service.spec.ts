@@ -5,6 +5,7 @@ import { GameMember } from 'src/entities/GameMember';
 import { GameResult } from 'src/entities/GameResult';
 import { GameRoom } from 'src/entities/GameRoom';
 import { User } from 'src/entities/User';
+import { RoomManagerService } from 'src/events/game/services/room-manager.service';
 import { Connection } from 'typeorm';
 import { GameService } from './game.service';
 
@@ -44,6 +45,10 @@ const mockDmService = () => ({
   transaction: jest.fn(),
 });
 
+const mockRoomManagerService = () => ({
+  transaction: jest.fn(),
+});
+
 describe('GameService', () => {
   let service: GameService;
 
@@ -74,6 +79,10 @@ describe('GameService', () => {
         {
           provide: DmService,
           useFactory: mockDmService,
+        },
+        {
+          provide: RoomManagerService,
+          useFactory: mockRoomManagerService,
         },
       ],
     }).compile();

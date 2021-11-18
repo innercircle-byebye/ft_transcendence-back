@@ -14,6 +14,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtTwoFactorGuard } from 'src/auth/guards/jwt-two-factor.guard';
@@ -24,13 +25,10 @@ import { GameRoomCreateDto } from './dto/gameroom-create.dto';
 import { GameRoomJoinDto } from './dto/gameroom-join.dto';
 import { GameRoomListDto } from './dto/gameroom-list.dto';
 import { GameRoomUpdateDto } from './dto/gameroom-update.dto';
-import { GameMemberBanDto } from './dto/gamemember-ban.dto';
 import { GameService } from './game.service';
-import { GameMemberMoveDto } from './dto/gamemember-move.dto';
 import { GameRoomDto } from './dto/gameroom.dto';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
-import { GameMemberDto } from './dto/gamemember.dto';
 import { GameResultRankingDto } from './dto/gameresult-ranking.dto';
 
 @UseGuards(JwtTwoFactorGuard)
@@ -237,9 +235,12 @@ export class GameController {
   })
   @ApiBadRequestResponse({
     description:
-      '게임방이 존재하지 않습니다.\n\n 비밀번호가 일치하지 않습니다.\n\n' +
-      '이미 다른 게임방에 참여중입니다. \n\n' +
-      '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n 게임방에 참여할 수 없습니다. (관전 정원초과)',
+      '이미 다른 게임방에 참여중입니다.\n\n' +
+      '게임방이 존재하지 않습니다.\n\n' +
+      '비밀번호가 일치하지 않습니다.\n\n' +
+      '게임방에 참여할 수 없습니다. (정원 초과)\n\n' +
+      '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n' +
+      'ban 처리된 사용자 입니다.',
   })
   @Post('/room/:game_room_id/join')
   async joinGameRoom(
@@ -253,6 +254,7 @@ export class GameController {
         gameRoomId,
         body.password,
       );
+
     return this.gameService.joinGameRoomAsObserver(
       user.userId,
       gameRoomId,
@@ -261,71 +263,81 @@ export class GameController {
   }
 
   @ApiOperation({
-    summary: '게임방 나가기',
-    description: '게임방에서 나갑니다',
+    summary: '게임방에서 특정 사용자를 강제퇴장 시킵니다.',
+    description:
+      '게임방에서 특정 사용자를 강제퇴장 시킵니다.(플레이어1만 할 수 있습니다.)',
   })
-  @ApiOkResponse({ description: 'OK' })
+  @ApiResponse({
+    status: 204,
+    description: '강제퇴장 성공시 별도의 응답없음.',
+  })
   @ApiBadRequestResponse({
     description:
-      '게임방이 존재하지 않습니다.\n\n 게임방에 유저가 존재 하지 않습니다.\n\n',
-    // '이미 다른 게임방에 참여중입니다. \n\n' +
-    // '게임방에 참여할 수 없습니다. (플레이어 만석)\n\n 게임방에 참여할 수 없습니다. (관전 정원초과)',
+      '본인을 강제퇴장시킬 수 없습니다.\n\n' +
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '강제퇴장 권한이 없습니다.\n\n' +
+      '플레이 중에는 강제퇴장 시킬 수 없습니다.\n\n' +
+      '강제퇴장 대상이 게임방에 존재하지 않습니다.',
   })
-  @Delete('/room/:game_room_id/leave')
-  leaveGameRoom(
+  @Delete('/room/:game_room_id/kick/:target_user_id')
+  async kickFromGameRoom(
     @Param('game_room_id') gameRoomId: number,
+    @Param('target_user_id') targetUserId: number,
     @AuthUser() user: User,
   ) {
-    return this.gameService.leaveGameRoom(user.userId, gameRoomId);
-  }
-
-  @ApiOperation({
-    summary: '게임방 멤버 차단/차단해제 하기',
-    description:
-      '게임방에서 해당 사용자를 차단 /차단 해제 합니다. \n\n 멤버 차단/차단해제는 플레이어1만 가능합니다.\n\n' +
-      'body에 플레이어/관전자 정보를 전달 받게됩니다.',
-  })
-  @ApiOkResponse({ type: GameMemberDto })
-  @ApiBadRequestResponse({
-    description:
-      '게임방이 존재하지 않습니다.\n\n 차단 권한이 없습니다.\n\n' +
-      '유저가 존재 하지 않습니다.\n\n게임 중에는 나갈 수 없습니다.\n\n',
-  })
-  @Patch('/room/:game_room_id/ban')
-  banPlayerFromGameRoom(
-    @Param('game_room_id') gameRoomId: number,
-    @AuthUser() user: User,
-    @Body() body: GameMemberBanDto,
-  ) {
-    if (body.banDate)
-      return this.gameService.banGameMember(
-        gameRoomId,
-        user.userId,
-        body.userId,
-        body.banDate,
-      );
-    return this.gameService.restoreGameMemberFromBan(
+    await this.gameService.kickFromGameRoom(
       gameRoomId,
       user.userId,
-      body.userId,
+      targetUserId,
     );
   }
 
   @ApiOperation({
-    summary: '게임방 멤버 상태 전환 (플레이어 <-> 관전자)',
-    description:
-      '게임방에서 해당 사용자의 상태를 변경합니다.\n\n' +
-      'body에 플레이어/관전자 정보를 전달 받게됩니다.',
+    summary: '게임방에서 플레이어로 이동',
+    description: '게임방에서 관전자 -> 플레이어로 이동합니다.',
   })
-  @ApiOkResponse({ type: GameMemberDto })
-  @Patch('/room/:game_room_id/move')
-  moveGameMemberInGameRoom(
+  @ApiResponse({
+    status: 204,
+    description: '플레이어로 이동 성공시 별도의 응답없음.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '이미 플레이어입니다.\n\n' +
+      '이동 가능한 플레이어 자리가 없습니다.',
+  })
+  @Patch('/room/:game_room_id/move/player')
+  async moveToPlayerInGameRoom(
     @Param('game_room_id') gameRoomId: number,
     @AuthUser() user: User,
-    @Body() body: GameMemberMoveDto,
   ) {
-    return this.gameService.movePlayerOrObserver(gameRoomId, user.userId, body);
-    return 'OK';
+    await this.gameService.moveToPlayer(gameRoomId, user.userId);
+  }
+
+  @ApiOperation({
+    summary: '게임방에서 관전자로 이동',
+    description: '게임방에서 플레이어 -> 관전자로 이동합니다.',
+  })
+  @ApiResponse({
+    status: 204,
+    description: '관전자로 이동 성공시 별도의 응답없음.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '게임방이 존재하지 않습니다.\n\n' +
+      '해당 게임방에 참여 중이지 않습니다.\n\n' +
+      '이미 관전자입니다.\n\n' +
+      '플레이 중에는 관전자로 이동할 수 없습니다.\n\n' +
+      '혼자 있는 경우, 관전자로 이동할 수 없습니다.',
+  })
+  @Patch('/room/:game_room_id/move/observer')
+  async moveToObserverInGameRoom(
+    @Param('game_room_id') gameRoomId: number,
+    @AuthUser() user: User,
+  ) {
+    await this.gameService.moveToObserver(gameRoomId, user.userId);
   }
 
   @ApiOperation({

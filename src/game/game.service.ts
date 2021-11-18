@@ -8,8 +8,7 @@ import { User, UserStatus } from 'src/entities/User';
 import { Brackets, Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { DMType } from 'src/entities/DM';
-import { GameMemberMoveDto } from './dto/gamemember-move.dto';
-import { GameMemberDto } from './dto/gamemember.dto';
+import { RoomManagerService } from 'src/events/game/services/room-manager.service';
 import { GameResultUserDto } from './dto/gameresult-user.dto';
 import { GameResultWinRateDto } from './dto/gameresult-winrate.dto';
 import { GameRoomCreateDto } from './dto/gameroom-create.dto';
@@ -29,6 +28,7 @@ export class GameService {
     private gameResultRepository: Repository<GameResult>,
     private connection: Connection,
     private dmService: DmService, // events module needed private readonly chatEventsGateway: ChatEventsGateway,
+    private readonly roomManagerService: RoomManagerService,
   ) {}
 
   async getCurrentGameRoomMemberCount(id: number) {
@@ -57,7 +57,7 @@ export class GameService {
   }
 
   async checkUserAlreadyInGameRoom(id: number): Promise<boolean> {
-    const gameMemberRepositoryCheck = this.gameMemberRepository.findOne({
+    const gameMemberRepositoryCheck = await this.gameMemberRepository.findOne({
       where: { userId: id },
     });
     if (gameMemberRepositoryCheck) return true;
@@ -72,12 +72,6 @@ export class GameService {
     const result = gameMemberRepositoryCheck.map((x) => x.userId);
 
     return result;
-  }
-
-  async countAllGameRoomObservers(gameRoomId: number): Promise<number> {
-    return this.gameMemberRepository.count({
-      where: { gameRoomId, status: GameMemberStatus.OBSERVER },
-    });
   }
 
   async getGameRoomTotalInfo(gameRoomId: number): Promise<GameRoomDto> {
@@ -321,7 +315,7 @@ export class GameService {
     const checkExistGameRoom = await this.gameRoomRepository.findOne({
       where: [{ title: gameRoomUpdateDto.title, deletedAt: null }],
     });
-    if (checkExistGameRoom)
+    if (checkExistGameRoom && checkExistGameRoom.gameRoomId !== gameRoomId)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
 
     const checkGameRoomUpdateAuth = this.gameMemberRepository.findOne({
@@ -343,16 +337,16 @@ export class GameService {
         .findOne({ where: { gameRoomId } });
       if (gameRoomUpdateDto.title)
         targetGameRoom.title = gameRoomUpdateDto.title;
-      if (typeof Object(gameRoomUpdateDto.password) !== undefined) {
+
+      if (gameRoomUpdateDto.password === null) {
+        targetGameRoom.password = null;
+      } else if (gameRoomUpdateDto.password) {
         targetGameRoom.password = await bcrypt.hash(
           gameRoomUpdateDto.password,
           parseInt(process.env.BCRYPT_HASH_ROUNDS, 10),
         );
       }
-      if (
-        typeof Object(gameRoomUpdateDto.maxParticipantNum) !== undefined &&
-        targetGameRoom.maxParticipantNum !== gameRoomUpdateDto.maxParticipantNum
-      )
+      if (gameRoomUpdateDto.maxParticipantNum)
         targetGameRoom.maxParticipantNum = gameRoomUpdateDto.maxParticipantNum;
       updatedGameRoom = await queryRunner.manager
         .getRepository(GameRoom)
@@ -360,7 +354,7 @@ export class GameService {
       const latestGameReseult = await queryRunner.manager
         .getRepository(GameResult)
         .findOne({
-          where: [{ gameRoomId }, { startAt: null }, { endAt: null }],
+          where: [{ gameRoomId, startAt: null, endAt: null }],
         });
       if (gameRoomUpdateDto.ballSpeed)
         latestGameReseult.ballSpeed = gameRoomUpdateDto.ballSpeed;
@@ -370,6 +364,15 @@ export class GameService {
         .getRepository(GameResult)
         .save(latestGameReseult);
       await queryRunner.commitTransaction();
+
+      const roomId = this.roomManagerService.getGameRoomIdByUserId(playerOneId);
+      const room = this.roomManagerService.getRoomsByGameRoomId().get(roomId);
+      if (gameRoomUpdateDto.ballSpeed) {
+        room?.setBallSpeed(gameRoomUpdateDto.ballSpeed);
+      }
+      if (gameRoomUpdateDto.winPoint) {
+        room?.setWinPoint(gameRoomUpdateDto.winPoint);
+      }
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -388,26 +391,44 @@ export class GameService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId, deletedAt: null },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    if (
-      typeof Object(password) !== undefined &&
-      !(await bcrypt.compare(password, checkGameRoom.password))
-    )
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-    const checkGameMemberInRoom = await this.gameMemberRepository.findOne({
-      where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
-    });
-    if (this.checkUserAlreadyInGameRoom(userId))
+    if (await this.checkUserAlreadyInGameRoom(userId))
       throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
 
-    if (checkGameMemberInRoom)
-      throw new BadRequestException(
-        '게임방에 참여할 수 없습니다. (플레이어 만석)',
-      );
+    const checkGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameRoom')
+      .addSelect('gameRoom.password')
+      .where('gameRoom.gameRoomId = :gameRoomId', { gameRoomId })
+      .getOne();
+
+    // 방 존재여부 체크
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+
+    // 방 비밀번호 체크
+    if (checkGameRoom.password) {
+      if (
+        !password ||
+        !(await bcrypt.compare(password, checkGameRoom.password))
+      ) {
+        throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    // 게임방 정원초과여부, 플레이어 자리 있는지 확인
+    const checkGameMemberInRoom = await this.gameMemberRepository.find({
+      where: [{ gameRoomId }],
+    });
+    if (checkGameMemberInRoom.length >= checkGameRoom.maxParticipantNum) {
+      throw new BadRequestException('게임방에 참여할 수 없습니다. (정원 초과)');
+    }
+    checkGameMemberInRoom.forEach((gameMember) => {
+      if (gameMember.status === GameMemberStatus.PLAYER_TWO) {
+        throw new BadRequestException(
+          '게임방에 참여할 수 없습니다. (플레이어 만석)',
+        );
+      }
+    });
+
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
       .where('gameMembers.gameRoomId = :gameRoomId', {
@@ -423,20 +444,18 @@ export class GameService {
 
     try {
       let gameRoomPlayerTwo;
-      if (checkIfAlreadyJoined) gameRoomPlayerTwo = checkIfAlreadyJoined;
-      else gameRoomPlayerTwo = new GameMember();
-      gameRoomPlayerTwo.gameRoomId = gameRoomId;
-      gameRoomPlayerTwo.userId = userId;
+      if (checkIfAlreadyJoined) {
+        gameRoomPlayerTwo = checkIfAlreadyJoined;
+        gameRoomPlayerTwo.deletedAt = null;
+      } else {
+        gameRoomPlayerTwo = new GameMember();
+        gameRoomPlayerTwo.gameRoomId = gameRoomId;
+        gameRoomPlayerTwo.userId = userId;
+      }
       gameRoomPlayerTwo.status = GameMemberStatus.PLAYER_TWO;
-
-      if (checkIfAlreadyJoined)
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .restore(gameRoomPlayerTwo);
-      else
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .save(gameRoomPlayerTwo);
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .save(gameRoomPlayerTwo);
 
       const latestGameReseult = await queryRunner.manager
         .getRepository(GameResult)
@@ -445,6 +464,7 @@ export class GameService {
       await queryRunner.manager
         .getRepository(GameResult)
         .save(latestGameReseult);
+
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -460,33 +480,36 @@ export class GameService {
     gameRoomId: number,
     password: string,
   ) {
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId, deletedAt: null },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    if (
-      typeof Object(password) !== undefined &&
-      !(await bcrypt.compare(password, checkGameRoom.password))
-    )
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-    if (this.checkUserAlreadyInGameRoom(userId))
+    if (await this.checkUserAlreadyInGameRoom(userId))
       throw new BadRequestException('이미 다른 게임방에 참여중입니다.');
 
-    let currentObserverCount;
-    currentObserverCount = await this.getCurrentGameRoomMemberCount(gameRoomId);
-    if (
-      this.gameMemberRepository.findOne({
-        where: [{ gameRoomId, status: GameMemberStatus.PLAYER_TWO }],
-      }) === undefined
-    )
-      currentObserverCount -= 2;
-    else currentObserverCount -= 1;
+    const checkGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameRoom')
+      .addSelect('gameRoom.password')
+      .where('gameRoom.gameRoomId = :gameRoomId', { gameRoomId })
+      .getOne();
 
-    if (checkGameRoom.maxParticipantNum - 2 <= currentObserverCount)
-      throw new BadRequestException(
-        '게임방에 참여할 수 없습니다. (관전 정원 초과)',
-      );
+    // 방 존재여부 체크
+    if (!checkGameRoom)
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+
+    // 방 비밀번호 체크
+    if (checkGameRoom.password) {
+      if (
+        !password ||
+        !(await bcrypt.compare(password, checkGameRoom.password))
+      ) {
+        throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    // 게임방 정원초과여부
+    const checkGameMemberInRoom = await this.gameMemberRepository.find({
+      where: [{ gameRoomId }],
+    });
+    if (checkGameMemberInRoom.length >= checkGameRoom.maxParticipantNum) {
+      throw new BadRequestException('게임방에 참여할 수 없습니다. (정원 초과)');
+    }
 
     const checkIfAlreadyJoined = await this.gameMemberRepository
       .createQueryBuilder('gameMembers')
@@ -499,9 +522,12 @@ export class GameService {
       .withDeleted()
       .getOne();
     if (checkIfAlreadyJoined) {
-      if (checkIfAlreadyJoined.banDate !== null)
+      if (checkIfAlreadyJoined.banDate !== null) {
         throw new BadRequestException('ban 처리된 사용자 입니다');
-      await this.gameMemberRepository.restore(checkIfAlreadyJoined);
+      }
+      checkIfAlreadyJoined.status = GameMemberStatus.OBSERVER;
+      checkIfAlreadyJoined.deletedAt = null;
+      await this.gameMemberRepository.save(checkIfAlreadyJoined);
     } else {
       const gameRoomObserver = new GameMember();
       gameRoomObserver.gameRoomId = gameRoomId;
@@ -512,279 +538,214 @@ export class GameService {
     return this.getGameRoomTotalInfo(gameRoomId);
   }
 
-  async leaveGameRoom(userId: number, gameRoomId: number) {
+  async kickFromGameRoom(
+    gameRoomId: number,
+    userId: number,
+    targetUserId: number,
+  ) {
+    if (userId === targetUserId) {
+      throw new BadRequestException('본인을 강제퇴장시킬 수 없습니다.');
+    }
     const checkGameRoom = await this.gameRoomRepository.findOne({
       where: { gameRoomId },
     });
-    if (!checkGameRoom)
+    if (!checkGameRoom) {
       throw new BadRequestException('게임방이 존재하지 않습니다.');
+    }
     const checkGameMember = await this.gameMemberRepository.findOne({
       where: { gameRoomId, userId },
     });
-    if (!checkGameMember)
-      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
-
-    if (checkGameMember.status === GameMemberStatus.OBSERVER) {
-      await this.gameMemberRepository.softRemove(checkGameMember);
-    } else {
-      const queryRunner = this.connection.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      try {
-        await queryRunner.manager
-          .getRepository(GameMember)
-          .softRemove(checkGameMember);
-
-        if (checkGameMember.status === GameMemberStatus.PLAYER_TWO) {
-          const latestGameReseult = await queryRunner.manager
-            .getRepository(GameResult)
-            .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-          if (!latestGameReseult)
-            throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
-          latestGameReseult.playerTwoId = null;
-          await queryRunner.manager
-            .getRepository(GameResult)
-            .save(latestGameReseult);
-        } else if (checkGameMember.status === GameMemberStatus.PLAYER_ONE) {
-          const checkGameMemberInPlayerTwo = await queryRunner.manager
-            .getRepository(GameMember)
-            .findOne({
-              where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
-            });
-          // Player 2 becomes Player 1
-          if (checkGameMemberInPlayerTwo) {
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            if (!latestGameReseult)
-              throw new BadRequestException('게임 중에는 나갈 수 없습니다.');
-            latestGameReseult.playerOneId = checkGameMemberInPlayerTwo.userId;
-            latestGameReseult.playerTwoId = null;
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .save(latestGameReseult);
-            checkGameMemberInPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
-            await queryRunner.manager
-              .getRepository(GameMember)
-              .save(checkGameMemberInPlayerTwo);
-          } else if ((await this.countAllGameRoomObservers(gameRoomId)) > 0) {
-            // observer becomes player 1
-            const observerToPlayerOne = await queryRunner.manager
-              .getRepository(GameMember)
-              .findOne({ gameRoomId, status: GameMemberStatus.OBSERVER });
-            observerToPlayerOne.status = GameMemberStatus.PLAYER_ONE;
-            await queryRunner.manager
-              .getRepository(GameMember)
-              .save(observerToPlayerOne);
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            latestGameReseult.playerOneId = observerToPlayerOne.userId;
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .save(latestGameReseult);
-          } else {
-            // remove gameroom
-            const latestGameReseult = await queryRunner.manager
-              .getRepository(GameResult)
-              .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-            await queryRunner.manager
-              .getRepository(GameResult)
-              .remove(latestGameReseult);
-            // save for later
-            // await Promise.all(
-            //   (
-            //     await this.getAllGameRoomObserversId(gameRoomId)
-            //   ).map(async (observerUserID) => {
-            //     const observerInGameRoom = await queryRunner.manager
-            //       .getRepository(GameMember)
-            //       .findOne({ where: { gameRoomId, userId: observerUserID } });
-            //     console.log(observerInGameRoom);
-            //     await queryRunner.manager
-            //       .getRepository(GameMember)
-            //       .softRemove(observerInGameRoom);
-            //   }),
-            // );
-            const removeTargetGameRoom = await queryRunner.manager
-              .getRepository(GameRoom)
-              .find({ where: { gameRoomId } });
-            await queryRunner.manager
-              .getRepository(GameRoom)
-              .remove(removeTargetGameRoom);
-          }
-        }
-        await queryRunner.commitTransaction();
-      } catch (error) {
-        await queryRunner.rollbackTransaction();
-        throw error;
-      } finally {
-        await queryRunner.release();
-      }
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
     }
-    return 'OK';
-  }
-
-  async banGameMember(
-    gameRoomId: number,
-    playerOneId: number,
-    targetUserId: number,
-    banDate: Date,
-  ) {
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId },
+    if (checkGameMember.status !== GameMemberStatus.PLAYER_ONE) {
+      throw new BadRequestException('강제퇴장 권한이 없습니다.');
+    }
+    const checkGameResult = await this.gameResultRepository.findOne({
+      where: { gameRoomId, startAt: null, endAt: null },
     });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    const checkPlayerOne = await this.gameMemberRepository.findOne({
-      where: { gameRoomId, userId: playerOneId },
-    });
-    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
-      throw new BadRequestException('차단 권한이 없습니다');
-    const targetUser = await this.gameMemberRepository.findOne({
-      where: { gameRoomId, userId: targetUserId },
-    });
-    if (!targetUser)
-      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
+    if (!checkGameResult) {
+      throw new BadRequestException('플레이 중에는 강제퇴장 시킬 수 없습니다.');
+    }
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    let returnTargetUser;
     try {
-      targetUser.banDate = banDate;
-      await queryRunner.manager.getRepository(GameMember).save(targetUser);
-      returnTargetUser = await queryRunner.manager
+      const targetGameMember = await queryRunner.manager
         .getRepository(GameMember)
-        .softRemove(targetUser);
-      if (targetUser.status === GameMemberStatus.PLAYER_TWO) {
-        const latestGameReseult = await queryRunner.manager
+        .findOne({ where: { gameRoomId, userId: targetUserId } });
+
+      if (!targetGameMember) {
+        throw new BadRequestException(
+          '강제퇴장 대상이 게임방에 존재하지 않습니다.',
+        );
+      }
+
+      if (targetGameMember.status === GameMemberStatus.PLAYER_TWO) {
+        const gameResult = await queryRunner.manager
           .getRepository(GameResult)
           .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-        latestGameReseult.playerTwoId = null;
-        await queryRunner.manager
-          .getRepository(GameResult)
-          .save(latestGameReseult);
+        gameResult.playerTwoId = null;
+        await queryRunner.manager.getRepository(GameResult).save(gameResult);
       }
+
+      await queryRunner.manager
+        .getRepository(GameMember)
+        .softRemove(targetGameMember);
       await queryRunner.commitTransaction();
+
+      this.roomManagerService.kick(targetUserId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
-    return returnTargetUser;
   }
 
-  async restoreGameMemberFromBan(
-    gameRoomId: number,
-    playerOneId: number,
-    userId: number,
-  ) {
+  async moveToPlayer(gameRoomId: number, userId: number) {
     const checkGameRoom = await this.gameRoomRepository.findOne({
       where: { gameRoomId },
     });
-    if (!checkGameRoom)
+    if (!checkGameRoom) {
       throw new BadRequestException('게임방이 존재하지 않습니다.');
-    const checkPlayerOne = await this.gameMemberRepository.findOne({
-      where: { gameRoomId, userId: playerOneId },
+    }
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
     });
-    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
-      throw new BadRequestException('차단 권한이 없습니다');
-    const targetUser = await this.gameMemberRepository
-      .createQueryBuilder('gameMembers')
-      .where('gameMembers.gameRoomId = :gameRoomId', {
-        gameRoomId,
-      })
-      .andWhere('gameMembers.userId = :target', {
-        target: userId,
-      })
-      .withDeleted()
-      .getOne();
-    if (!targetUser)
-      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
-    if (!targetUser.banDate)
-      throw new BadRequestException('해당 유저의 차단 기록이 없습니다.');
-    targetUser.banDate = null;
-    return this.gameMemberRepository.save(targetUser);
-    // const queryRunner = this.connection.createQueryRunner();
-    // await queryRunner.connect();
-    // await queryRunner.startTransaction();
-    // try {
-    //   await queryRunner.manager.getRepository(GameMember).save(targetUser);
-    //   await queryRunner.manager
-    //     .getRepository(GameMember)
-    //     .softRemove(targetUser);
-    //   if (targetUser.status === GameMemberStatus.PLAYER_TWO) {
-    //     const latestGameReseult = await queryRunner.manager
-    //       .getRepository(GameResult)
-    //       .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-    //     latestGameReseult.playerTwoId = null;
-    //     await queryRunner.manager
-    //       .getRepository(GameResult)
-    //       .save(latestGameReseult);
-    //   }
-    //   await queryRunner.commitTransaction();
-    // } catch (error) {
-    //   await queryRunner.rollbackTransaction();
-    //   throw error;
-    // } finally {
-    //   await queryRunner.release();
-    // }
-  }
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
+    }
+    if (checkGameMember.status !== GameMemberStatus.OBSERVER) {
+      throw new BadRequestException('이미 플레이어입니다.');
+    }
+    const checkExistPlayerTwo = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, status: GameMemberStatus.PLAYER_TWO },
+    });
+    if (checkExistPlayerTwo) {
+      throw new BadRequestException('이동 가능한 플레이어 자리가 없습니다.');
+    }
 
-  async movePlayerOrObserver(
-    gameRoomId: number,
-    playerOneId: number,
-    gameMemberMoveDto: GameMemberMoveDto,
-  ): Promise<GameMemberDto> {
-    const checkGameRoom = await this.gameRoomRepository.findOne({
-      where: { gameRoomId },
-    });
-    if (!checkGameRoom)
-      throw new BadRequestException('게임방이 존재하지 않습니다.');
-    const checkPlayerOne = await this.gameMemberRepository.findOne({
-      where: { gameRoomId, userId: playerOneId },
-    });
-    if (checkPlayerOne.status !== GameMemberStatus.PLAYER_ONE)
-      throw new BadRequestException('이동 권한이 없습니다');
-    const targetUser = await this.gameMemberRepository.findOne({
-      where: { gameRoomId, userId: gameMemberMoveDto.userId },
-    });
-    if (!targetUser)
-      throw new BadRequestException('게임방에 유저가 존재 하지 않습니다.');
-    if (targetUser.status === gameMemberMoveDto.status)
-      throw new BadRequestException(
-        '잘못된 요청입니다 (동일한 상태로의 변경은 불가능합니다)',
-      );
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    let returnTargetUser;
     try {
-      const fixLatestGameResult = await queryRunner.manager
+      const gameMember = await queryRunner.manager
+        .getRepository(GameMember)
+        .findOne({ where: { gameRoomId, userId } });
+      const gameResult = await queryRunner.manager
         .getRepository(GameResult)
         .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
-      if (gameMemberMoveDto.status === GameMemberStatus.OBSERVER) {
-        targetUser.status = GameMemberStatus.OBSERVER;
-        fixLatestGameResult.playerTwoId = null;
-      } else {
-        targetUser.status = GameMemberStatus.PLAYER_TWO;
-        fixLatestGameResult.playerTwoId = targetUser.userId;
-      }
-      returnTargetUser = await queryRunner.manager
-        .getRepository(GameMember)
-        .save(targetUser);
-      await queryRunner.manager
-        .getRepository(GameResult)
-        .save(fixLatestGameResult);
+
+      gameMember.status = GameMemberStatus.PLAYER_TWO;
+      gameResult.playerTwoId = userId;
+
+      await queryRunner.manager.getRepository(GameMember).save(gameMember);
+      await queryRunner.manager.getRepository(GameResult).save(gameResult);
       await queryRunner.commitTransaction();
+
+      this.roomManagerService.moveToPlayer(userId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
-    return returnTargetUser;
+  }
+
+  async moveToObserver(gameRoomId: number, userId: number) {
+    const checkGameRoom = await this.gameRoomRepository.findOne({
+      where: { gameRoomId },
+    });
+    if (!checkGameRoom) {
+      throw new BadRequestException('게임방이 존재하지 않습니다.');
+    }
+    const checkGameMember = await this.gameMemberRepository.findOne({
+      where: { gameRoomId, userId },
+    });
+    if (!checkGameMember) {
+      throw new BadRequestException('해당 게임방에 참여 중이지 않습니다.');
+    }
+    if (checkGameMember.status === GameMemberStatus.OBSERVER) {
+      throw new BadRequestException('이미 관전자입니다.');
+    }
+    const checkGameResult = await this.gameResultRepository.findOne({
+      where: { gameRoomId, startAt: null, endAt: null },
+    });
+    if (!checkGameResult) {
+      throw new BadRequestException(
+        '플레이 중에는 관전자로 이동할 수 없습니다.',
+      );
+    }
+    const checkParticipantsCnt = await this.gameMemberRepository.count({
+      where: { gameRoomId },
+    });
+    if (checkParticipantsCnt === 1) {
+      throw new BadRequestException(
+        '혼자 있는 경우, 관전자로 이동할 수 없습니다.',
+      );
+    }
+
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const gameMember = await queryRunner.manager
+        .getRepository(GameMember)
+        .findOne({ where: { gameRoomId, userId } });
+      const gameResult = await queryRunner.manager
+        .getRepository(GameResult)
+        .findOne({ where: { gameRoomId, startAt: null, endAt: null } });
+
+      if (gameMember.status === GameMemberStatus.PLAYER_ONE) {
+        // 플레이어1일때
+        if (gameResult.playerTwoId) {
+          // 플레이어2있을때
+          const gameMemberPlayerTwo = await queryRunner.manager
+            .getRepository(GameMember)
+            .findOne({ where: { gameRoomId, userId: gameResult.playerTwoId } });
+          gameMemberPlayerTwo.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
+            .getRepository(GameMember)
+            .save(gameMemberPlayerTwo);
+
+          gameMember.status = GameMemberStatus.OBSERVER;
+          gameResult.playerOneId = gameResult.playerTwoId;
+          gameResult.playerTwoId = null;
+        } else {
+          // 관전자만 있을떄
+          const gameMemberObserver = await queryRunner.manager
+            .getRepository(GameMember)
+            .createQueryBuilder('gameMember')
+            .where({ gameRoomId, status: GameMemberStatus.OBSERVER })
+            .orderBy('gameMember.lastModifiedAt', 'ASC')
+            .getOne();
+          gameMemberObserver.status = GameMemberStatus.PLAYER_ONE;
+          await queryRunner.manager
+            .getRepository(GameMember)
+            .save(gameMemberObserver);
+
+          gameMember.status = GameMemberStatus.OBSERVER;
+          gameResult.playerOneId = gameMemberObserver.userId;
+        }
+      } else {
+        // 플레이어2일때
+        gameMember.status = GameMemberStatus.OBSERVER;
+        gameResult.playerTwoId = null;
+      }
+
+      await queryRunner.manager.getRepository(GameMember).save(gameMember);
+      await queryRunner.manager.getRepository(GameResult).save(gameResult);
+      await queryRunner.commitTransaction();
+
+      this.roomManagerService.moveToObserver(userId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async countGameResultsOfUser(userId: number) {
