@@ -5,9 +5,9 @@ import { Channel } from 'src/entities/Channel';
 import { ChannelChat } from 'src/entities/ChannelChat';
 import { ChannelMember } from 'src/entities/ChannelMember';
 import { Friend } from 'src/entities/Friend';
-import { GameMember } from 'src/entities/GameMember';
-import { GameResult } from 'src/entities/GameResult';
-import { GameRoom } from 'src/entities/GameRoom';
+// import { GameMember } from 'src/entities/GameMember';
+// import { GameResult } from 'src/entities/GameResult';
+// import { GameRoom } from 'src/entities/GameRoom';
 import { Rank } from 'src/entities/Rank';
 import { User } from 'src/entities/User';
 import { Connection } from 'typeorm';
@@ -19,11 +19,11 @@ import { ChannelInitData } from '../channel-init-data';
 import { ChannelChatInitData } from '../channelchat-init-data';
 import { ChannelMemberInitData } from '../channelmember-init-data';
 import { friendInitData } from '../friend-init-data';
-import {
-  GameMemberInitData,
-  GameResultInitData,
-  GameRoomInitData,
-} from '../game-init-data';
+// import {
+//   GameMemberInitData,
+//   GameResultInitData,
+//   GameRoomInitData,
+// } from '../game-init-data';
 import { rankInitData } from '../rank-init-data';
 import { userInitData } from '../user-init-data';
 
@@ -99,25 +99,25 @@ export class InitialDataSeeder implements Seeder {
       .values(ChannelChatInitData)
       .execute();
 
-    await connection
-      .createQueryBuilder()
-      .insert()
-      .into(GameRoom)
-      .values(GameRoomInitData)
-      .execute();
+    // await connection
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into(GameRoom)
+    //   .values(GameRoomInitData)
+    //   .execute();
 
-    await connection
-      .createQueryBuilder()
-      .insert()
-      .into(GameMember)
-      .values(GameMemberInitData)
-      .execute();
+    // await connection
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into(GameMember)
+    //   .values(GameMemberInitData)
+    //   .execute();
 
-    await connection
-      .createQueryBuilder()
-      .insert()
-      .into(GameResult)
-      .values(GameResultInitData)
-      .execute();
+    // await connection
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into(GameResult)
+    //   .values(GameResultInitData)
+    //   .execute();
   }
 }
