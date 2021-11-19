@@ -38,6 +38,19 @@ export class MainEventsGateway implements OnGatewayDisconnect {
     this.server.to(socket.id).emit('playerList', playerListData);
   }
 
+  @SubscribeMessage('onlineList')
+  handleOnlineList(@ConnectedSocket() socket: Socket) {
+    const onlineSet = new Set(Object.values(onlineMap));
+    const uniqueOnlineList = [...onlineSet];
+    this.server.to(socket.id).emit('onlineList', uniqueOnlineList);
+
+    const playerListData = {
+      player1: Array.from(playerSets.player1),
+      player2: Array.from(playerSets.player2),
+    };
+    this.server.to(socket.id).emit('playerList', playerListData);
+  }
+
   emitPlayerList() {
     const emitData = {
       player1: Array.from(playerSets.player1),
