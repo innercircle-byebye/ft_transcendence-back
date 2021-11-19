@@ -203,6 +203,14 @@ export class GameEventsService {
             .getRepository(GameResult)
             .save(latestGameReseult);
 
+          const playerOneUser = await queryRunner.manager
+            .getRepository(User)
+            .findOne({
+              where: { userId: latestGameReseult.playerOneId },
+            });
+          playerOneUser.experience += 42;
+          await queryRunner.manager.getRepository(User).save(playerOneUser);
+
           await queryRunner.manager.getRepository(GameResult).save({
             gameRoomId,
             playerOneId: latestGameReseult.playerOneId,
@@ -241,6 +249,14 @@ export class GameEventsService {
             await queryRunner.manager
               .getRepository(GameResult)
               .save(latestGameReseult);
+
+            const playerTwoUser = await queryRunner.manager
+              .getRepository(User)
+              .findOne({
+                where: { userId: latestGameReseult.playerTwoId },
+              });
+            playerTwoUser.experience += 42;
+            await queryRunner.manager.getRepository(User).save(playerTwoUser);
 
             await queryRunner.manager.getRepository(GameResult).save({
               gameRoomId,
