@@ -59,7 +59,6 @@ export class UserService {
     const targetUser: any = await this.userRepository
       .createQueryBuilder('user')
       .where('user.nickname = :nickname', { nickname })
-      .limit(1)
       .getOne();
 
     if (!targetUser) {
