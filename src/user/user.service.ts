@@ -38,7 +38,6 @@ export class UserService {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
-    console.log('aaa', typeof targetUser.experience);
 
     targetUser.rankInfo = await this.rankRepository
       .createQueryBuilder('rank')
@@ -46,6 +45,7 @@ export class UserService {
         experience: targetUser.experience,
       })
       .orderBy('rank.criteriaExperience', 'DESC')
+      .limit(1)
       .getOne();
     // console.log(targetUser.rankInfo);
 
@@ -73,6 +73,7 @@ export class UserService {
         experience: targetUser.experience,
       })
       .orderBy('rank.criteriaExperience', 'DESC')
+      .limit(1)
       .getOne();
 
     delete targetUser.rankInfo.criteriaExperience;
