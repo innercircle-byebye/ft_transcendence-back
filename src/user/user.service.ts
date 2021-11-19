@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, LessThanOrEqual, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
 import { User, UserStatus } from 'src/entities/User';
 import * as fs from 'fs';
@@ -38,11 +38,16 @@ export class UserService {
       // 이미 삭제 처리가 되어 있는 경우
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
+    console.log('aaa', typeof targetUser.experience);
 
-    targetUser.rankInfo = await this.rankRepository.findOne({
-      where: { criteriaExperience: LessThanOrEqual(targetUser.experience) },
-    });
-    console.log(targetUser.rankInfo);
+    targetUser.rankInfo = await this.rankRepository
+      .createQueryBuilder('rank')
+      .where('rank.criteriaExperience <= :experience', {
+        experience: targetUser.experience,
+      })
+      .orderBy('rank.criteriaExperience', 'DESC')
+      .getOne();
+    // console.log(targetUser.rankInfo);
 
     delete targetUser.rankInfo.criteriaExperience;
     delete targetUser.rankInfo.rankId;
@@ -54,6 +59,7 @@ export class UserService {
     const targetUser: any = await this.userRepository
       .createQueryBuilder('user')
       .where('user.nickname = :nickname', { nickname })
+      .limit(1)
       .getOne();
 
     if (!targetUser) {
@@ -61,10 +67,13 @@ export class UserService {
       throw new ForbiddenException('존재하지 않는 사용자입니다');
     }
 
-    targetUser.rankInfo = await this.rankRepository.findOne({
-      where: { criteriaExperience: LessThanOrEqual(targetUser.experience) },
-    });
-    console.log(targetUser.rankInfo);
+    targetUser.rankInfo = await this.rankRepository
+      .createQueryBuilder('rank')
+      .where('rank.criteriaExperience <= :experience', {
+        experience: targetUser.experience,
+      })
+      .orderBy('rank.criteriaExperience', 'DESC')
+      .getOne();
 
     delete targetUser.rankInfo.criteriaExperience;
     delete targetUser.rankInfo.rankId;
