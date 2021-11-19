@@ -240,9 +240,11 @@ export class GameService {
       throw new BadRequestException(
         '게임 승리 점수는 최소 2점, 최대 10점 입니다.',
       );
-    const checkExistGameRoom = await this.gameRoomRepository.findOne({
-      where: [{ title: gameRoomCreateDto.title, deletedAt: null }],
-    });
+    const checkExistGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .withDeleted()
+      .where('gameroom.title = :title', { title: gameRoomCreateDto.title })
+      .getOne();
     if (checkExistGameRoom)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
 
@@ -312,12 +314,13 @@ export class GameService {
       throw new BadRequestException(
         '게임 승리 점수는 최소 2점, 최대 10점 입니다.',
       );
-    const checkExistGameRoom = await this.gameRoomRepository.findOne({
-      where: [{ title: gameRoomUpdateDto.title, deletedAt: null }],
-    });
-    if (checkExistGameRoom && checkExistGameRoom.gameRoomId !== gameRoomId)
+    const checkExistGameRoom = await this.gameRoomRepository
+      .createQueryBuilder('gameroom')
+      .withDeleted()
+      .where('gameroom.title = :title', { title: gameRoomUpdateDto.title })
+      .getOne();
+    if (checkExistGameRoom)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
-
     const checkGameRoomUpdateAuth = this.gameMemberRepository.findOne({
       where: [
         {
