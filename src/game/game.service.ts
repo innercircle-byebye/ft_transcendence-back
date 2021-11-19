@@ -319,7 +319,7 @@ export class GameService {
       .withDeleted()
       .where('gameroom.title = :title', { title: gameRoomUpdateDto.title })
       .getOne();
-    if (checkExistGameRoom)
+    if (checkExistGameRoom && checkExistGameRoom.gameRoomId !== gameRoomId)
       throw new BadRequestException('이미 존재하는 게임방 이름입니다.');
     const checkGameRoomUpdateAuth = this.gameMemberRepository.findOne({
       where: [
